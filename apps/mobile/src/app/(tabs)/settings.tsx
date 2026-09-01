@@ -1,5 +1,5 @@
 import { useSQLiteContext } from 'expo-sqlite';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
@@ -22,6 +22,15 @@ export default function SettingsScreen() {
   const [testResult, setTestResult] = useState<ConnectionTestResult | null>(null);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (savedTimer.current) {
+        clearTimeout(savedTimer.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -43,10 +52,14 @@ export default function SettingsScreen() {
       return;
     }
     setUrlError(null);
+    setSaveError(null);
     try {
       await saveBackendSettings(db, { backendUrl: trimmedUrl, apiKey: apiKey.trim() });
       setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      if (savedTimer.current) {
+        clearTimeout(savedTimer.current);
+      }
+      savedTimer.current = setTimeout(() => setSaved(false), 2000);
     } catch {
       setSaveError('No se pudo guardar la configuración.');
     }

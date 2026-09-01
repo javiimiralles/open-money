@@ -29,11 +29,11 @@ export const colors = {
 } as const;
 
 export const typography = {
-  displayMega: { fontFamily: 'Manrope_800ExtraBold', fontSize: 126, fontWeight: '900', lineHeight: 107.1 },
-  displayXxl: { fontFamily: 'Manrope_800ExtraBold', fontSize: 96, fontWeight: '900', lineHeight: 81.6 },
-  displayXl: { fontFamily: 'Manrope_800ExtraBold', fontSize: 64, fontWeight: '900', lineHeight: 54.4 },
-  displayLg: { fontFamily: 'Manrope_400Regular', fontSize: 47, fontWeight: '400', lineHeight: 70.5, letterSpacing: -0.108 },
-  displayMd: { fontFamily: 'Manrope_800ExtraBold', fontSize: 40, fontWeight: '900', lineHeight: 34 },
+  displayMega: { fontFamily: 'Manrope_800ExtraBold', fontSize: 126, lineHeight: 107.1 },
+  displayXxl: { fontFamily: 'Manrope_800ExtraBold', fontSize: 96, lineHeight: 81.6 },
+  displayXl: { fontFamily: 'Manrope_800ExtraBold', fontSize: 64, lineHeight: 54.4 },
+  displayLg: { fontFamily: 'Manrope_400Regular', fontSize: 47, lineHeight: 70.5, letterSpacing: -0.108 },
+  displayMd: { fontFamily: 'Manrope_800ExtraBold', fontSize: 40, lineHeight: 34 },
   displaySm: { fontFamily: 'Inter_600SemiBold', fontSize: 32, fontWeight: '600', lineHeight: 38.4, letterSpacing: -0.96 },
   displayXs: { fontFamily: 'Inter_600SemiBold', fontSize: 24, fontWeight: '600', lineHeight: 31.2, letterSpacing: -0.48 },
   bodyLg: { fontFamily: 'Inter_400Regular', fontSize: 20, fontWeight: '400', lineHeight: 30 },

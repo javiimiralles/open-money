@@ -81,6 +81,17 @@ describe('testConnection', () => {
     db.close();
   });
 
+  it('reports a timeout when the request is aborted', async () => {
+    const db = await createDbWithSettings('https://api.example.com', 'key');
+    const abortError = new Error('Aborted');
+    abortError.name = 'AbortError';
+    const fetchMock = jest.fn().mockRejectedValue(abortError);
+    const result = await testConnection(db, fetchMock as unknown as typeof fetch);
+    expect(result.ok).toBe(false);
+    expect(result.message).toContain('Tiempo de espera');
+    db.close();
+  });
+
   it('uses the provided settings override instead of saved settings', async () => {
     const db = await createDbWithSettings('https://saved.example.com', 'saved-key');
     const fetchMock = jest.fn().mockResolvedValue({ ok: true, status: 200 });
