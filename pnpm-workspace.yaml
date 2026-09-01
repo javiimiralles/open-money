@@ -1,0 +1,9 @@
+packages:
+  - apps/*
+
+allowBuilds:
+  '@parcel/watcher': set this to true or false
+  unrs-resolver: set this to true or false
+
+onlyBuiltDependencies:
+  - better-sqlite3
