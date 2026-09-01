@@ -3,7 +3,7 @@ import { Inter_400Regular, Inter_600SemiBold } from '@expo-google-fonts/inter';
 import { useFonts } from 'expo-font';
 import { Stack, ThemeProvider, DefaultTheme } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { SQLiteProvider } from 'expo-sqlite';
+import { SQLiteProvider, type SQLiteDatabase } from 'expo-sqlite';
 import { useEffect } from 'react';
 
 import { migrate, DATABASE_NAME } from '@/db/client';
@@ -11,6 +11,12 @@ import { toSqlExecutor } from '@/db/sqlite-adapter';
 import { colors } from '@/theme/tokens';
 
 SplashScreen.preventAutoHideAsync();
+
+const onDatabaseInit = (db: SQLiteDatabase) => migrate(toSqlExecutor(db));
+
+const onDatabaseError = (error: Error) => {
+  console.error('Database initialization failed:', error);
+};
 
 const navigationTheme = {
   ...DefaultTheme,
@@ -44,7 +50,7 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={navigationTheme}>
-      <SQLiteProvider databaseName={DATABASE_NAME} onInit={(db) => migrate(toSqlExecutor(db))}>
+      <SQLiteProvider databaseName={DATABASE_NAME} onInit={onDatabaseInit} onError={onDatabaseError}>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" />
         </Stack>

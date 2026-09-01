@@ -26,6 +26,9 @@ export class MigrationError extends Error {
 }
 
 export async function migrate(db: SqlExecutor): Promise<void> {
+  // Must run outside a transaction; it is a no-op inside one.
+  await db.execAsync('PRAGMA foreign_keys = ON');
+
   const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
   let currentVersion = row?.user_version ?? 0;
 

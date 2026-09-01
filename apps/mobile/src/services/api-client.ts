@@ -7,7 +7,7 @@
  */
 
 import type { SqlExecutor } from '@/db/client';
-import { getBackendSettings } from '@/db/repositories/settings-repo';
+import { getBackendSettings, type BackendSettings } from '@/db/repositories/settings-repo';
 
 export class BackendNotConfiguredError extends Error {
   constructor() {
@@ -43,8 +43,10 @@ export function isValidBackendUrl(url: string): boolean {
 export async function testConnection(
   db: SqlExecutor,
   fetchImpl: typeof fetch = fetch,
+  settingsOverride?: BackendSettings,
 ): Promise<ConnectionTestResult> {
-  const { backendUrl, apiKey } = await getBackendSettings(db);
+  const settings = settingsOverride ?? (await getBackendSettings(db));
+  const { backendUrl, apiKey } = settings;
 
   if (!backendUrl || !apiKey) {
     return { ok: false, message: 'Configura la URL y la API key del backend.' };

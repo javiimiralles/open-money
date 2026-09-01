@@ -1,5 +1,5 @@
 import { useSQLiteContext } from 'expo-sqlite';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
@@ -13,13 +13,15 @@ import { colors, spacing, typography } from '@/theme/tokens';
 type TestState = 'idle' | 'loading' | 'done';
 
 export default function SettingsScreen() {
-  const db = toSqlExecutor(useSQLiteContext());
+  const sqlite = useSQLiteContext();
+  const db = useMemo(() => toSqlExecutor(sqlite), [sqlite]);
   const [backendUrl, setBackendUrl] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [urlError, setUrlError] = useState<string | null>(null);
   const [testState, setTestState] = useState<TestState>('idle');
   const [testResult, setTestResult] = useState<ConnectionTestResult | null>(null);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -41,15 +43,22 @@ export default function SettingsScreen() {
       return;
     }
     setUrlError(null);
-    await saveBackendSettings(db, { backendUrl: trimmedUrl, apiKey: apiKey.trim() });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    try {
+      await saveBackendSettings(db, { backendUrl: trimmedUrl, apiKey: apiKey.trim() });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      setSaveError('No se pudo guardar la configuración.');
+    }
   };
 
   const handleTestConnection = async () => {
     setTestState('loading');
     setTestResult(null);
-    const result = await testConnection(db);
+    const result = await testConnection(db, fetch, {
+      backendUrl: backendUrl.trim(),
+      apiKey: apiKey.trim(),
+    });
     setTestResult(result);
     setTestState('done');
   };
@@ -89,6 +98,7 @@ export default function SettingsScreen() {
           />
           <Button label="Guardar" onPress={handleSave} />
           {saved ? <Text style={styles.savedText}>Configuración guardada.</Text> : null}
+          {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
         </View>
       </Card>
 
@@ -132,6 +142,10 @@ const styles = StyleSheet.create({
   savedText: {
     ...typography.bodySm,
     color: colors.positiveDeep,
+  },
+  errorText: {
+    ...typography.bodySm,
+    color: colors.negativeDarkest,
   },
   testResult: {
     ...typography.bodySmStrong,

@@ -80,4 +80,21 @@ describe('testConnection', () => {
     expect(result.message).toContain('No se pudo conectar');
     db.close();
   });
+
+  it('uses the provided settings override instead of saved settings', async () => {
+    const db = await createDbWithSettings('https://saved.example.com', 'saved-key');
+    const fetchMock = jest.fn().mockResolvedValue({ ok: true, status: 200 });
+    const result = await testConnection(
+      db,
+      fetchMock as unknown as typeof fetch,
+      { backendUrl: 'https://typed.example.com', apiKey: 'typed-key' },
+    );
+
+    expect(result.ok).toBe(true);
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://typed.example.com/health',
+      expect.objectContaining({ headers: { 'X-API-Key': 'typed-key' } }),
+    );
+    db.close();
+  });
 });

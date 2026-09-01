@@ -1,5 +1,5 @@
 import { migrate } from '@/db/client';
-import { BASE_CATEGORIES } from '@/db/seed';
+import { BASE_CATEGORIES, seedCategoriesSql } from '@/db/seed';
 import { countCategoriesByKind } from '@/db/repositories/categories-repo';
 import { BetterSqliteExecutor } from '@/test/better-sqlite-executor';
 
@@ -47,6 +47,19 @@ describe('migrations', () => {
     db.close();
   });
 
+  it('seed SQL uses INSERT OR IGNORE so re-running it does not duplicate rows', async () => {
+    const db = new BetterSqliteExecutor();
+    await migrate(db);
+
+    // Simulate a re-run of the seed (e.g. a future migration re-seeding).
+    await db.execAsync(seedCategoriesSql());
+
+    const count = await db.getFirstAsync<{ count: number }>('SELECT COUNT(*) AS count FROM categories');
+    expect(count?.count).toBe(BASE_CATEGORIES.length);
+
+    db.close();
+  });
+
   it('is a no-op on a database already at the latest version', async () => {
     const db = new BetterSqliteExecutor();
     await migrate(db);
@@ -65,7 +78,6 @@ describe('migrations', () => {
   it('enables foreign key enforcement in the schema', async () => {
     const db = new BetterSqliteExecutor();
     await migrate(db);
-    await db.execAsync('PRAGMA foreign_keys = ON');
 
     // Inserting a transaction referencing a non-existent account must fail.
     await expect(
