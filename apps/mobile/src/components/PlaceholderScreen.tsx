@@ -1,0 +1,37 @@
+import { StyleSheet, Text, View } from 'react-native';
+
+import { Card } from '@/components/Card';
+import { colors, spacing, typography } from '@/theme/tokens';
+
+export interface PlaceholderScreenProps {
+  title: string;
+  description: string;
+}
+
+export function PlaceholderScreen({ title, description }: PlaceholderScreenProps) {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>{title}</Text>
+      <Card variant="sage">
+        <Text style={styles.description}>{description}</Text>
+      </Card>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.canvasSoft,
+    padding: spacing.xl,
+    gap: spacing.lg,
+  },
+  title: {
+    ...typography.displayXs,
+    color: colors.ink,
+  },
+  description: {
+    ...typography.bodyMd,
+    color: colors.body,
+  },
+});
