@@ -1,5 +1,8 @@
 packages:
   - apps/*
 
+minimumReleaseAgeExclude:
+  - '@expo/ui@57.0.15'
+
 onlyBuiltDependencies:
   - better-sqlite3
