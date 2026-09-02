@@ -64,6 +64,17 @@ export default function RootLayout() {
               headerShadowVisible: false,
             }}
           />
+          <Stack.Screen
+            name="transaction-form"
+            options={{
+              presentation: 'modal',
+              headerShown: true,
+              title: 'Nuevo movimiento',
+              headerStyle: { backgroundColor: colors.canvas },
+              headerTitleStyle: typography.bodyMdStrong,
+              headerShadowVisible: false,
+            }}
+          />
         </Stack>
       </SQLiteProvider>
     </ThemeProvider>
