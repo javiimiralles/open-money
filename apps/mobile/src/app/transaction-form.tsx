@@ -12,6 +12,7 @@ import { colors, rounded, spacing, typography } from '@/theme/tokens';
 const TYPE_OPTIONS = [
   { value: 'expense', label: 'Gasto' },
   { value: 'income', label: 'Ingreso' },
+  { value: 'transfer', label: 'Transferencia' },
 ] as const;
 
 export default function TransactionFormScreen() {
@@ -86,19 +87,53 @@ export default function TransactionFormScreen() {
               error={form.errors.amount}
             />
             <SelectField
-              label="Cuenta"
+              label={form.values.type === 'transfer' ? 'Cuenta de origen' : 'Cuenta'}
               value={form.values.accountId}
               options={form.accountOptions}
               onChange={form.setAccountId}
               placeholder="Selecciona una cuenta"
               error={form.errors.accountId}
             />
-            <SelectField
-              label="Categoría (opcional)"
-              value={form.values.categoryId}
-              options={[{ label: 'Sin categoría', value: 0 }, ...form.categoryOptions]}
-              onChange={form.setCategoryId}
-            />
+            {form.values.type === 'transfer' ? (
+              <>
+                <SelectField
+                  label="Cuenta de destino"
+                  value={form.values.destinationAccountId}
+                  options={form.accountOptions}
+                  onChange={form.setDestinationAccountId}
+                  placeholder="Selecciona la cuenta de destino"
+                  error={form.errors.destinationAccountId}
+                />
+                {form.isCrossCurrency ? (
+                  <>
+                    <TextField
+                      label="Tasa de cambio"
+                      value={form.values.fxRate}
+                      onChangeText={form.setFxRate}
+                      placeholder="1,00"
+                      keyboardType="decimal-pad"
+                      error={form.errors.fxRate}
+                    />
+                    <TextField
+                      label="Importe de destino"
+                      value={form.values.destinationAmount}
+                      onChangeText={form.setDestinationAmount}
+                      placeholder="0,00"
+                      keyboardType="decimal-pad"
+                      error={form.errors.destinationAmount}
+                    />
+                  </>
+                ) : null}
+              </>
+            ) : null}
+            {form.values.type === 'transfer' ? null : (
+              <SelectField
+                label="Categoría (opcional)"
+                value={form.values.categoryId}
+                options={[{ label: 'Sin categoría', value: 0 }, ...form.categoryOptions]}
+                onChange={form.setCategoryId}
+              />
+            )}
             <TextField
               label="Notas (opcional)"
               value={form.values.notes}

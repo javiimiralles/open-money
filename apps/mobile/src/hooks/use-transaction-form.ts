@@ -1,6 +1,7 @@
 /**
  * Transaction create/edit form state, validation, save, and delete flow.
  * The transaction currency is derived from the selected account.
+ * Transfers (US-005) add a destination account and optional FX fields.
  */
 
 import { useSQLiteContext } from 'expo-sqlite';
@@ -16,10 +17,12 @@ import {
   type TransactionInput,
 } from '@/db/repositories/transactions-repo';
 import { toSqlExecutor } from '@/db/sqlite-adapter';
+import { getLatestRatesToEur } from '@/utils/currency';
 import { todayIso } from '@/utils/dates';
 import { formatMoney, parseAmount } from '@/utils/money';
+import { crossRate, destinationAmountFromRate, rateFromAmounts } from '@/utils/transfer';
 
-export type TransactionFormType = 'income' | 'expense';
+export type TransactionFormType = 'income' | 'expense' | 'transfer';
 
 export interface TransactionFormValues {
   type: TransactionFormType;
@@ -29,11 +32,17 @@ export interface TransactionFormValues {
   /** 0 means "no category"; real category ids start at 1. */
   categoryId: number;
   notes: string;
+  destinationAccountId: number | null;
+  destinationAmount: string;
+  fxRate: string;
 }
 
 export interface TransactionFormErrors {
   amount?: string;
   accountId?: string;
+  destinationAccountId?: string;
+  destinationAmount?: string;
+  fxRate?: string;
 }
 
 export interface UseTransactionFormResult {
@@ -46,14 +55,45 @@ export interface UseTransactionFormResult {
   saving: boolean;
   deleting: boolean;
   isEditing: boolean;
+  isCrossCurrency: boolean;
   setType: (type: TransactionFormType) => void;
   setDate: (date: string) => void;
   setAmount: (amount: string) => void;
   setAccountId: (accountId: number) => void;
   setCategoryId: (categoryId: number) => void;
   setNotes: (notes: string) => void;
+  setDestinationAccountId: (destinationAccountId: number) => void;
+  setDestinationAmount: (destinationAmount: string) => void;
+  setFxRate: (fxRate: string) => void;
   save: () => Promise<boolean>;
   remove: () => Promise<void>;
+}
+
+/**
+ * Recomputes the destination amount and FX rate for a transfer when the
+ * origin/destination accounts change or the type switches to transfer.
+ * Same-currency transfers keep destinationAmount = amount and no rate;
+ * cross-currency ones prefill the rate from the stored rates when available.
+ */
+function transferDefaults(
+  values: TransactionFormValues,
+  accounts: AccountWithBalance[],
+  rates: Record<string, number>,
+): Pick<TransactionFormValues, 'destinationAmount' | 'fxRate'> {
+  const origin = accounts.find((account) => account.id === values.accountId);
+  const destination = accounts.find((account) => account.id === values.destinationAccountId);
+  if (!origin || !destination) {
+    return { destinationAmount: '', fxRate: '' };
+  }
+  const amount = parseAmount(values.amount);
+  if (origin.currency === destination.currency) {
+    return { destinationAmount: amount !== null ? String(amount) : '', fxRate: '' };
+  }
+  const rate = crossRate(origin.currency, destination.currency, rates);
+  if (rate === null || amount === null) {
+    return { destinationAmount: '', fxRate: '' };
+  }
+  return { destinationAmount: String(destinationAmountFromRate(amount, rate)), fxRate: String(rate) };
 }
 
 export function useTransactionForm(transactionId: number | null): UseTransactionFormResult {
@@ -66,23 +106,30 @@ export function useTransactionForm(transactionId: number | null): UseTransaction
     accountId: null,
     categoryId: 0,
     notes: '',
+    destinationAccountId: null,
+    destinationAmount: '',
+    fxRate: '',
   });
   const [errors, setErrors] = useState<TransactionFormErrors>({});
   const [accounts, setAccounts] = useState<AccountWithBalance[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [rates, setRates] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(transactionId !== null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let active = true;
-    Promise.all([listAccountsWithBalances(db), getAllCategories(db)]).then(([accountRows, categoryRows]) => {
-      if (!active) {
-        return;
-      }
-      setAccounts(accountRows);
-      setCategories(categoryRows);
-    });
+    Promise.all([listAccountsWithBalances(db), getAllCategories(db), getLatestRatesToEur(db)]).then(
+      ([accountRows, categoryRows, rateRows]) => {
+        if (!active) {
+          return;
+        }
+        setAccounts(accountRows);
+        setCategories(categoryRows);
+        setRates(rateRows);
+      },
+    );
     return () => {
       active = false;
     };
@@ -98,12 +145,15 @@ export function useTransactionForm(transactionId: number | null): UseTransaction
         return;
       }
       setValues({
-        type: transaction.type === 'income' ? 'income' : 'expense',
+        type: transaction.type,
         date: transaction.date,
         amount: String(transaction.amount),
         accountId: transaction.accountId,
         categoryId: transaction.categoryId ?? 0,
         notes: transaction.notes ?? '',
+        destinationAccountId: transaction.destinationAccountId,
+        destinationAmount: transaction.destinationAmount !== null ? String(transaction.destinationAmount) : '',
+        fxRate: transaction.fxRate !== null ? String(transaction.fxRate) : '',
       });
       setLoading(false);
     });
@@ -129,6 +179,15 @@ export function useTransactionForm(transactionId: number | null): UseTransaction
     [categories, values.type],
   );
 
+  const isCrossCurrency = useMemo(() => {
+    if (values.type !== 'transfer') {
+      return false;
+    }
+    const origin = accounts.find((account) => account.id === values.accountId);
+    const destination = accounts.find((account) => account.id === values.destinationAccountId);
+    return origin !== undefined && destination !== undefined && origin.currency !== destination.currency;
+  }, [accounts, values.type, values.accountId, values.destinationAccountId]);
+
   const validate = useCallback((): TransactionFormErrors => {
     const nextErrors: TransactionFormErrors = {};
     const amount = parseAmount(values.amount);
@@ -140,8 +199,25 @@ export function useTransactionForm(transactionId: number | null): UseTransaction
     if (values.accountId === null) {
       nextErrors.accountId = 'Selecciona una cuenta.';
     }
+    if (values.type === 'transfer') {
+      if (values.destinationAccountId === null) {
+        nextErrors.destinationAccountId = 'Selecciona la cuenta de destino.';
+      } else if (values.destinationAccountId === values.accountId) {
+        nextErrors.destinationAccountId = 'El destino debe ser distinto del origen.';
+      }
+      if (isCrossCurrency) {
+        const rate = parseAmount(values.fxRate);
+        if (values.fxRate.trim() === '' || rate === null || rate <= 0) {
+          nextErrors.fxRate = 'Introduce una tasa de cambio válida.';
+        }
+        const destinationAmount = parseAmount(values.destinationAmount);
+        if (values.destinationAmount.trim() === '' || destinationAmount === null || destinationAmount <= 0) {
+          nextErrors.destinationAmount = 'Introduce un importe de destino válido.';
+        }
+      }
+    }
     return nextErrors;
-  }, [values]);
+  }, [values, isCrossCurrency]);
 
   const save = useCallback(async (): Promise<boolean> => {
     const nextErrors = validate();
@@ -158,15 +234,36 @@ export function useTransactionForm(transactionId: number | null): UseTransaction
       return false;
     }
 
-    const input: TransactionInput = {
-      type: values.type,
+    const amount = parseAmount(values.amount) ?? 0;
+    const base = {
       date: values.date,
-      amount: parseAmount(values.amount) ?? 0,
+      amount,
       currency: account.currency,
       accountId: values.accountId,
-      categoryId: values.categoryId === 0 ? null : values.categoryId,
       notes: values.notes.trim() || null,
     };
+
+    let input: TransactionInput;
+    if (values.type === 'transfer') {
+      if (values.destinationAccountId === null) {
+        return false;
+      }
+      const destinationAmount = isCrossCurrency ? parseAmount(values.destinationAmount) ?? 0 : amount;
+      const fxRate = isCrossCurrency && amount > 0 ? rateFromAmounts(amount, destinationAmount) : null;
+      input = {
+        type: 'transfer',
+        ...base,
+        destinationAccountId: values.destinationAccountId,
+        destinationAmount,
+        fxRate,
+      };
+    } else {
+      input = {
+        type: values.type,
+        ...base,
+        categoryId: values.categoryId === 0 ? null : values.categoryId,
+      };
+    }
 
     setSaving(true);
     try {
@@ -179,7 +276,7 @@ export function useTransactionForm(transactionId: number | null): UseTransaction
     } finally {
       setSaving(false);
     }
-  }, [db, transactionId, values, validate]);
+  }, [db, transactionId, values, validate, isCrossCurrency]);
 
   const remove = useCallback(async (): Promise<void> => {
     if (transactionId === null) {
@@ -193,6 +290,97 @@ export function useTransactionForm(transactionId: number | null): UseTransaction
     }
   }, [db, transactionId]);
 
+  const setType = useCallback(
+    (type: TransactionFormType) => {
+      setValues((current) => {
+        const next = { ...current, type, categoryId: 0 };
+        if (type === 'transfer') {
+          return { ...next, ...transferDefaults(next, accounts, rates) };
+        }
+        return next;
+      });
+    },
+    [accounts, rates],
+  );
+
+  const setDate = useCallback((date: string) => setValues((v) => ({ ...v, date })), []);
+  const setAmount = useCallback(
+    (amount: string) => {
+      setValues((current) => {
+        const next = { ...current, amount };
+        if (next.type === 'transfer') {
+          const origin = accounts.find((account) => account.id === next.accountId);
+          const destination = accounts.find((account) => account.id === next.destinationAccountId);
+          if (origin && destination && origin.currency === destination.currency) {
+            const parsed = parseAmount(amount);
+            next.destinationAmount = parsed !== null ? String(parsed) : '';
+            next.fxRate = '';
+          } else if (origin && destination) {
+            const parsed = parseAmount(amount);
+            const rate = parseAmount(next.fxRate);
+            if (parsed !== null && rate !== null && rate > 0) {
+              next.destinationAmount = String(destinationAmountFromRate(parsed, rate));
+            }
+          }
+        }
+        return next;
+      });
+    },
+    [accounts],
+  );
+  const setAccountId = useCallback(
+    (accountId: number) => {
+      setValues((current) => {
+        const next = { ...current, accountId };
+        if (next.type === 'transfer') {
+          return { ...next, ...transferDefaults(next, accounts, rates) };
+        }
+        return next;
+      });
+    },
+    [accounts, rates],
+  );
+  const setCategoryId = useCallback((categoryId: number) => setValues((v) => ({ ...v, categoryId })), []);
+  const setNotes = useCallback((notes: string) => setValues((v) => ({ ...v, notes })), []);
+  const setDestinationAccountId = useCallback(
+    (destinationAccountId: number) => {
+      setValues((current) => {
+        const next = { ...current, destinationAccountId };
+        if (next.type === 'transfer') {
+          return { ...next, ...transferDefaults(next, accounts, rates) };
+        }
+        return next;
+      });
+    },
+    [accounts, rates],
+  );
+  const setDestinationAmount = useCallback((destinationAmount: string) => {
+    setValues((current) => {
+      const next = { ...current, destinationAmount };
+      if (next.type === 'transfer') {
+        const amount = parseAmount(next.amount);
+        const destination = parseAmount(destinationAmount);
+        if (amount !== null && amount > 0 && destination !== null && destination > 0) {
+          next.fxRate = String(rateFromAmounts(amount, destination));
+        }
+      }
+      return next;
+    });
+  }, []);
+  const setFxRate = useCallback((fxRate: string) => {
+    setValues((current) => {
+      const next = { ...current, fxRate };
+      if (next.type === 'transfer') {
+        const amount = parseAmount(next.amount);
+        const rate = parseAmount(fxRate);
+        if (amount !== null && amount > 0 && rate !== null && rate > 0) {
+          next.destinationAmount = String(destinationAmountFromRate(amount, rate));
+        }
+      }
+      return next;
+    });
+  }, []);
+
   return {
     values,
     errors,
@@ -203,12 +391,16 @@ export function useTransactionForm(transactionId: number | null): UseTransaction
     saving,
     deleting,
     isEditing: transactionId !== null,
-    setType: (type: TransactionFormType) => setValues((v) => ({ ...v, type, categoryId: 0 })),
-    setDate: (date: string) => setValues((v) => ({ ...v, date })),
-    setAmount: (amount: string) => setValues((v) => ({ ...v, amount })),
-    setAccountId: (accountId: number) => setValues((v) => ({ ...v, accountId })),
-    setCategoryId: (categoryId: number) => setValues((v) => ({ ...v, categoryId })),
-    setNotes: (notes: string) => setValues((v) => ({ ...v, notes })),
+    isCrossCurrency,
+    setType,
+    setDate,
+    setAmount,
+    setAccountId,
+    setCategoryId,
+    setNotes,
+    setDestinationAccountId,
+    setDestinationAmount,
+    setFxRate,
     save,
     remove,
   };

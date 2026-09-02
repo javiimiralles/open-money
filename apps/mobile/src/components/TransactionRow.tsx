@@ -11,9 +11,19 @@ export interface TransactionRowProps {
 }
 
 export function TransactionRow({ transaction, onPress }: TransactionRowProps) {
+  const isTransfer = transaction.type === 'transfer';
   const isIncome = transaction.type === 'income';
   const signedAmount = isIncome ? transaction.amount : -transaction.amount;
-  const detail = [transaction.accountName, transaction.categoryName].filter(Boolean).join(' · ');
+
+  let detail: string;
+  if (isTransfer) {
+    detail = `${transaction.accountName} → ${transaction.destinationAccountName ?? '?'}`;
+    if (transaction.destinationAmount !== null && transaction.destinationAmount !== transaction.amount) {
+      detail += ` · ${formatMoney(transaction.destinationAmount, transaction.destinationCurrency ?? transaction.currency)}`;
+    }
+  } else {
+    detail = [transaction.accountName, transaction.categoryName].filter(Boolean).join(' · ');
+  }
 
   return (
     <Pressable
@@ -26,8 +36,12 @@ export function TransactionRow({ transaction, onPress }: TransactionRowProps) {
           {detail}
         </Text>
       </View>
-      <Text style={[styles.amount, isIncome ? styles.income : styles.expense]}>
-        {formatMoney(signedAmount, transaction.currency)}
+      <Text
+        style={[
+          styles.amount,
+          isTransfer ? styles.transfer : isIncome ? styles.income : styles.expense,
+        ]}>
+        {isTransfer ? formatMoney(transaction.amount, transaction.currency) : formatMoney(signedAmount, transaction.currency)}
       </Text>
     </Pressable>
   );
@@ -66,5 +80,8 @@ const styles = StyleSheet.create({
   },
   expense: {
     color: colors.negativeDeep,
+  },
+  transfer: {
+    color: colors.ink,
   },
 });

@@ -8,7 +8,9 @@ import {
   listTransactions,
   listTransactionsFiltered,
   updateTransaction,
+  type IncomeExpenseInput,
   type TransactionInput,
+  type TransferInput,
 } from '@/db/repositories/transactions-repo';
 import { BetterSqliteExecutor } from '@/test/better-sqlite-executor';
 
@@ -23,7 +25,7 @@ describe('transactions-repo', () => {
     return insertAccount(db, { name, identifier: null, currency, initialBalance });
   }
 
-  function input(overrides: Partial<TransactionInput> = {}): TransactionInput {
+  function input(overrides: Partial<IncomeExpenseInput> = {}): TransactionInput {
     return {
       type: 'expense',
       date: '2026-09-01',
@@ -31,6 +33,21 @@ describe('transactions-repo', () => {
       currency: 'EUR',
       accountId: 1,
       categoryId: null,
+      notes: null,
+      ...overrides,
+    };
+  }
+
+  function transferInput(overrides: Partial<TransferInput> = {}): TransactionInput {
+    return {
+      type: 'transfer',
+      date: '2026-09-01',
+      amount: 100,
+      currency: 'EUR',
+      accountId: 1,
+      destinationAccountId: 2,
+      destinationAmount: 100,
+      fxRate: null,
       notes: null,
       ...overrides,
     };
@@ -145,6 +162,102 @@ describe('transactions-repo', () => {
     db.close();
   });
 
+  it('inserts a transfer with destination details projected', async () => {
+    const db = await createDb();
+    const origin = await createAccount(db, 'Banco', 'EUR', 100);
+    const destination = await createAccount(db, 'Dólares', 'USD', 0);
+
+    const id = await insertTransaction(
+      db,
+      transferInput({
+        accountId: origin,
+        destinationAccountId: destination,
+        amount: 100,
+        destinationAmount: 110,
+        fxRate: 1.1,
+      }),
+    );
+
+    const transaction = await getTransactionById(db, id);
+    expect(transaction).toMatchObject({
+      id,
+      type: 'transfer',
+      amount: 100,
+      accountId: origin,
+      accountName: 'Banco',
+      destinationAccountId: destination,
+      destinationAccountName: 'Dólares',
+      destinationAmount: 110,
+      destinationCurrency: 'USD',
+      fxRate: 1.1,
+      categoryId: null,
+    });
+    db.close();
+  });
+
+  it('updates a transfer and recalculates both balances', async () => {
+    const db = await createDb();
+    const origin = await createAccount(db, 'Banco', 'EUR', 100);
+    const destination = await createAccount(db, 'Efectivo', 'EUR', 50);
+    const id = await insertTransaction(
+      db,
+      transferInput({ accountId: origin, destinationAccountId: destination, amount: 30, destinationAmount: 30 }),
+    );
+
+    await updateTransaction(
+      db,
+      id,
+      transferInput({ accountId: origin, destinationAccountId: destination, amount: 60, destinationAmount: 60 }),
+    );
+
+    const transaction = await getTransactionById(db, id);
+    expect(transaction).toMatchObject({ id, type: 'transfer', amount: 60, destinationAmount: 60 });
+    const accounts = await listAccountsWithBalances(db);
+    expect(accounts.find((a) => a.id === origin)?.balance).toBe(40);
+    expect(accounts.find((a) => a.id === destination)?.balance).toBe(110);
+    db.close();
+  });
+
+  it('deletes a transfer and reverts both legs', async () => {
+    const db = await createDb();
+    const origin = await createAccount(db, 'Banco', 'EUR', 100);
+    const destination = await createAccount(db, 'Efectivo', 'EUR', 50);
+    const id = await insertTransaction(
+      db,
+      transferInput({ accountId: origin, destinationAccountId: destination, amount: 30, destinationAmount: 30 }),
+    );
+
+    await deleteTransaction(db, id);
+
+    expect(await getTransactionById(db, id)).toBeNull();
+    const accounts = await listAccountsWithBalances(db);
+    expect(accounts.find((a) => a.id === origin)?.balance).toBe(100);
+    expect(accounts.find((a) => a.id === destination)?.balance).toBe(50);
+    db.close();
+  });
+
+  it('applies cross-currency transfer legs via the repository', async () => {
+    const db = await createDb();
+    const origin = await createAccount(db, 'Banco', 'EUR', 100);
+    const destination = await createAccount(db, 'Dólares', 'USD', 0);
+
+    await insertTransaction(
+      db,
+      transferInput({
+        accountId: origin,
+        destinationAccountId: destination,
+        amount: 100,
+        destinationAmount: 110,
+        fxRate: 1.1,
+      }),
+    );
+
+    const accounts = await listAccountsWithBalances(db);
+    expect(accounts.find((a) => a.id === origin)?.balance).toBe(0);
+    expect(accounts.find((a) => a.id === destination)?.balance).toBe(110);
+    db.close();
+  });
+
   describe('listTransactionsFiltered', () => {
   async function seed() {
     const db = await createDb();
@@ -186,6 +299,35 @@ describe('transactions-repo', () => {
     const rows = await listTransactionsFiltered(db, { ...EMPTY_TRANSACTION_FILTERS, accountId: accountB });
     expect(rows).toHaveLength(1);
     expect(rows[0].amount).toBe(20);
+    db.close();
+  });
+
+  it('filters by account including the transfer destination', async () => {
+    const { db, accountA, accountB } = await seed();
+    await insertTransaction(
+      db,
+      transferInput({ accountId: accountA, destinationAccountId: accountB, amount: 30, destinationAmount: 30 }),
+    );
+
+    const byOrigin = await listTransactionsFiltered(db, { ...EMPTY_TRANSACTION_FILTERS, accountId: accountA });
+    const byDestination = await listTransactionsFiltered(db, { ...EMPTY_TRANSACTION_FILTERS, accountId: accountB });
+    expect(byOrigin).toHaveLength(1);
+    expect(byDestination).toHaveLength(1);
+    expect(byDestination[0].type).toBe('transfer');
+    db.close();
+  });
+
+  it('filters by transfer type', async () => {
+    const { db, accountA, accountB } = await seed();
+    await insertTransaction(db, input({ type: 'income', amount: 100, accountId: accountA }));
+    await insertTransaction(
+      db,
+      transferInput({ accountId: accountA, destinationAccountId: accountB, amount: 30, destinationAmount: 30 }),
+    );
+
+    const rows = await listTransactionsFiltered(db, { ...EMPTY_TRANSACTION_FILTERS, type: 'transfer' });
+    expect(rows).toHaveLength(1);
+    expect(rows[0].type).toBe('transfer');
     db.close();
   });
 

@@ -18,6 +18,9 @@ export interface Transaction {
   accountId: number;
   categoryId: number | null;
   notes: string | null;
+  destinationAccountId: number | null;
+  destinationAmount: number | null;
+  fxRate: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -25,9 +28,11 @@ export interface Transaction {
 export interface TransactionWithDetails extends Transaction {
   accountName: string;
   categoryName: string | null;
+  destinationAccountName: string | null;
+  destinationCurrency: string | null;
 }
 
-export interface TransactionInput {
+export interface IncomeExpenseInput {
   type: 'income' | 'expense';
   date: string;
   amount: number;
@@ -36,6 +41,20 @@ export interface TransactionInput {
   categoryId: number | null;
   notes: string | null;
 }
+
+export interface TransferInput {
+  type: 'transfer';
+  date: string;
+  amount: number;
+  currency: string;
+  accountId: number;
+  destinationAccountId: number;
+  destinationAmount: number;
+  fxRate: number | null;
+  notes: string | null;
+}
+
+export type TransactionInput = IncomeExpenseInput | TransferInput;
 
 export interface TransactionFilters {
   type: TransactionType | 'all';
@@ -64,6 +83,9 @@ interface TransactionRow {
   account_id: number;
   category_id: number | null;
   notes: string | null;
+  destination_account_id: number | null;
+  destination_amount: number | null;
+  fx_rate: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -71,6 +93,8 @@ interface TransactionRow {
 interface TransactionDetailsRow extends TransactionRow {
   account_name: string;
   category_name: string | null;
+  destination_account_name: string | null;
+  destination_currency: string | null;
 }
 
 function mapTransaction(row: TransactionRow): Transaction {
@@ -83,13 +107,22 @@ function mapTransaction(row: TransactionRow): Transaction {
     accountId: row.account_id,
     categoryId: row.category_id,
     notes: row.notes,
+    destinationAccountId: row.destination_account_id,
+    destinationAmount: row.destination_amount,
+    fxRate: row.fx_rate,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 }
 
 function mapTransactionWithDetails(row: TransactionDetailsRow): TransactionWithDetails {
-  return { ...mapTransaction(row), accountName: row.account_name, categoryName: row.category_name };
+  return {
+    ...mapTransaction(row),
+    accountName: row.account_name,
+    categoryName: row.category_name,
+    destinationAccountName: row.destination_account_name,
+    destinationCurrency: row.destination_currency,
+  };
 }
 
 const DETAILS_SELECT = `
@@ -102,33 +135,79 @@ const DETAILS_SELECT = `
     t.account_id,
     t.category_id,
     t.notes,
+    t.destination_account_id,
+    t.destination_amount,
+    t.fx_rate,
     t.created_at,
     t.updated_at,
     a.name AS account_name,
-    c.name AS category_name
+    c.name AS category_name,
+    da.name AS destination_account_name,
+    da.currency AS destination_currency
   FROM transactions t
   JOIN accounts a ON a.id = t.account_id
   LEFT JOIN categories c ON c.id = t.category_id
+  LEFT JOIN accounts da ON da.id = t.destination_account_id
 `;
 
 export async function insertTransaction(db: SqlExecutor, input: TransactionInput): Promise<number> {
-  await db.runAsync(
-    `INSERT INTO transactions (type, date, amount, currency, account_id, category_id, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [input.type, input.date, input.amount, input.currency, input.accountId, input.categoryId, input.notes],
-  );
+  if (input.type === 'transfer') {
+    await db.runAsync(
+      `INSERT INTO transactions
+         (type, date, amount, currency, account_id, category_id, notes, destination_account_id, destination_amount, fx_rate)
+       VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?)`,
+      [
+        input.type,
+        input.date,
+        input.amount,
+        input.currency,
+        input.accountId,
+        input.notes,
+        input.destinationAccountId,
+        input.destinationAmount,
+        input.fxRate,
+      ],
+    );
+  } else {
+    await db.runAsync(
+      `INSERT INTO transactions (type, date, amount, currency, account_id, category_id, notes)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [input.type, input.date, input.amount, input.currency, input.accountId, input.categoryId, input.notes],
+    );
+  }
   const row = await db.getFirstAsync<{ id: number }>('SELECT last_insert_rowid() AS id');
   return row?.id ?? 0;
 }
 
 export async function updateTransaction(db: SqlExecutor, id: number, input: TransactionInput): Promise<void> {
-  await db.runAsync(
-    `UPDATE transactions
-     SET type = ?, date = ?, amount = ?, currency = ?, account_id = ?, category_id = ?, notes = ?,
-         updated_at = datetime('now')
-     WHERE id = ?`,
-    [input.type, input.date, input.amount, input.currency, input.accountId, input.categoryId, input.notes, id],
-  );
+  if (input.type === 'transfer') {
+    await db.runAsync(
+      `UPDATE transactions
+       SET type = ?, date = ?, amount = ?, currency = ?, account_id = ?, category_id = NULL, notes = ?,
+           destination_account_id = ?, destination_amount = ?, fx_rate = ?, updated_at = datetime('now')
+       WHERE id = ?`,
+      [
+        input.type,
+        input.date,
+        input.amount,
+        input.currency,
+        input.accountId,
+        input.notes,
+        input.destinationAccountId,
+        input.destinationAmount,
+        input.fxRate,
+        id,
+      ],
+    );
+  } else {
+    await db.runAsync(
+      `UPDATE transactions
+       SET type = ?, date = ?, amount = ?, currency = ?, account_id = ?, category_id = ?, notes = ?,
+           destination_account_id = NULL, destination_amount = NULL, fx_rate = NULL, updated_at = datetime('now')
+       WHERE id = ?`,
+      [input.type, input.date, input.amount, input.currency, input.accountId, input.categoryId, input.notes, id],
+    );
+  }
 }
 
 export async function deleteTransaction(db: SqlExecutor, id: number): Promise<void> {
@@ -160,8 +239,9 @@ function buildFilters(filters: TransactionFilters): { where: string; params: unk
     params.push(filters.type);
   }
   if (filters.accountId !== null) {
-    conditions.push('t.account_id = ?');
-    params.push(filters.accountId);
+    // A transfer involves two accounts: match either leg.
+    conditions.push('(t.account_id = ? OR t.destination_account_id = ?)');
+    params.push(filters.accountId, filters.accountId);
   }
   if (filters.categoryId !== null) {
     conditions.push('t.category_id = ?');

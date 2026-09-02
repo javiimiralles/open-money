@@ -125,4 +125,12 @@ ${seedCategoriesSql()}
 CREATE INDEX idx_transactions_account_date ON transactions(account_id, date);
 `,
   },
+  {
+    version: 3,
+    up: `
+-- Transfer destination legs are scanned by balance derivation and the
+-- account filter (US-005).
+CREATE INDEX idx_transactions_destination_account ON transactions(destination_account_id);
+`,
+  },
 ];

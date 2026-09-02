@@ -15,6 +15,11 @@ function tx(overrides: Partial<TransactionWithDetails> = {}): TransactionWithDet
     updatedAt: '2026-09-01T00:00:00',
     accountName: 'Banco',
     categoryName: null,
+    destinationAccountId: null,
+    destinationAmount: null,
+    destinationAccountName: null,
+    destinationCurrency: null,
+    fxRate: null,
     ...overrides,
   };
 }
