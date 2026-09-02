@@ -55,7 +55,7 @@ As a developer-owner, I want the project base (React Native app with navigation,
 - T-004: Initial seed of the base category catalog in Spanish on first launch.
 - T-005: Settings screen: backend URL, API key, and "test connection" button.
 
-## US-002: Account Management
+## US-002: Account Management [Done]
 As a user, I want to create, edit, and delete accounts with any name I choose to organize my money by banks, cash, or other categories.
 
 ### Acceptance Criteria

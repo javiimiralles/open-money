@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 
 import { migrate, DATABASE_NAME } from '@/db/client';
 import { toSqlExecutor } from '@/db/sqlite-adapter';
-import { colors } from '@/theme/tokens';
+import { colors, typography } from '@/theme/tokens';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -53,6 +53,17 @@ export default function RootLayout() {
       <SQLiteProvider databaseName={DATABASE_NAME} onInit={onDatabaseInit} onError={onDatabaseError}>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen
+            name="account-form"
+            options={{
+              presentation: 'modal',
+              headerShown: true,
+              title: 'Nueva cuenta',
+              headerStyle: { backgroundColor: colors.canvas },
+              headerTitleStyle: typography.bodyMdStrong,
+              headerShadowVisible: false,
+            }}
+          />
         </Stack>
       </SQLiteProvider>
     </ThemeProvider>
