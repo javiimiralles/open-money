@@ -39,7 +39,7 @@ Budgets; advanced reports/charts; technical investment analysis; multi-user; cro
 
 ---
 
-## US-001: Technical Foundation
+## US-001: Technical Foundation [Done]
 As a developer-owner, I want the project base (React Native app with navigation, local database, and backend settings) so that the rest of the features are built on a common infrastructure.
 
 ### Acceptance Criteria
