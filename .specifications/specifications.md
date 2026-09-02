@@ -72,7 +72,7 @@ As a user, I want to create, edit, and delete accounts with any name I choose to
 - T-008: Balance logic: initial balance + transactions + transfer legs.
 - T-009: Account deletion: confirmation, transaction cascade, and block if active recurring transactions exist.
 
-## US-003: Quick Transaction Entry
+## US-003: Quick Transaction Entry [Done]
 As a user, I want to record an income or expense in a few seconds with date, amount, account, category, and notes to keep a frictionless record.
 
 ### Acceptance Criteria
@@ -87,7 +87,7 @@ As a user, I want to record an income or expense in a few seconds with date, amo
 - T-012: Transaction edit and delete with balance updates.
 - T-013: Form validations (amount > 0, account required).
 
-## US-004: Transaction List and Filtering
+## US-004: Transaction List and Filtering [Done]
 As a user, I want to list my transactions with filters by category, dates, account, and type to easily find and review movements.
 
 ### Acceptance Criteria
