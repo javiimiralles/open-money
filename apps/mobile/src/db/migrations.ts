@@ -118,4 +118,11 @@ CREATE INDEX idx_exchange_rates_currency ON exchange_rates(currency);
 ${seedCategoriesSql()}
 `,
   },
+  {
+    version: 2,
+    up: `
+-- Compound index for the most common combined filter (account + date range).
+CREATE INDEX idx_transactions_account_date ON transactions(account_id, date);
+`,
+  },
 ];

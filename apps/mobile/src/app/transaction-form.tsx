@@ -1,16 +1,13 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { DateTimePicker } from '@expo/ui/community/datetime-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
+import { DateField } from '@/components/DateField';
 import { SelectField } from '@/components/SelectField';
 import { TextField } from '@/components/TextField';
 import { useTransactionForm } from '@/hooks/use-transaction-form';
 import { colors, rounded, spacing, typography } from '@/theme/tokens';
-import { dateToIso, formatDateEs, isoToDate } from '@/utils/dates';
 
 const TYPE_OPTIONS = [
   { value: 'expense', label: 'Gasto' },
@@ -22,7 +19,6 @@ export default function TransactionFormScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const transactionId = params.id ? Number(params.id) : null;
   const form = useTransactionForm(transactionId);
-  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const handleSave = async () => {
     const saved = await form.save();
@@ -71,16 +67,15 @@ export default function TransactionFormScreen() {
                 })}
               </View>
             </View>
-            <View style={styles.field}>
-              <Text style={styles.label}>Fecha</Text>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => setShowDatePicker(true)}
-                style={styles.dateField}>
-                <Text style={styles.dateValue}>{formatDateEs(form.values.date)}</Text>
-                <MaterialCommunityIcons name="calendar" size={20} color={colors.ink} />
-              </Pressable>
-            </View>
+            <DateField
+              label="Fecha"
+              value={form.values.date}
+              onChange={(iso) => {
+                if (iso !== null) {
+                  form.setDate(iso);
+                }
+              }}
+            />
             <TextField
               label="Importe"
               value={form.values.amount}
@@ -120,20 +115,6 @@ export default function TransactionFormScreen() {
           </View>
         </Card>
       </ScrollView>
-      {showDatePicker ? (
-        <DateTimePicker
-          value={isoToDate(form.values.date)}
-          onValueChange={(event, selectedDate) => {
-            setShowDatePicker(false);
-            if (selectedDate) {
-              form.setDate(dateToIso(selectedDate));
-            }
-          }}
-          onDismiss={() => setShowDatePicker(false)}
-          mode="date"
-          presentation="dialog"
-        />
-      ) : null}
     </>
   );
 }
@@ -179,20 +160,5 @@ const styles = StyleSheet.create({
   },
   typeChipTextSelected: {
     color: colors.onPrimary,
-  },
-  dateField: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.canvas,
-    borderWidth: 1,
-    borderColor: colors.ink,
-    borderRadius: rounded.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-  },
-  dateValue: {
-    ...typography.bodyMd,
-    color: colors.ink,
   },
 });

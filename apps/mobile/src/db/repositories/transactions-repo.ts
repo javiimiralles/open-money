@@ -37,6 +37,24 @@ export interface TransactionInput {
   notes: string | null;
 }
 
+export interface TransactionFilters {
+  type: TransactionType | 'all';
+  accountId: number | null;
+  categoryId: number | null;
+  fromDate: string | null;
+  toDate: string | null;
+  search: string | null;
+}
+
+export const EMPTY_TRANSACTION_FILTERS: TransactionFilters = {
+  type: 'all',
+  accountId: null,
+  categoryId: null,
+  fromDate: null,
+  toDate: null,
+  search: null,
+};
+
 interface TransactionRow {
   id: number;
   type: TransactionType;
@@ -123,13 +141,73 @@ export async function getTransactionById(db: SqlExecutor, id: number): Promise<T
 }
 
 /**
+ * Escapes LIKE wildcards so user input is matched literally.
+ */
+function escapeLike(value: string): string {
+  return value.replace(/[\\%_]/g, (char) => `\\${char}`);
+}
+
+/**
+ * Builds a parameterized WHERE clause for the given filters.
+ * Never interpolates user input into the SQL text.
+ */
+function buildFilters(filters: TransactionFilters): { where: string; params: unknown[] } {
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+
+  if (filters.type !== 'all') {
+    conditions.push('t.type = ?');
+    params.push(filters.type);
+  }
+  if (filters.accountId !== null) {
+    conditions.push('t.account_id = ?');
+    params.push(filters.accountId);
+  }
+  if (filters.categoryId !== null) {
+    conditions.push('t.category_id = ?');
+    params.push(filters.categoryId);
+  }
+  if (filters.fromDate !== null) {
+    conditions.push('t.date >= ?');
+    params.push(filters.fromDate);
+  }
+  if (filters.toDate !== null) {
+    conditions.push('t.date <= ?');
+    params.push(filters.toDate);
+  }
+  if (filters.search !== null && filters.search.trim() !== '') {
+    conditions.push(`t.notes LIKE ('%' || ? || '%') ESCAPE '\\'`);
+    params.push(escapeLike(filters.search.trim()));
+  }
+
+  return { where: conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '', params };
+}
+
+/**
+ * Lists transactions matching the given filters in reverse chronological
+ * order (newest first). All criteria are combined with AND.
+ */
+export async function listTransactionsFiltered(
+  db: SqlExecutor,
+  filters: TransactionFilters,
+): Promise<TransactionWithDetails[]> {
+  const { where, params } = buildFilters(filters);
+  const rows = await db.getAllAsync<TransactionDetailsRow>(
+    `${DETAILS_SELECT}${where} ORDER BY t.date DESC, t.id DESC`,
+    params,
+  );
+  return rows.map(mapTransactionWithDetails);
+}
+
+/**
  * Lists transactions in reverse chronological order (newest first).
- * `limit` is optional; US-004 will extend this with filter parameters.
+ * `limit` is optional; used by the dashboard for recent movements.
  */
 export async function listTransactions(db: SqlExecutor, limit?: number): Promise<TransactionWithDetails[]> {
+  const { where, params } = buildFilters(EMPTY_TRANSACTION_FILTERS);
   const rows = await db.getAllAsync<TransactionDetailsRow>(
-    `${DETAILS_SELECT} ORDER BY t.date DESC, t.id DESC${limit ? ' LIMIT ?' : ''}`,
-    limit ? [limit] : [],
+    `${DETAILS_SELECT}${where} ORDER BY t.date DESC, t.id DESC${limit ? ' LIMIT ?' : ''}`,
+    limit ? [...params, limit] : params,
   );
   return rows.map(mapTransactionWithDetails);
 }
