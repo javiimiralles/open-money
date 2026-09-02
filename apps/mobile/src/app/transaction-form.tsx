@@ -75,6 +75,7 @@ export default function TransactionFormScreen() {
                   form.setDate(iso);
                 }
               }}
+              clearable={false}
             />
             <TextField
               label="Importe"

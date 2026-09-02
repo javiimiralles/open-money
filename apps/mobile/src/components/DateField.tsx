@@ -12,9 +12,11 @@ export interface DateFieldProps {
   value: string | null;
   onChange: (iso: string | null) => void;
   placeholder?: string;
+  /** Whether to show the clear button when a value is set. Default true. */
+  clearable?: boolean;
 }
 
-export function DateField({ label, value, onChange, placeholder = 'Selecciona…' }: DateFieldProps) {
+export function DateField({ label, value, onChange, placeholder = 'Selecciona…', clearable = true }: DateFieldProps) {
   const [showPicker, setShowPicker] = useState(false);
 
   return (
@@ -27,7 +29,7 @@ export function DateField({ label, value, onChange, placeholder = 'Selecciona…
           </Text>
           <MaterialCommunityIcons name="calendar" size={20} color={colors.ink} />
         </Pressable>
-        {value !== null ? (
+        {value !== null && clearable ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`Quitar ${label.toLowerCase()}`}
