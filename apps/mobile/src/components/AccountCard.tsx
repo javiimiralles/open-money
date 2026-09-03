@@ -66,7 +66,7 @@ const makeStyles = (colors: ThemeColors, background: string | null, text: Readab
   StyleSheet.create({
     card: {
       flexGrow: 1,
-      minHeight: 100,
+      minHeight: 152,
       justifyContent: 'space-between',
       backgroundColor: background ?? colors.canvas,
       borderRadius: rounded.xl,
