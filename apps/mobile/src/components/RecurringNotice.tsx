@@ -39,6 +39,11 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: spacing.md,
+      shadowColor: '#0e0f0c',
+      shadowOpacity: 0.2,
+      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 4 },
+      elevation: 4,
     },
     text: {
       ...typography.bodySmStrong,

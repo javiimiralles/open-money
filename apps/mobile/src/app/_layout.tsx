@@ -14,7 +14,7 @@ import { migrate, DATABASE_NAME } from '@/db/client';
 import { toSqlExecutor } from '@/db/sqlite-adapter';
 import { useRecurringProcessing } from '@/hooks/use-recurring-processing';
 import { spacing, typography } from '@/theme/tokens';
-import { ThemeProvider, useTheme, type ThemeColors } from '@/theme/theme';
+import { ThemeProvider, useTheme } from '@/theme/theme';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -23,13 +23,13 @@ const onDatabaseInit = (db: SQLiteDatabase) => migrate(toSqlExecutor(db));
 function RecurringHost() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => makeStyles(colors, insets.top), [colors, insets.top]);
+  const styles = useMemo(() => makeStyles(insets.top), [insets.top]);
   const { notice, dismiss, undo } = useRecurringProcessing();
 
   return (
     <>
       {notice ? (
-        <View style={styles.noticeWrapper}>
+        <View style={styles.noticeWrapper} pointerEvents="box-none">
           <RecurringNotice count={notice.count} onUndo={undo} onDismiss={dismiss} />
         </View>
       ) : null}
@@ -136,12 +136,16 @@ function RecurringHost() {
   );
 }
 
-const makeStyles = (colors: ThemeColors, topInset: number) =>
+const makeStyles = (topInset: number) =>
   StyleSheet.create({
+    // Floating overlay: never shifts the screens below.
     noticeWrapper: {
-      paddingHorizontal: spacing.lg,
-      paddingTop: topInset + spacing.sm,
-      backgroundColor: colors.canvasSoft,
+      position: 'absolute',
+      top: topInset + spacing.sm,
+      left: spacing.lg,
+      right: spacing.lg,
+      zIndex: 10,
+      elevation: 10,
     },
   });
 
