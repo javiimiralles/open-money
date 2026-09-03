@@ -22,6 +22,11 @@ describe('transfer utils', () => {
       expect(crossRate('USD', 'GBP', rates)).toBeCloseTo(0.85 / 1.1);
     });
 
+    it('treats EUR as the base currency even when not stored in rates', () => {
+      expect(crossRate('EUR', 'USD', { USD: 1.1 })).toBeCloseTo(1.1);
+      expect(crossRate('USD', 'EUR', { USD: 1.1 })).toBeCloseTo(1 / 1.1);
+    });
+
     it('returns null when a currency has no stored rate', () => {
       expect(crossRate('EUR', 'JPY', rates)).toBeNull();
       expect(crossRate('JPY', 'EUR', rates)).toBeNull();

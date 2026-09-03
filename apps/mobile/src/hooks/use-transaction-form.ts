@@ -249,7 +249,8 @@ export function useTransactionForm(transactionId: number | null): UseTransaction
         return false;
       }
       const destinationAmount = isCrossCurrency ? parseAmount(values.destinationAmount) ?? 0 : amount;
-      const fxRate = isCrossCurrency && amount > 0 ? rateFromAmounts(amount, destinationAmount) : null;
+      // Persist the exact ratio (T-2) so the three fields stay consistent.
+      const fxRate = isCrossCurrency && amount > 0 ? destinationAmount / amount : null;
       input = {
         type: 'transfer',
         ...base,
@@ -320,13 +321,20 @@ export function useTransactionForm(transactionId: number | null): UseTransaction
             const rate = parseAmount(next.fxRate);
             if (parsed !== null && rate !== null && rate > 0) {
               next.destinationAmount = String(destinationAmountFromRate(parsed, rate));
+            } else if (parsed !== null) {
+              // No rate yet (e.g. accounts picked before the amount): prefill.
+              const prefilled = crossRate(origin.currency, destination.currency, rates);
+              if (prefilled !== null) {
+                next.fxRate = String(prefilled);
+                next.destinationAmount = String(destinationAmountFromRate(parsed, prefilled));
+              }
             }
           }
         }
         return next;
       });
     },
-    [accounts],
+    [accounts, rates],
   );
   const setAccountId = useCallback(
     (accountId: number) => {

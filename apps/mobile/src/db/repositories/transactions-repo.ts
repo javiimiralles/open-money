@@ -56,6 +56,16 @@ export interface TransferInput {
 
 export type TransactionInput = IncomeExpenseInput | TransferInput;
 
+/**
+ * Defense-in-depth guard: a transfer must move money between two accounts.
+ * The form validates this too; the repository rejects invalid callers.
+ */
+function assertValidTransfer(input: TransferInput): void {
+  if (input.destinationAccountId === input.accountId) {
+    throw new Error('Transfer origin and destination must be different accounts.');
+  }
+}
+
 export interface TransactionFilters {
   type: TransactionType | 'all';
   accountId: number | null;
@@ -152,6 +162,7 @@ const DETAILS_SELECT = `
 
 export async function insertTransaction(db: SqlExecutor, input: TransactionInput): Promise<number> {
   if (input.type === 'transfer') {
+    assertValidTransfer(input);
     await db.runAsync(
       `INSERT INTO transactions
          (type, date, amount, currency, account_id, category_id, notes, destination_account_id, destination_amount, fx_rate)
@@ -181,6 +192,7 @@ export async function insertTransaction(db: SqlExecutor, input: TransactionInput
 
 export async function updateTransaction(db: SqlExecutor, id: number, input: TransactionInput): Promise<void> {
   if (input.type === 'transfer') {
+    assertValidTransfer(input);
     await db.runAsync(
       `UPDATE transactions
        SET type = ?, date = ?, amount = ?, currency = ?, account_id = ?, category_id = NULL, notes = ?,

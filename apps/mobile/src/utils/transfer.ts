@@ -9,14 +9,15 @@ export function roundToCents(value: number): number {
 
 /**
  * Cross rate from `fromCurrency` to `toCurrency` using stored rates against
- * EUR. Returns null when either currency has no stored rate.
+ * EUR. EUR is the base currency and always has rate 1. Returns null when a
+ * non-EUR currency has no stored rate.
  */
 export function crossRate(fromCurrency: string, toCurrency: string, rates: Record<string, number>): number | null {
   if (fromCurrency === toCurrency) {
     return 1;
   }
-  const fromRate = rates[fromCurrency];
-  const toRate = rates[toCurrency];
+  const fromRate = fromCurrency === 'EUR' ? 1 : rates[fromCurrency];
+  const toRate = toCurrency === 'EUR' ? 1 : rates[toCurrency];
   if (fromRate === undefined || toRate === undefined) {
     return null;
   }
