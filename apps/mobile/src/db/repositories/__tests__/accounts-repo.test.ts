@@ -37,6 +37,42 @@ describe('accounts-repo', () => {
     db.close();
   });
 
+  it('defaults color to null and returns it in listings', async () => {
+    const db = await createDb();
+    const id = await insertAccount(db, { name: 'Efectivo', identifier: null, currency: 'EUR', initialBalance: 100 });
+
+    expect(await getAccountById(db, id)).toMatchObject({ color: null });
+    const accounts = await listAccountsWithBalances(db);
+    expect(accounts[0].color).toBeNull();
+    db.close();
+  });
+
+  it('stores and updates the account color', async () => {
+    const db = await createDb();
+    const id = await insertAccount(db, {
+      name: 'Efectivo',
+      identifier: null,
+      currency: 'EUR',
+      initialBalance: 100,
+      color: '#9fe870',
+    });
+
+    expect(await getAccountById(db, id)).toMatchObject({ color: '#9fe870' });
+
+    await updateAccount(db, id, {
+      name: 'Efectivo',
+      identifier: null,
+      currency: 'EUR',
+      initialBalance: 100,
+      color: '#38c8ff',
+    });
+    expect(await getAccountById(db, id)).toMatchObject({ color: '#38c8ff' });
+
+    const accounts = await listAccountsWithBalances(db);
+    expect(accounts[0].color).toBe('#38c8ff');
+    db.close();
+  });
+
   it('calculates balance from income and expense transactions', async () => {
     const db = await createDb();
     const id = await insertAccount(db, { name: 'Banco', identifier: null, currency: 'EUR', initialBalance: 1000 });

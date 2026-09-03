@@ -14,6 +14,7 @@ export interface Account {
   identifier: string | null;
   currency: string;
   initialBalance: number;
+  color: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -27,6 +28,7 @@ export interface AccountInput {
   identifier: string | null;
   currency: string;
   initialBalance: number;
+  color?: string | null;
 }
 
 interface AccountRow {
@@ -35,6 +37,7 @@ interface AccountRow {
   identifier: string | null;
   currency: string;
   initial_balance: number;
+  color: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -50,6 +53,7 @@ function mapAccount(row: AccountRow): Account {
     identifier: row.identifier,
     currency: row.currency,
     initialBalance: row.initial_balance,
+    color: row.color,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -67,6 +71,7 @@ export async function listAccountsWithBalances(db: SqlExecutor): Promise<Account
        a.identifier,
        a.currency,
        a.initial_balance,
+       a.color,
        a.created_at,
        a.updated_at,
        a.initial_balance
@@ -103,7 +108,7 @@ export async function listAccountsWithBalances(db: SqlExecutor): Promise<Account
 
 export async function getAccountById(db: SqlExecutor, id: number): Promise<Account | null> {
   const row = await db.getFirstAsync<AccountRow>(
-    'SELECT id, name, identifier, currency, initial_balance, created_at, updated_at FROM accounts WHERE id = ?',
+    'SELECT id, name, identifier, currency, initial_balance, color, created_at, updated_at FROM accounts WHERE id = ?',
     [id],
   );
   return row ? mapAccount(row) : null;
@@ -111,8 +116,8 @@ export async function getAccountById(db: SqlExecutor, id: number): Promise<Accou
 
 export async function insertAccount(db: SqlExecutor, input: AccountInput): Promise<number> {
   await db.runAsync(
-    'INSERT INTO accounts (name, identifier, currency, initial_balance) VALUES (?, ?, ?, ?)',
-    [input.name, input.identifier, input.currency, input.initialBalance],
+    'INSERT INTO accounts (name, identifier, currency, initial_balance, color) VALUES (?, ?, ?, ?, ?)',
+    [input.name, input.identifier, input.currency, input.initialBalance, input.color ?? null],
   );
   const row = await db.getFirstAsync<{ id: number }>('SELECT last_insert_rowid() AS id');
   return row?.id ?? 0;
@@ -121,9 +126,9 @@ export async function insertAccount(db: SqlExecutor, input: AccountInput): Promi
 export async function updateAccount(db: SqlExecutor, id: number, input: AccountInput): Promise<void> {
   await db.runAsync(
     `UPDATE accounts
-     SET name = ?, identifier = ?, currency = ?, initial_balance = ?, updated_at = datetime('now')
+     SET name = ?, identifier = ?, currency = ?, initial_balance = ?, color = ?, updated_at = datetime('now')
      WHERE id = ?`,
-    [input.name, input.identifier, input.currency, input.initialBalance, id],
+    [input.name, input.identifier, input.currency, input.initialBalance, input.color ?? null, id],
   );
 }
 
