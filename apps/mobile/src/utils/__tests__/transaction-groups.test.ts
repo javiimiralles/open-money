@@ -20,6 +20,9 @@ function tx(overrides: Partial<TransactionWithDetails> = {}): TransactionWithDet
     destinationAccountName: null,
     destinationCurrency: null,
     fxRate: null,
+    source: 'manual',
+    recurringRuleId: null,
+    recurringBatchId: null,
     ...overrides,
   };
 }

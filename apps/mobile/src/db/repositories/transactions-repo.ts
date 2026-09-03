@@ -21,6 +21,9 @@ export interface Transaction {
   destinationAccountId: number | null;
   destinationAmount: number | null;
   fxRate: number | null;
+  source: 'manual' | 'recurring';
+  recurringRuleId: number | null;
+  recurringBatchId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -40,6 +43,9 @@ export interface IncomeExpenseInput {
   accountId: number;
   categoryId: number | null;
   notes: string | null;
+  source?: 'manual' | 'recurring';
+  recurringRuleId?: number | null;
+  recurringBatchId?: string | null;
 }
 
 export interface TransferInput {
@@ -52,6 +58,9 @@ export interface TransferInput {
   destinationAmount: number;
   fxRate: number | null;
   notes: string | null;
+  source?: 'manual' | 'recurring';
+  recurringRuleId?: number | null;
+  recurringBatchId?: string | null;
 }
 
 export type TransactionInput = IncomeExpenseInput | TransferInput;
@@ -96,6 +105,9 @@ interface TransactionRow {
   destination_account_id: number | null;
   destination_amount: number | null;
   fx_rate: number | null;
+  source: 'manual' | 'recurring';
+  recurring_rule_id: number | null;
+  recurring_batch_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -120,6 +132,9 @@ function mapTransaction(row: TransactionRow): Transaction {
     destinationAccountId: row.destination_account_id,
     destinationAmount: row.destination_amount,
     fxRate: row.fx_rate,
+    source: row.source ?? 'manual',
+    recurringRuleId: row.recurring_rule_id ?? null,
+    recurringBatchId: row.recurring_batch_id ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -148,6 +163,9 @@ const DETAILS_SELECT = `
     t.destination_account_id,
     t.destination_amount,
     t.fx_rate,
+    t.source,
+    t.recurring_rule_id,
+    t.recurring_batch_id,
     t.created_at,
     t.updated_at,
     a.name AS account_name,
@@ -161,12 +179,15 @@ const DETAILS_SELECT = `
 `;
 
 export async function insertTransaction(db: SqlExecutor, input: TransactionInput): Promise<number> {
+  const source = input.source ?? 'manual';
+  const recurringRuleId = input.recurringRuleId ?? null;
+  const recurringBatchId = input.recurringBatchId ?? null;
   if (input.type === 'transfer') {
     assertValidTransfer(input);
     await db.runAsync(
       `INSERT INTO transactions
-         (type, date, amount, currency, account_id, category_id, notes, destination_account_id, destination_amount, fx_rate)
-       VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?)`,
+         (type, date, amount, currency, account_id, category_id, notes, destination_account_id, destination_amount, fx_rate, source, recurring_rule_id, recurring_batch_id)
+       VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?)`,
       [
         input.type,
         input.date,
@@ -177,13 +198,27 @@ export async function insertTransaction(db: SqlExecutor, input: TransactionInput
         input.destinationAccountId,
         input.destinationAmount,
         input.fxRate,
+        source,
+        recurringRuleId,
+        recurringBatchId,
       ],
     );
   } else {
     await db.runAsync(
-      `INSERT INTO transactions (type, date, amount, currency, account_id, category_id, notes)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [input.type, input.date, input.amount, input.currency, input.accountId, input.categoryId, input.notes],
+      `INSERT INTO transactions (type, date, amount, currency, account_id, category_id, notes, source, recurring_rule_id, recurring_batch_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        input.type,
+        input.date,
+        input.amount,
+        input.currency,
+        input.accountId,
+        input.categoryId,
+        input.notes,
+        source,
+        recurringRuleId,
+        recurringBatchId,
+      ],
     );
   }
   const row = await db.getFirstAsync<{ id: number }>('SELECT last_insert_rowid() AS id');
@@ -224,6 +259,21 @@ export async function updateTransaction(db: SqlExecutor, id: number, input: Tran
 
 export async function deleteTransaction(db: SqlExecutor, id: number): Promise<void> {
   await db.runAsync('DELETE FROM transactions WHERE id = ?', [id]);
+}
+
+export async function deleteTransactionsByBatch(db: SqlExecutor, batchId: string): Promise<number> {
+  const result = (await db.runAsync('DELETE FROM transactions WHERE recurring_batch_id = ?', [batchId])) as {
+    changes?: number;
+  };
+  return result?.changes ?? 0;
+}
+
+export async function countTransactionsByBatch(db: SqlExecutor, batchId: string): Promise<number> {
+  const row = await db.getFirstAsync<{ count: number }>(
+    'SELECT COUNT(*) AS count FROM transactions WHERE recurring_batch_id = ?',
+    [batchId],
+  );
+  return row?.count ?? 0;
 }
 
 export async function getTransactionById(db: SqlExecutor, id: number): Promise<TransactionWithDetails | null> {
