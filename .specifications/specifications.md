@@ -210,13 +210,13 @@ As a user, I want a main screen with my net worth, my recent transactions, and q
 ### Acceptance Criteria
 - Given the dashboard, When I open it, Then I see the net worth in EUR (sum of converted account balances + portfolio value).
 - Given the dashboard, When I open it, Then I see an account summary (name and balance) and the last 15 transactions.
-- Given the dashboard, When I tap the FAB, Then the new transaction form opens directly.
+- Given the dashboard, When I tap a quick action (Ingreso, Gasto, Transferencia), Then the new transaction form opens with that type preselected.
 - Given the dashboard, When I tap an account or a transaction, Then I navigate to the corresponding detail.
 
 ### Tasks
 - T-040: Net worth calculation and display in EUR.
 - T-041: Account summary section and last 15 transactions with navigation to detail.
-- T-042: FAB on dashboard connected to the transaction form.
+- T-042: Quick actions on dashboard (income, expense, transfer) opening the transaction form with the type preselected.
 
 ## US-013: Backup and Export
 As a user, I want to export/import a JSON backup of all my data and export transactions to CSV so I don't lose information since everything is local.
