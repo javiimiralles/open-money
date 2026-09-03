@@ -157,4 +157,12 @@ CREATE UNIQUE INDEX idx_instruments_symbol ON instruments(symbol);
 ALTER TABLE accounts ADD COLUMN color TEXT;
 `,
   },
+  {
+    version: 7,
+    up: `
+-- Single primary account (1 = primary, 0 = not). Exclusivity is enforced
+-- by the repository, not by a constraint.
+ALTER TABLE accounts ADD COLUMN is_primary INTEGER NOT NULL DEFAULT 0;
+`,
+  },
 ];

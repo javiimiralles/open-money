@@ -9,7 +9,7 @@ describe('migrations', () => {
     await migrate(db);
 
     const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    expect(version?.user_version).toBe(6);
+    expect(version?.user_version).toBe(7);
 
     const tables = await db.getAllAsync<{ name: string }>(
       "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
@@ -91,6 +91,25 @@ describe('migrations', () => {
     db.close();
   });
 
+  it('applies migration v7 with the non-null primary account flag', async () => {
+    const db = new BetterSqliteExecutor();
+    await migrate(db);
+
+    const columns = await db.getAllAsync<{ name: string; notnull: number; dflt_value: string | null }>(
+      'PRAGMA table_info(accounts)',
+    );
+    const flag = columns.find((column) => column.name === 'is_primary');
+    expect(flag).toMatchObject({ notnull: 1, dflt_value: '0' });
+
+    await db.runAsync("INSERT INTO accounts (name, currency, initial_balance) VALUES ('Banco', 'EUR', 0)");
+    const row = await db.getFirstAsync<{ is_primary: number }>(
+      "SELECT is_primary FROM accounts WHERE name = 'Banco'",
+    );
+    expect(row?.is_primary).toBe(0);
+
+    db.close();
+  });
+
   it('is idempotent: running migrate twice does not duplicate seed data', async () => {
     const db = new BetterSqliteExecutor();
     await migrate(db);
@@ -124,7 +143,7 @@ describe('migrations', () => {
     await db.execAsync('PRAGMA user_version = 999');
     await migrate(db);
     const versionAfter = (await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version'))?.user_version;
-    expect(versionBefore).toBe(6);
+    expect(versionBefore).toBe(7);
     expect(versionAfter).toBe(999);
 
     db.close();
