@@ -4,16 +4,25 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { AccountListItem } from '@/hooks/use-accounts';
 import { rounded, spacing, typography } from '@/theme/tokens';
 import { useTheme, type ThemeColors } from '@/theme/theme';
+import { pickReadableText, type ReadableTextColors } from '@/utils/color';
 import { formatMoney } from '@/utils/money';
 
-export interface AccountRowProps {
+export interface AccountCardProps {
   account: AccountListItem;
   onPress: () => void;
 }
 
-export function AccountRow({ account, onPress }: AccountRowProps) {
+export function AccountCard({ account, onPress }: AccountCardProps) {
   const { colors } = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const text = useMemo<ReadableTextColors>(
+    () =>
+      account.color ? pickReadableText(account.color) : { primary: colors.ink, secondary: colors.mute },
+    [account.color, colors],
+  );
+  const styles = useMemo(
+    () => makeStyles(colors, account.color, text),
+    [colors, account.color, text],
+  );
   const showEurEquivalent = account.currency !== 'EUR';
 
   return (
@@ -25,12 +34,18 @@ export function AccountRow({ account, onPress }: AccountRowProps) {
         <Text style={styles.name} numberOfLines={1}>
           {account.name}
         </Text>
-        {account.identifier ? <Text style={styles.identifier}>{account.identifier}</Text> : null}
+        {account.identifier ? (
+          <Text style={styles.identifier} numberOfLines={1}>
+            {account.identifier}
+          </Text>
+        ) : null}
       </View>
       <View style={styles.balances}>
-        <Text style={styles.balance}>{formatMoney(account.balance, account.currency)}</Text>
+        <Text style={styles.balance} numberOfLines={1} adjustsFontSizeToFit>
+          {formatMoney(account.balance, account.currency)}
+        </Text>
         {showEurEquivalent ? (
-          <Text style={styles.eurEquivalent}>
+          <Text style={styles.eurEquivalent} numberOfLines={1}>
             ≈ {formatMoney(account.eurEquivalent, 'EUR')}
             {account.rateMissing ? ' · tasa no disponible' : ''}
           </Text>
@@ -40,10 +55,13 @@ export function AccountRow({ account, onPress }: AccountRowProps) {
   );
 }
 
-const makeStyles = (colors: ThemeColors) =>
+const makeStyles = (colors: ThemeColors, background: string | null, text: ReadableTextColors) =>
   StyleSheet.create({
     card: {
-      backgroundColor: colors.canvas,
+      flexGrow: 1,
+      minHeight: 152,
+      justifyContent: 'space-between',
+      backgroundColor: background ?? colors.canvas,
       borderRadius: rounded.xl,
       padding: spacing.xl,
       gap: spacing.md,
@@ -56,21 +74,21 @@ const makeStyles = (colors: ThemeColors) =>
     },
     name: {
       ...typography.bodyMdStrong,
-      color: colors.ink,
+      color: text.primary,
     },
     identifier: {
       ...typography.caption,
-      color: colors.mute,
+      color: text.secondary,
     },
     balances: {
       gap: spacing.xxs,
     },
     balance: {
       ...typography.displayXs,
-      color: colors.ink,
+      color: text.primary,
     },
     eurEquivalent: {
       ...typography.caption,
-      color: colors.mute,
+      color: text.secondary,
     },
   });
