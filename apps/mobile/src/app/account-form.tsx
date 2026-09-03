@@ -31,9 +31,16 @@ export default function AccountFormScreen() {
       );
       return;
     }
+    const linked: string[] = [];
+    if (result.transactions > 0) {
+      linked.push(`${result.transactions} movimiento(s)`);
+    }
+    if (result.trades > 0) {
+      linked.push(`${result.trades} operación(es)`);
+    }
     const message =
-      result.transactions > 0
-        ? `La cuenta tiene ${result.transactions} movimiento(s) asociado(s) que se eliminarán también. ¿Continuar?`
+      linked.length > 0
+        ? `La cuenta tiene ${linked.join(' y ')} que se eliminarán también. ¿Continuar?`
         : '¿Eliminar esta cuenta?';
     Alert.alert('Eliminar cuenta', message, [
       { text: 'Cancelar', style: 'cancel' },
