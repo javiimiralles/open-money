@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -14,6 +15,7 @@ import { formatMoney, formatPercent } from '@/utils/money';
 export default function PortfolioScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { items, loading, totals, lastUpdateAt, refreshing, refreshError, refreshPrices } = usePortfolio();
 
@@ -33,7 +35,7 @@ export default function PortfolioScreen() {
         : colors.negativeDarkest;
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
       <FlatList
         data={items}
         keyExtractor={(item) => String(item.id)}

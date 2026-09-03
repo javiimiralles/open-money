@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { SectionList, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/Card';
 import { FilterBar } from '@/components/FilterBar';
@@ -16,6 +17,7 @@ import { formatMoney } from '@/utils/money';
 export default function TransactionsScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const filters = useTransactionFilters();
   const [panelOpen, setPanelOpen] = useState(false);
@@ -37,7 +39,7 @@ export default function TransactionsScreen() {
   };
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
       <SectionList
         sections={sections}
         keyExtractor={(item) => String(item.id)}

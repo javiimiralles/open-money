@@ -16,6 +16,7 @@ export default function TabsLayout() {
     <View style={styles.container}>
       <Tabs
         screenOptions={{
+          headerShown: false,
           tabBarActiveTintColor: colors.ink,
           tabBarInactiveTintColor: colors.mute,
           tabBarStyle: {
@@ -23,9 +24,6 @@ export default function TabsLayout() {
             borderTopColor: colors.canvasSoft,
           },
           tabBarLabelStyle: typography.caption,
-          headerStyle: { backgroundColor: colors.canvas },
-          headerTitleStyle: typography.bodyMdStrong,
-          headerShadowVisible: false,
         }}>
         <Tabs.Screen
           name="index"

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AccountRow } from '@/components/AccountRow';
 import { Button } from '@/components/Button';
@@ -13,6 +14,7 @@ import { formatMoney } from '@/utils/money';
 export default function AccountsScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { items, loading, totalEur, hasMissingRates } = useAccounts();
 
@@ -25,7 +27,7 @@ export default function AccountsScreen() {
   };
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
       <FlatList
         data={items}
         keyExtractor={(item) => String(item.id)}

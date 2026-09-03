@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -25,6 +26,7 @@ const THEME_OPTIONS: SelectOption<ThemeMode>[] = [
 export default function SettingsScreen() {
   const { colors, mode, setMode } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const sqlite = useSQLiteContext();
   const db = useMemo(() => toSqlExecutor(sqlite), [sqlite]);
@@ -100,7 +102,7 @@ export default function SettingsScreen() {
   const resultColor = testResult?.ok ? colors.positiveDeep : colors.negativeDarkest;
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <ScrollView style={[styles.screen, { paddingTop: insets.top }]} contentContainerStyle={styles.content}>
       <Text style={styles.sectionTitle}>Apariencia</Text>
       <Card>
         <View style={styles.form}>

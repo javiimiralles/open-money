@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AccountRow } from '@/components/AccountRow';
 import { Card } from '@/components/Card';
@@ -13,6 +14,7 @@ import { formatMoney } from '@/utils/money';
 export default function DashboardScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { accounts, netWorthEur, unpricedCount, hasMissingRates, recentTransactions, loading } = useDashboard();
 
@@ -25,7 +27,7 @@ export default function DashboardScreen() {
   };
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
       <FlatList
         data={recentTransactions}
         keyExtractor={(item) => String(item.id)}
