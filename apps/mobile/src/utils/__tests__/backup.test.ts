@@ -6,7 +6,7 @@ import {
   type BackupFile,
 } from '@/utils/backup';
 
-const CURRENT_SCHEMA_VERSION = 5;
+const CURRENT_SCHEMA_VERSION = 6;
 
 function validData(): BackupData {
   return {
@@ -119,6 +119,34 @@ describe('backup format', () => {
     expect(() => validateBackup({ ...validFile(), data }, CURRENT_SCHEMA_VERSION)).toThrow(
       'transactions.account_id referencia una fila inexistente de accounts',
     );
+  });
+
+  it('accepts account rows with a color and legacy rows without one', () => {
+    const data = validData();
+    data.accounts = [
+      {
+        id: 1,
+        name: 'Cash',
+        identifier: null,
+        currency: 'EUR',
+        initial_balance: 100,
+        color: '#9fe870',
+        created_at: '2026-01-01',
+        updated_at: '2026-01-01',
+      },
+      {
+        id: 2,
+        name: 'Banco',
+        identifier: null,
+        currency: 'EUR',
+        initial_balance: 0,
+        created_at: '2026-01-01',
+        updated_at: '2026-01-01',
+      },
+    ];
+    const parsed = validateBackup({ ...validFile(), data }, CURRENT_SCHEMA_VERSION);
+    expect(parsed.data.accounts).toHaveLength(2);
+    expect(parsed.data.accounts[0].color).toBe('#9fe870');
   });
 
   it('rejects backups created by a newer app version', () => {

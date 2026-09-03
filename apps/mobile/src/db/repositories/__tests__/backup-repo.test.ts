@@ -34,7 +34,7 @@ describe('backup-repo', () => {
     const file = await dumpAllTables(db);
 
     expect(file.app).toBe('open-money');
-    expect(file.schemaVersion).toBe(5);
+    expect(file.schemaVersion).toBe(6);
     expect(file.data.accounts).toHaveLength(1);
     expect(file.data.transactions).toHaveLength(1);
     expect(file.data.categories.length).toBeGreaterThan(1);
@@ -73,6 +73,19 @@ describe('backup-repo', () => {
       initialBalance: 0,
     });
     expect(nextId).toBeGreaterThan(1);
+    db.close();
+  });
+
+  it('keeps the account color through dump and restore', async () => {
+    const { db, accountId } = await createSeededDb();
+    await db.runAsync('UPDATE accounts SET color = ? WHERE id = ?', ['#9fe870', accountId]);
+    const file = await dumpAllTables(db);
+
+    await db.runAsync('UPDATE accounts SET color = NULL WHERE id = ?', [accountId]);
+    await replaceAllTables(db, file);
+
+    const accounts = await listAccountsWithBalances(db);
+    expect(accounts[0].color).toBe('#9fe870');
     db.close();
   });
 

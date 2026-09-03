@@ -48,7 +48,7 @@ export const BACKUP_TABLES: readonly BackupTableName[] = [
 ];
 
 const TABLE_COLUMNS: Record<BackupTableName, readonly string[]> = {
-  accounts: ['id', 'name', 'identifier', 'currency', 'initial_balance', 'created_at', 'updated_at'],
+  accounts: ['id', 'name', 'identifier', 'currency', 'initial_balance', 'color', 'created_at', 'updated_at'],
   categories: ['id', 'name', 'kind', 'created_at'],
   transactions: [
     'id',
