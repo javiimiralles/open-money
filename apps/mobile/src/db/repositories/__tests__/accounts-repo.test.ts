@@ -73,6 +73,115 @@ describe('accounts-repo', () => {
     db.close();
   });
 
+  it('defaults new accounts to non-primary', async () => {
+    const db = await createDb();
+    const id = await insertAccount(db, { name: 'Banco', identifier: null, currency: 'EUR', initialBalance: 100 });
+
+    expect(await getAccountById(db, id)).toMatchObject({ isPrimary: false });
+    db.close();
+  });
+
+  it('keeps a single primary account when a new one is set', async () => {
+    const db = await createDb();
+    const first = await insertAccount(db, {
+      name: 'Banco',
+      identifier: null,
+      currency: 'EUR',
+      initialBalance: 100,
+      isPrimary: true,
+    });
+    const second = await insertAccount(db, {
+      name: 'Efectivo',
+      identifier: null,
+      currency: 'EUR',
+      initialBalance: 0,
+      isPrimary: true,
+    });
+
+    expect(await getAccountById(db, first)).toMatchObject({ isPrimary: false });
+    expect(await getAccountById(db, second)).toMatchObject({ isPrimary: true });
+    db.close();
+  });
+
+  it('lists the primary account first and the rest alphabetically', async () => {
+    const db = await createDb();
+    await insertAccount(db, { name: 'Zeta', identifier: null, currency: 'EUR', initialBalance: 0 });
+    await insertAccount(db, {
+      name: 'Media',
+      identifier: null,
+      currency: 'EUR',
+      initialBalance: 0,
+      isPrimary: true,
+    });
+    await insertAccount(db, { name: 'Alfa', identifier: null, currency: 'EUR', initialBalance: 0 });
+
+    const accounts = await listAccountsWithBalances(db);
+    expect(accounts.map((account) => account.name)).toEqual(['Media', 'Alfa', 'Zeta']);
+    db.close();
+  });
+
+  it('moves the primary flag to another account on update', async () => {
+    const db = await createDb();
+    const first = await insertAccount(db, {
+      name: 'Banco',
+      identifier: null,
+      currency: 'EUR',
+      initialBalance: 100,
+      isPrimary: true,
+    });
+    const second = await insertAccount(db, { name: 'Efectivo', identifier: null, currency: 'EUR', initialBalance: 0 });
+
+    await updateAccount(db, second, {
+      name: 'Efectivo',
+      identifier: null,
+      currency: 'EUR',
+      initialBalance: 0,
+      isPrimary: true,
+    });
+
+    expect(await getAccountById(db, first)).toMatchObject({ isPrimary: false });
+    expect(await getAccountById(db, second)).toMatchObject({ isPrimary: true });
+    db.close();
+  });
+
+  it('promotes the next alphabetical account when the primary is deleted', async () => {
+    const db = await createDb();
+    const primary = await insertAccount(db, {
+      name: 'Media',
+      identifier: null,
+      currency: 'EUR',
+      initialBalance: 0,
+      isPrimary: true,
+    });
+    const next = await insertAccount(db, { name: 'Alfa', identifier: null, currency: 'EUR', initialBalance: 0 });
+    await insertAccount(db, { name: 'Zeta', identifier: null, currency: 'EUR', initialBalance: 0 });
+
+    await deleteAccount(db, primary);
+
+    expect(await getAccountById(db, next)).toMatchObject({ isPrimary: true });
+    const accounts = await listAccountsWithBalances(db);
+    expect(accounts.filter((account) => account.isPrimary)).toHaveLength(1);
+    expect(accounts[0].name).toBe('Alfa');
+    db.close();
+  });
+
+  it('keeps the primary when a non-primary account is deleted', async () => {
+    const db = await createDb();
+    const primary = await insertAccount(db, {
+      name: 'Banco',
+      identifier: null,
+      currency: 'EUR',
+      initialBalance: 100,
+      isPrimary: true,
+    });
+    const other = await insertAccount(db, { name: 'Efectivo', identifier: null, currency: 'EUR', initialBalance: 0 });
+
+    await deleteAccount(db, other);
+
+    expect(await getAccountById(db, primary)).toMatchObject({ isPrimary: true });
+    db.close();
+  });
+
   it('calculates balance from income and expense transactions', async () => {
     const db = await createDb();
     const id = await insertAccount(db, { name: 'Banco', identifier: null, currency: 'EUR', initialBalance: 1000 });
