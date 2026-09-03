@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { TradeWithDetails } from '@/db/repositories/trades-repo';
-import { colors, rounded, spacing, typography } from '@/theme/tokens';
+import { rounded, spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
 import { formatDateEs } from '@/utils/dates';
 import { formatMoney } from '@/utils/money';
 
@@ -10,6 +12,8 @@ export interface TradeRowProps {
 }
 
 export function TradeRow({ trade }: TradeRowProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const isBuy = trade.type === 'buy';
   const total = trade.quantity * trade.price;
 
@@ -32,41 +36,42 @@ export function TradeRow({ trade }: TradeRowProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.canvas,
-    borderRadius: rounded.xl,
-    padding: spacing.xl,
-    gap: spacing.xs,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  type: {
-    ...typography.bodyMdStrong,
-  },
-  buy: {
-    color: colors.negativeDeep,
-  },
-  sell: {
-    color: colors.positiveDeep,
-  },
-  date: {
-    ...typography.caption,
-    color: colors.mute,
-  },
-  detail: {
-    ...typography.bodyMd,
-    color: colors.ink,
-  },
-  account: {
-    ...typography.caption,
-    color: colors.mute,
-  },
-  notes: {
-    ...typography.caption,
-    color: colors.body,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: colors.canvas,
+      borderRadius: rounded.xl,
+      padding: spacing.xl,
+      gap: spacing.xs,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    type: {
+      ...typography.bodyMdStrong,
+    },
+    buy: {
+      color: colors.negativeDeep,
+    },
+    sell: {
+      color: colors.positiveDeep,
+    },
+    date: {
+      ...typography.caption,
+      color: colors.mute,
+    },
+    detail: {
+      ...typography.bodyMd,
+      color: colors.ink,
+    },
+    account: {
+      ...typography.caption,
+      color: colors.mute,
+    },
+    notes: {
+      ...typography.caption,
+      color: colors.body,
+    },
+  });

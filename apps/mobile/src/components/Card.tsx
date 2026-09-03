@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors, rounded, spacing } from '@/theme/tokens';
+import { rounded, spacing } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
 
 export type CardVariant = 'content' | 'sage' | 'green' | 'dark';
 
@@ -10,15 +12,16 @@ export interface CardProps {
   children: React.ReactNode;
 }
 
-const variantStyles: Record<CardVariant, { backgroundColor: string }> = {
+const getVariantStyles = (colors: ThemeColors): Record<CardVariant, { backgroundColor: string }> => ({
   content: { backgroundColor: colors.canvas },
   sage: { backgroundColor: colors.canvasSoft },
   green: { backgroundColor: colors.primaryPale },
   dark: { backgroundColor: colors.ink },
-};
+});
 
 export function Card({ variant = 'content', style, children }: CardProps) {
-  const variantStyle = variantStyles[variant];
+  const { colors } = useTheme();
+  const variantStyle = useMemo(() => getVariantStyles(colors)[variant], [colors, variant]);
   return (
     <View style={[styles.base, { backgroundColor: variantStyle.backgroundColor }, style]}>
       {children}

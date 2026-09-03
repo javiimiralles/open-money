@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { PortfolioItem } from '@/hooks/use-portfolio';
-import { colors, rounded, spacing, typography } from '@/theme/tokens';
+import { rounded, spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
 import { formatDateEs } from '@/utils/dates';
 import { formatMoney, formatPercent } from '@/utils/money';
 
@@ -11,6 +13,8 @@ export interface PortfolioRowProps {
 }
 
 export function PortfolioRow({ item, onPress }: PortfolioRowProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { position, values } = item;
   const kindLabel = item.kind === 'etf' ? 'ETF' : item.kind === 'crypto' ? 'Cripto' : 'Acción';
   const pnlColor =
@@ -58,56 +62,57 @@ export function PortfolioRow({ item, onPress }: PortfolioRowProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.canvas,
-    borderRadius: rounded.xl,
-    padding: spacing.xl,
-    gap: spacing.md,
-  },
-  cardPressed: {
-    opacity: 0.85,
-  },
-  header: {
-    gap: spacing.xxs,
-  },
-  name: {
-    ...typography.bodyMdStrong,
-    color: colors.ink,
-  },
-  symbol: {
-    ...typography.caption,
-    color: colors.mute,
-  },
-  position: {
-    gap: spacing.xxs,
-  },
-  quantity: {
-    ...typography.bodyMdStrong,
-    color: colors.ink,
-  },
-  lastPrice: {
-    ...typography.caption,
-    color: colors.mute,
-  },
-  valuationRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-  },
-  valueLabel: {
-    ...typography.bodySm,
-    color: colors.body,
-  },
-  value: {
-    ...typography.bodyMdStrong,
-    color: colors.ink,
-  },
-  pnl: {
-    ...typography.bodySmStrong,
-  },
-  empty: {
-    ...typography.caption,
-    color: colors.mute,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: colors.canvas,
+      borderRadius: rounded.xl,
+      padding: spacing.xl,
+      gap: spacing.md,
+    },
+    cardPressed: {
+      opacity: 0.85,
+    },
+    header: {
+      gap: spacing.xxs,
+    },
+    name: {
+      ...typography.bodyMdStrong,
+      color: colors.ink,
+    },
+    symbol: {
+      ...typography.caption,
+      color: colors.mute,
+    },
+    position: {
+      gap: spacing.xxs,
+    },
+    quantity: {
+      ...typography.bodyMdStrong,
+      color: colors.ink,
+    },
+    lastPrice: {
+      ...typography.caption,
+      color: colors.mute,
+    },
+    valuationRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'baseline',
+    },
+    valueLabel: {
+      ...typography.bodySm,
+      color: colors.body,
+    },
+    value: {
+      ...typography.bodyMdStrong,
+      color: colors.ink,
+    },
+    pnl: {
+      ...typography.bodySmStrong,
+    },
+    empty: {
+      ...typography.caption,
+      color: colors.mute,
+    },
+  });

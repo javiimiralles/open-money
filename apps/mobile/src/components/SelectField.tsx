@@ -1,8 +1,9 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, rounded, spacing, typography } from '@/theme/tokens';
+import { rounded, spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
 
 export interface SelectOption<T extends string | number> {
   label: string;
@@ -26,6 +27,8 @@ export function SelectField<T extends string | number>({
   placeholder = 'Selecciona…',
   error,
 }: SelectFieldProps<T>) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [open, setOpen] = useState(false);
   const selected = options.find((option) => option.value === value);
 
@@ -69,61 +72,62 @@ export function SelectField<T extends string | number>({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: spacing.xs,
-  },
-  label: {
-    ...typography.bodySmStrong,
-    color: colors.ink,
-  },
-  field: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-    backgroundColor: colors.canvas,
-    borderWidth: 1,
-    borderColor: colors.ink,
-    borderRadius: rounded.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-  },
-  fieldError: {
-    borderColor: colors.negative,
-  },
-  value: {
-    ...typography.bodyMd,
-    color: colors.ink,
-    flexShrink: 1,
-  },
-  placeholder: {
-    color: colors.mute,
-  },
-  error: {
-    ...typography.caption,
-    color: colors.negativeDarkest,
-  },
-  options: {
-    borderWidth: 1,
-    borderColor: colors.ink,
-    borderRadius: rounded.md,
-    overflow: 'hidden',
-  },
-  option: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    backgroundColor: colors.canvas,
-  },
-  optionSelected: {
-    backgroundColor: colors.primaryPale,
-  },
-  optionText: {
-    ...typography.bodyMd,
-    color: colors.ink,
-  },
-  optionTextSelected: {
-    ...typography.bodyMdStrong,
-    color: colors.ink,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      gap: spacing.xs,
+    },
+    label: {
+      ...typography.bodySmStrong,
+      color: colors.ink,
+    },
+    field: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+      backgroundColor: colors.canvas,
+      borderWidth: 1,
+      borderColor: colors.ink,
+      borderRadius: rounded.md,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+    },
+    fieldError: {
+      borderColor: colors.negative,
+    },
+    value: {
+      ...typography.bodyMd,
+      color: colors.ink,
+      flexShrink: 1,
+    },
+    placeholder: {
+      color: colors.mute,
+    },
+    error: {
+      ...typography.caption,
+      color: colors.negativeDarkest,
+    },
+    options: {
+      borderWidth: 1,
+      borderColor: colors.ink,
+      borderRadius: rounded.md,
+      overflow: 'hidden',
+    },
+    option: {
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+      backgroundColor: colors.canvas,
+    },
+    optionSelected: {
+      backgroundColor: colors.primaryPale,
+    },
+    optionText: {
+      ...typography.bodyMd,
+      color: colors.ink,
+    },
+    optionTextSelected: {
+      ...typography.bodyMdStrong,
+      color: colors.ink,
+    },
+  });

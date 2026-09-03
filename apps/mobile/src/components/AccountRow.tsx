@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { AccountListItem } from '@/hooks/use-accounts';
-import { colors, rounded, spacing, typography } from '@/theme/tokens';
+import { rounded, spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
 import { formatMoney } from '@/utils/money';
 
 export interface AccountRowProps {
@@ -10,6 +12,8 @@ export interface AccountRowProps {
 }
 
 export function AccountRow({ account, onPress }: AccountRowProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const showEurEquivalent = account.currency !== 'EUR';
 
   return (
@@ -36,36 +40,37 @@ export function AccountRow({ account, onPress }: AccountRowProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.canvas,
-    borderRadius: rounded.xl,
-    padding: spacing.xl,
-    gap: spacing.md,
-  },
-  cardPressed: {
-    opacity: 0.85,
-  },
-  header: {
-    gap: spacing.xxs,
-  },
-  name: {
-    ...typography.bodyMdStrong,
-    color: colors.ink,
-  },
-  identifier: {
-    ...typography.caption,
-    color: colors.mute,
-  },
-  balances: {
-    gap: spacing.xxs,
-  },
-  balance: {
-    ...typography.displayXs,
-    color: colors.ink,
-  },
-  eurEquivalent: {
-    ...typography.caption,
-    color: colors.mute,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: colors.canvas,
+      borderRadius: rounded.xl,
+      padding: spacing.xl,
+      gap: spacing.md,
+    },
+    cardPressed: {
+      opacity: 0.85,
+    },
+    header: {
+      gap: spacing.xxs,
+    },
+    name: {
+      ...typography.bodyMdStrong,
+      color: colors.ink,
+    },
+    identifier: {
+      ...typography.caption,
+      color: colors.mute,
+    },
+    balances: {
+      gap: spacing.xxs,
+    },
+    balance: {
+      ...typography.displayXs,
+      color: colors.ink,
+    },
+    eurEquivalent: {
+      ...typography.caption,
+      color: colors.mute,
+    },
+  });

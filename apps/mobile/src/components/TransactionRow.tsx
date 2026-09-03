@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { TransactionWithDetails } from '@/db/repositories/transactions-repo';
-import { colors, rounded, spacing, typography } from '@/theme/tokens';
+import { rounded, spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
 import { formatDateEs } from '@/utils/dates';
 import { formatMoney } from '@/utils/money';
 
@@ -11,6 +13,8 @@ export interface TransactionRowProps {
 }
 
 export function TransactionRow({ transaction, onPress }: TransactionRowProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const isTransfer = transaction.type === 'transfer';
   const isIncome = transaction.type === 'income';
   const signedAmount = isIncome ? transaction.amount : -transaction.amount;
@@ -49,46 +53,47 @@ export function TransactionRow({ transaction, onPress }: TransactionRowProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.md,
-    backgroundColor: colors.canvas,
-    borderRadius: rounded.xl,
-    padding: spacing.xl,
-  },
-  cardPressed: {
-    opacity: 0.85,
-  },
-  info: {
-    flexShrink: 1,
-    gap: spacing.xxs,
-  },
-  date: {
-    ...typography.caption,
-    color: colors.mute,
-  },
-  detail: {
-    ...typography.bodyMdStrong,
-    color: colors.ink,
-  },
-  amount: {
-    ...typography.bodyMdStrong,
-  },
-  income: {
-    color: colors.positiveDeep,
-  },
-  expense: {
-    color: colors.negativeDeep,
-  },
-  transfer: {
-    color: colors.ink,
-  },
-  recurringTag: {
-    ...typography.caption,
-    color: colors.mute,
-    fontStyle: 'italic',
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    card: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.md,
+      backgroundColor: colors.canvas,
+      borderRadius: rounded.xl,
+      padding: spacing.xl,
+    },
+    cardPressed: {
+      opacity: 0.85,
+    },
+    info: {
+      flexShrink: 1,
+      gap: spacing.xxs,
+    },
+    date: {
+      ...typography.caption,
+      color: colors.mute,
+    },
+    detail: {
+      ...typography.bodyMdStrong,
+      color: colors.ink,
+    },
+    amount: {
+      ...typography.bodyMdStrong,
+    },
+    income: {
+      color: colors.positiveDeep,
+    },
+    expense: {
+      color: colors.negativeDeep,
+    },
+    transfer: {
+      color: colors.ink,
+    },
+    recurringTag: {
+      ...typography.caption,
+      color: colors.mute,
+      fontStyle: 'italic',
+    },
+  });

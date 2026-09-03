@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors, rounded, spacing, typography } from '@/theme/tokens';
+import { rounded, spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'tertiary';
 
@@ -11,14 +13,17 @@ export interface ButtonProps extends Omit<PressableProps, 'style'> {
   style?: StyleProp<ViewStyle>;
 }
 
-const variantStyles: Record<ButtonVariant, { backgroundColor: string; textColor: string; borderColor?: string }> = {
+const getVariantStyles = (
+  colors: ThemeColors,
+): Record<ButtonVariant, { backgroundColor: string; textColor: string; borderColor?: string }> => ({
   primary: { backgroundColor: colors.primary, textColor: colors.onPrimary },
   secondary: { backgroundColor: colors.canvasSoft, textColor: colors.ink },
   tertiary: { backgroundColor: colors.canvas, textColor: colors.ink, borderColor: colors.ink },
-};
+});
 
 export function Button({ variant = 'primary', label, loading = false, disabled, style, ...props }: ButtonProps) {
-  const variantStyle = variantStyles[variant];
+  const { colors } = useTheme();
+  const variantStyle = useMemo(() => getVariantStyles(colors)[variant], [colors, variant]);
   const isDisabled = disabled || loading;
 
   return (

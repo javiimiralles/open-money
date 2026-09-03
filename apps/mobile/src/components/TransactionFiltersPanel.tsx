@@ -1,10 +1,12 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Card } from '@/components/Card';
 import { DateField } from '@/components/DateField';
 import { SelectField } from '@/components/SelectField';
 import type { FilterType } from '@/hooks/use-transaction-filters';
-import { colors, rounded, spacing, typography } from '@/theme/tokens';
+import { rounded, spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
 
 const TYPE_OPTIONS: { value: FilterType; label: string }[] = [
   { value: 'all', label: 'Todos' },
@@ -44,6 +46,8 @@ export function TransactionFiltersPanel({
   onFromDateChange,
   onToDateChange,
 }: TransactionFiltersPanelProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <Card>
       <View style={styles.container}>
@@ -92,45 +96,46 @@ export function TransactionFiltersPanel({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: spacing.lg,
-  },
-  field: {
-    gap: spacing.xs,
-  },
-  label: {
-    ...typography.bodySmStrong,
-    color: colors.ink,
-  },
-  typeRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  typeChip: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: colors.ink,
-    borderRadius: rounded.pill,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-  },
-  typeChipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  typeChipText: {
-    ...typography.bodyMdStrong,
-    color: colors.ink,
-  },
-  typeChipTextSelected: {
-    color: colors.onPrimary,
-  },
-  datesRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  datesColumn: {
-    flex: 1,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      gap: spacing.lg,
+    },
+    field: {
+      gap: spacing.xs,
+    },
+    label: {
+      ...typography.bodySmStrong,
+      color: colors.ink,
+    },
+    typeRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+    },
+    typeChip: {
+      flex: 1,
+      borderWidth: 1,
+      borderColor: colors.ink,
+      borderRadius: rounded.pill,
+      paddingVertical: spacing.md,
+      alignItems: 'center',
+    },
+    typeChipSelected: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    typeChipText: {
+      ...typography.bodyMdStrong,
+      color: colors.ink,
+    },
+    typeChipTextSelected: {
+      color: colors.onPrimary,
+    },
+    datesRow: {
+      flexDirection: 'row',
+      gap: spacing.md,
+    },
+    datesColumn: {
+      flex: 1,
+    },
+  });

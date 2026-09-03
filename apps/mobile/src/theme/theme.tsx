@@ -8,6 +8,7 @@ import { toSqlExecutor } from '@/db/sqlite-adapter';
 import { darkColors, lightColors, type ThemeColors } from '@/theme/palettes';
 
 export type { ThemeMode };
+export type { ThemeColors } from '@/theme/palettes';
 
 export function resolveIsDark(mode: ThemeMode, systemScheme: 'light' | 'dark' | 'unspecified' | null | undefined): boolean {
   if (mode === 'dark') {

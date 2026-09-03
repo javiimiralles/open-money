@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { RecurringRuleWithDetails } from '@/db/repositories/recurring-rules-repo';
-import { colors, rounded, spacing, typography } from '@/theme/tokens';
+import { rounded, spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
 import { formatDateEs } from '@/utils/dates';
 import { formatMoney } from '@/utils/money';
 
@@ -32,6 +34,8 @@ export interface RecurringRuleRowProps {
 }
 
 export function RecurringRuleRow({ rule, onPress, onToggleActive }: RecurringRuleRowProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <Pressable
       accessibilityRole="button"
@@ -77,82 +81,83 @@ export function RecurringRuleRow({ rule, onPress, onToggleActive }: RecurringRul
   );
 }
 
-const styles = StyleSheet.create({
-  row: {
-    backgroundColor: colors.canvas,
-    borderRadius: rounded.xl,
-    padding: spacing.xl,
-    gap: spacing.sm,
-  },
-  rowPressed: {
-    opacity: 0.85,
-  },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: spacing.lg,
-  },
-  left: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  right: {
-    alignItems: 'flex-end',
-    gap: spacing.sm,
-  },
-  typeLabel: {
-    ...typography.bodySmStrong,
-    color: colors.body,
-  },
-  amount: {
-    ...typography.bodyMdStrong,
-    color: colors.ink,
-  },
-  meta: {
-    ...typography.bodySm,
-    color: colors.body,
-  },
-  notes: {
-    ...typography.caption,
-    color: colors.mute,
-    fontStyle: 'italic',
-  },
-  badge: {
-    borderRadius: rounded.pill,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.md,
-  },
-  badgeActive: {
-    backgroundColor: colors.primaryPale,
-  },
-  badgePaused: {
-    backgroundColor: colors.canvasSoft,
-    borderWidth: 1,
-    borderColor: colors.mute,
-  },
-  badgeText: {
-    ...typography.caption,
-    fontWeight: '600',
-  },
-  badgeTextActive: {
-    color: colors.positiveDeep,
-  },
-  badgeTextPaused: {
-    color: colors.body,
-  },
-  toggle: {
-    borderWidth: 1,
-    borderColor: colors.ink,
-    borderRadius: rounded.pill,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.md,
-  },
-  togglePressed: {
-    opacity: 0.7,
-  },
-  toggleText: {
-    ...typography.caption,
-    fontWeight: '600',
-    color: colors.ink,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    row: {
+      backgroundColor: colors.canvas,
+      borderRadius: rounded.xl,
+      padding: spacing.xl,
+      gap: spacing.sm,
+    },
+    rowPressed: {
+      opacity: 0.85,
+    },
+    topRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: spacing.lg,
+    },
+    left: {
+      flex: 1,
+      gap: spacing.xs,
+    },
+    right: {
+      alignItems: 'flex-end',
+      gap: spacing.sm,
+    },
+    typeLabel: {
+      ...typography.bodySmStrong,
+      color: colors.body,
+    },
+    amount: {
+      ...typography.bodyMdStrong,
+      color: colors.ink,
+    },
+    meta: {
+      ...typography.bodySm,
+      color: colors.body,
+    },
+    notes: {
+      ...typography.caption,
+      color: colors.mute,
+      fontStyle: 'italic',
+    },
+    badge: {
+      borderRadius: rounded.pill,
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.md,
+    },
+    badgeActive: {
+      backgroundColor: colors.primaryPale,
+    },
+    badgePaused: {
+      backgroundColor: colors.canvasSoft,
+      borderWidth: 1,
+      borderColor: colors.mute,
+    },
+    badgeText: {
+      ...typography.caption,
+      fontWeight: '600',
+    },
+    badgeTextActive: {
+      color: colors.positiveDeep,
+    },
+    badgeTextPaused: {
+      color: colors.body,
+    },
+    toggle: {
+      borderWidth: 1,
+      borderColor: colors.ink,
+      borderRadius: rounded.pill,
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.md,
+    },
+    togglePressed: {
+      opacity: 0.7,
+    },
+    toggleText: {
+      ...typography.caption,
+      fontWeight: '600',
+      color: colors.ink,
+    },
+  });

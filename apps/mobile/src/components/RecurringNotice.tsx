@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, rounded, spacing, typography } from '@/theme/tokens';
+import { rounded, spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
 
 export interface RecurringNoticeProps {
   count: number;
@@ -9,6 +11,8 @@ export interface RecurringNoticeProps {
 }
 
 export function RecurringNotice({ count, onUndo, onDismiss }: RecurringNoticeProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const label = count === 1 ? 'Se ha aplicado 1 movimiento recurrente' : `Se han aplicado ${count} movimientos recurrentes`;
   return (
     <View style={styles.banner}>
@@ -25,44 +29,45 @@ export function RecurringNotice({ count, onUndo, onDismiss }: RecurringNoticePro
   );
 }
 
-const styles = StyleSheet.create({
-  banner: {
-    backgroundColor: colors.ink,
-    borderRadius: rounded.xl,
-    padding: spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.md,
-  },
-  text: {
-    ...typography.bodySmStrong,
-    color: colors.canvas,
-    flex: 1,
-  },
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  button: {
-    backgroundColor: colors.primary,
-    borderRadius: rounded.pill,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.md,
-  },
-  buttonPressed: {
-    opacity: 0.85,
-  },
-  buttonText: {
-    ...typography.bodySmStrong,
-    color: colors.onPrimary,
-  },
-  close: {
-    padding: spacing.xs,
-  },
-  closeText: {
-    ...typography.bodyMdStrong,
-    color: colors.canvas,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    banner: {
+      backgroundColor: colors.ink,
+      borderRadius: rounded.xl,
+      padding: spacing.lg,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.md,
+    },
+    text: {
+      ...typography.bodySmStrong,
+      color: colors.canvas,
+      flex: 1,
+    },
+    actions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    button: {
+      backgroundColor: colors.primary,
+      borderRadius: rounded.pill,
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.md,
+    },
+    buttonPressed: {
+      opacity: 0.85,
+    },
+    buttonText: {
+      ...typography.bodySmStrong,
+      color: colors.onPrimary,
+    },
+    close: {
+      padding: spacing.xs,
+    },
+    closeText: {
+      ...typography.bodyMdStrong,
+      color: colors.canvas,
+    },
+  });
