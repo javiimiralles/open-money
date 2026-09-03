@@ -1,16 +1,12 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Tabs, useRouter } from 'expo-router';
+import { Tabs } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Fab } from '@/components/Fab';
-import { spacing, typography } from '@/theme/tokens';
+import { typography } from '@/theme/tokens';
 import { useTheme } from '@/theme/theme';
 
 export default function TabsLayout() {
   const { colors } = useTheme();
-  const router = useRouter();
-  const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.container}>
@@ -61,10 +57,6 @@ export default function TabsLayout() {
           }}
         />
       </Tabs>
-      <Fab
-        onPress={() => router.push('/transaction-form')}
-        style={[styles.fab, { bottom: insets.bottom + 72 }]}
-      />
     </View>
   );
 }
@@ -72,9 +64,5 @@ export default function TabsLayout() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  fab: {
-    position: 'absolute',
-    right: spacing.xl,
   },
 });
