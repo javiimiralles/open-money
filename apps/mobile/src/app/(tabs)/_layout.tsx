@@ -4,9 +4,11 @@ import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Fab } from '@/components/Fab';
-import { colors, spacing, typography } from '@/theme/tokens';
+import { spacing, typography } from '@/theme/tokens';
+import { useTheme } from '@/theme/theme';
 
 export default function TabsLayout() {
+  const { colors } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 

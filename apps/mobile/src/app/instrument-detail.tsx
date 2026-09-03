@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -5,11 +6,14 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { TradeRow } from '@/components/TradeRow';
 import { useInstrumentDetail } from '@/hooks/use-instrument-detail';
-import { colors, spacing, typography } from '@/theme/tokens';
+import { spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
 import { formatDateEs } from '@/utils/dates';
 import { formatMoney } from '@/utils/money';
 
 export default function InstrumentDetailScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
   const instrumentId = params.id ? Number(params.id) : 0;
@@ -85,56 +89,57 @@ export default function InstrumentDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.canvasSoft,
-  },
-  content: {
-    padding: spacing.xl,
-    gap: spacing.lg,
-  },
-  section: {
-    gap: spacing.sm,
-  },
-  name: {
-    ...typography.bodyMdStrong,
-    color: colors.ink,
-  },
-  meta: {
-    ...typography.caption,
-    color: colors.mute,
-  },
-  sectionTitle: {
-    ...typography.bodyMdStrong,
-    color: colors.ink,
-  },
-  statRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-  },
-  statLabel: {
-    ...typography.bodySm,
-    color: colors.body,
-  },
-  statValue: {
-    ...typography.bodyMdStrong,
-    color: colors.ink,
-  },
-  lastPrice: {
-    ...typography.caption,
-    color: colors.mute,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  action: {
-    flex: 1,
-  },
-  empty: {
-    ...typography.bodyMd,
-    color: colors.body,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: colors.canvasSoft,
+    },
+    content: {
+      padding: spacing.xl,
+      gap: spacing.lg,
+    },
+    section: {
+      gap: spacing.sm,
+    },
+    name: {
+      ...typography.bodyMdStrong,
+      color: colors.ink,
+    },
+    meta: {
+      ...typography.caption,
+      color: colors.mute,
+    },
+    sectionTitle: {
+      ...typography.bodyMdStrong,
+      color: colors.ink,
+    },
+    statRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'baseline',
+    },
+    statLabel: {
+      ...typography.bodySm,
+      color: colors.body,
+    },
+    statValue: {
+      ...typography.bodyMdStrong,
+      color: colors.ink,
+    },
+    lastPrice: {
+      ...typography.caption,
+      color: colors.mute,
+    },
+    actions: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+    },
+    action: {
+      flex: 1,
+    },
+    empty: {
+      ...typography.bodyMd,
+      color: colors.body,
+    },
+  });

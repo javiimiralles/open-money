@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -6,7 +7,8 @@ import { Card } from '@/components/Card';
 import { TextField } from '@/components/TextField';
 import type { CategoryKind } from '@/db/repositories/categories-repo';
 import { useCategoryForm } from '@/hooks/use-category-form';
-import { colors, rounded, spacing, typography } from '@/theme/tokens';
+import { rounded, spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
 
 const KINDS: { value: CategoryKind; label: string }[] = [
   { value: 'expense', label: 'Gasto' },
@@ -14,6 +16,8 @@ const KINDS: { value: CategoryKind; label: string }[] = [
 ];
 
 export default function CategoryFormScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
   const categoryId = params.id ? Number(params.id) : null;
@@ -100,46 +104,47 @@ export default function CategoryFormScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.canvasSoft,
-  },
-  content: {
-    padding: spacing.xl,
-    gap: spacing.lg,
-  },
-  form: {
-    gap: spacing.lg,
-  },
-  field: {
-    gap: spacing.xs,
-  },
-  label: {
-    ...typography.bodySmStrong,
-    color: colors.ink,
-  },
-  kindRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  kindChip: {
-    borderWidth: 1,
-    borderColor: colors.ink,
-    borderRadius: rounded.pill,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-  },
-  kindChipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  kindChipText: {
-    ...typography.bodySmStrong,
-    color: colors.ink,
-  },
-  kindChipTextSelected: {
-    color: colors.onPrimary,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: colors.canvasSoft,
+    },
+    content: {
+      padding: spacing.xl,
+      gap: spacing.lg,
+    },
+    form: {
+      gap: spacing.lg,
+    },
+    field: {
+      gap: spacing.xs,
+    },
+    label: {
+      ...typography.bodySmStrong,
+      color: colors.ink,
+    },
+    kindRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    kindChip: {
+      borderWidth: 1,
+      borderColor: colors.ink,
+      borderRadius: rounded.pill,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.lg,
+    },
+    kindChipSelected: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    kindChipText: {
+      ...typography.bodySmStrong,
+      color: colors.ink,
+    },
+    kindChipTextSelected: {
+      color: colors.onPrimary,
+    },
+  });

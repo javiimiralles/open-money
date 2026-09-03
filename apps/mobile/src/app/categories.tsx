@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Stack, useRouter } from 'expo-router';
 import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 
@@ -5,9 +6,12 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import type { Category } from '@/db/repositories/categories-repo';
 import { useCategories } from '@/hooks/use-categories';
-import { colors, rounded, spacing, typography } from '@/theme/tokens';
+import { rounded, spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
 
 export default function CategoriesScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
   const { sections, loading } = useCategories();
 
@@ -60,36 +64,37 @@ export default function CategoriesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.canvasSoft,
-  },
-  content: {
-    padding: spacing.xl,
-    gap: spacing.lg,
-  },
-  header: {
-    gap: spacing.lg,
-  },
-  sectionTitle: {
-    ...typography.bodySmStrong,
-    color: colors.body,
-  },
-  row: {
-    backgroundColor: colors.canvas,
-    borderRadius: rounded.xl,
-    padding: spacing.xl,
-  },
-  rowPressed: {
-    opacity: 0.85,
-  },
-  name: {
-    ...typography.bodyMdStrong,
-    color: colors.ink,
-  },
-  emptyText: {
-    ...typography.bodyMd,
-    color: colors.body,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: colors.canvasSoft,
+    },
+    content: {
+      padding: spacing.xl,
+      gap: spacing.lg,
+    },
+    header: {
+      gap: spacing.lg,
+    },
+    sectionTitle: {
+      ...typography.bodySmStrong,
+      color: colors.body,
+    },
+    row: {
+      backgroundColor: colors.canvas,
+      borderRadius: rounded.xl,
+      padding: spacing.xl,
+    },
+    rowPressed: {
+      opacity: 0.85,
+    },
+    name: {
+      ...typography.bodyMdStrong,
+      color: colors.ink,
+    },
+    emptyText: {
+      ...typography.bodyMd,
+      color: colors.body,
+    },
+  });

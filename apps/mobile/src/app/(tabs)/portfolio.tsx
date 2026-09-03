@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 
@@ -5,11 +6,14 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { PortfolioRow } from '@/components/PortfolioRow';
 import { usePortfolio } from '@/hooks/use-portfolio';
-import { colors, spacing, typography } from '@/theme/tokens';
+import { spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
 import { formatDateEs } from '@/utils/dates';
 import { formatMoney, formatPercent } from '@/utils/money';
 
 export default function PortfolioScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
   const { items, loading, totals, lastUpdateAt, refreshing, refreshError, refreshPrices } = usePortfolio();
 
@@ -90,50 +94,51 @@ export default function PortfolioScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.canvasSoft,
-  },
-  content: {
-    padding: spacing.xl,
-    gap: spacing.lg,
-  },
-  header: {
-    gap: spacing.lg,
-  },
-  title: {
-    ...typography.displayXs,
-    color: colors.ink,
-  },
-  totals: {
-    gap: spacing.xs,
-  },
-  totalLabel: {
-    ...typography.bodySm,
-    color: colors.body,
-  },
-  totalValue: {
-    ...typography.displayXs,
-    color: colors.ink,
-  },
-  totalPnl: {
-    ...typography.bodyMdStrong,
-  },
-  meta: {
-    ...typography.caption,
-    color: colors.mute,
-  },
-  note: {
-    ...typography.caption,
-    color: colors.warningDeep,
-  },
-  cachedNote: {
-    ...typography.caption,
-    color: colors.warningDeep,
-  },
-  emptyText: {
-    ...typography.bodyMd,
-    color: colors.body,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: colors.canvasSoft,
+    },
+    content: {
+      padding: spacing.xl,
+      gap: spacing.lg,
+    },
+    header: {
+      gap: spacing.lg,
+    },
+    title: {
+      ...typography.displayXs,
+      color: colors.ink,
+    },
+    totals: {
+      gap: spacing.xs,
+    },
+    totalLabel: {
+      ...typography.bodySm,
+      color: colors.body,
+    },
+    totalValue: {
+      ...typography.displayXs,
+      color: colors.ink,
+    },
+    totalPnl: {
+      ...typography.bodyMdStrong,
+    },
+    meta: {
+      ...typography.caption,
+      color: colors.mute,
+    },
+    note: {
+      ...typography.caption,
+      color: colors.warningDeep,
+    },
+    cachedNote: {
+      ...typography.caption,
+      color: colors.warningDeep,
+    },
+    emptyText: {
+      ...typography.bodyMd,
+      color: colors.body,
+    },
+  });

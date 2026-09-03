@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 
@@ -5,10 +6,13 @@ import { AccountRow } from '@/components/AccountRow';
 import { Card } from '@/components/Card';
 import { TransactionRow } from '@/components/TransactionRow';
 import { useDashboard } from '@/hooks/use-dashboard';
-import { colors, spacing, typography } from '@/theme/tokens';
+import { spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
 import { formatMoney } from '@/utils/money';
 
 export default function DashboardScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
   const { accounts, netWorthEur, unpricedCount, hasMissingRates, recentTransactions, loading } = useDashboard();
 
@@ -79,46 +83,47 @@ export default function DashboardScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.canvasSoft,
-  },
-  content: {
-    padding: spacing.xl,
-    gap: spacing.lg,
-  },
-  header: {
-    gap: spacing.lg,
-  },
-  title: {
-    ...typography.displayXs,
-    color: colors.ink,
-  },
-  netWorth: {
-    gap: spacing.xs,
-  },
-  netWorthLabel: {
-    ...typography.bodySm,
-    color: colors.canvasSoft,
-  },
-  netWorthValue: {
-    ...typography.displayXs,
-    color: colors.primary,
-  },
-  netWorthNote: {
-    ...typography.caption,
-    color: colors.warning,
-  },
-  sectionTitle: {
-    ...typography.bodyMdStrong,
-    color: colors.ink,
-  },
-  accountsList: {
-    gap: spacing.lg,
-  },
-  emptyText: {
-    ...typography.bodyMd,
-    color: colors.body,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: colors.canvasSoft,
+    },
+    content: {
+      padding: spacing.xl,
+      gap: spacing.lg,
+    },
+    header: {
+      gap: spacing.lg,
+    },
+    title: {
+      ...typography.displayXs,
+      color: colors.ink,
+    },
+    netWorth: {
+      gap: spacing.xs,
+    },
+    netWorthLabel: {
+      ...typography.bodySm,
+      color: colors.canvasSoft,
+    },
+    netWorthValue: {
+      ...typography.displayXs,
+      color: colors.primary,
+    },
+    netWorthNote: {
+      ...typography.caption,
+      color: colors.warning,
+    },
+    sectionTitle: {
+      ...typography.bodyMdStrong,
+      color: colors.ink,
+    },
+    accountsList: {
+      gap: spacing.lg,
+    },
+    emptyText: {
+      ...typography.bodyMd,
+      color: colors.body,
+    },
+  });

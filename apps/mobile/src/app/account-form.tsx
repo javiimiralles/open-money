@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -5,11 +6,14 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { TextField } from '@/components/TextField';
 import { useAccountForm } from '@/hooks/use-account-form';
-import { colors, rounded, spacing, typography } from '@/theme/tokens';
+import { rounded, spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
 
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF', 'JPY', 'SEK', 'MXN', 'COP', 'ARS'];
 
 export default function AccountFormScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
   const accountId = params.id ? Number(params.id) : null;
@@ -117,46 +121,47 @@ export default function AccountFormScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.canvasSoft,
-  },
-  content: {
-    padding: spacing.xl,
-    gap: spacing.lg,
-  },
-  form: {
-    gap: spacing.lg,
-  },
-  field: {
-    gap: spacing.xs,
-  },
-  label: {
-    ...typography.bodySmStrong,
-    color: colors.ink,
-  },
-  currencyRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  currencyChip: {
-    borderWidth: 1,
-    borderColor: colors.ink,
-    borderRadius: rounded.pill,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-  },
-  currencyChipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  currencyChipText: {
-    ...typography.bodySmStrong,
-    color: colors.ink,
-  },
-  currencyChipTextSelected: {
-    color: colors.onPrimary,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: colors.canvasSoft,
+    },
+    content: {
+      padding: spacing.xl,
+      gap: spacing.lg,
+    },
+    form: {
+      gap: spacing.lg,
+    },
+    field: {
+      gap: spacing.xs,
+    },
+    label: {
+      ...typography.bodySmStrong,
+      color: colors.ink,
+    },
+    currencyRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    currencyChip: {
+      borderWidth: 1,
+      borderColor: colors.ink,
+      borderRadius: rounded.pill,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.lg,
+    },
+    currencyChipSelected: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    currencyChipText: {
+      ...typography.bodySmStrong,
+      color: colors.ink,
+    },
+    currencyChipTextSelected: {
+      color: colors.onPrimary,
+    },
+  });

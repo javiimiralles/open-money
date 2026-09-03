@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 
@@ -5,10 +6,13 @@ import { AccountRow } from '@/components/AccountRow';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { useAccounts } from '@/hooks/use-accounts';
-import { colors, spacing, typography } from '@/theme/tokens';
+import { spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
 import { formatMoney } from '@/utils/money';
 
 export default function AccountsScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
   const { items, loading, totalEur, hasMissingRates } = useAccounts();
 
@@ -60,36 +64,37 @@ export default function AccountsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.canvasSoft,
-  },
-  content: {
-    padding: spacing.xl,
-    gap: spacing.lg,
-  },
-  header: {
-    gap: spacing.lg,
-  },
-  title: {
-    ...typography.displayXs,
-    color: colors.ink,
-  },
-  totalLabel: {
-    ...typography.bodySm,
-    color: colors.body,
-  },
-  totalValue: {
-    ...typography.displayXs,
-    color: colors.ink,
-  },
-  missingRateNote: {
-    ...typography.caption,
-    color: colors.warningDeep,
-  },
-  emptyText: {
-    ...typography.bodyMd,
-    color: colors.body,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: colors.canvasSoft,
+    },
+    content: {
+      padding: spacing.xl,
+      gap: spacing.lg,
+    },
+    header: {
+      gap: spacing.lg,
+    },
+    title: {
+      ...typography.displayXs,
+      color: colors.ink,
+    },
+    totalLabel: {
+      ...typography.bodySm,
+      color: colors.body,
+    },
+    totalValue: {
+      ...typography.displayXs,
+      color: colors.ink,
+    },
+    missingRateNote: {
+      ...typography.caption,
+      color: colors.warningDeep,
+    },
+    emptyText: {
+      ...typography.bodyMd,
+      color: colors.body,
+    },
+  });

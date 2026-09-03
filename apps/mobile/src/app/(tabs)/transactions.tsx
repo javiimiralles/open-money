@@ -1,5 +1,6 @@
+import { useMemo } from 'react';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { SectionList, StyleSheet, Text, View } from 'react-native';
 
 import { Card } from '@/components/Card';
@@ -8,11 +9,14 @@ import { TransactionFiltersPanel } from '@/components/TransactionFiltersPanel';
 import { TransactionRow } from '@/components/TransactionRow';
 import { useTransactionFilters } from '@/hooks/use-transaction-filters';
 import { useTransactions } from '@/hooks/use-transactions';
-import { colors, spacing, typography } from '@/theme/tokens';
+import { spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
 import { formatDateEs } from '@/utils/dates';
 import { formatMoney } from '@/utils/money';
 
 export default function TransactionsScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
   const filters = useTransactionFilters();
   const [panelOpen, setPanelOpen] = useState(false);
@@ -103,47 +107,48 @@ export default function TransactionsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.canvasSoft,
-  },
-  content: {
-    padding: spacing.xl,
-    gap: spacing.lg,
-  },
-  header: {
-    gap: spacing.lg,
-  },
-  title: {
-    ...typography.displayXs,
-    color: colors.ink,
-  },
-  summaryCard: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-  },
-  summaryText: {
-    ...typography.bodyMdStrong,
-    color: colors.ink,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.xs,
-  },
-  sectionTitle: {
-    ...typography.bodySmStrong,
-    color: colors.body,
-  },
-  sectionTotal: {
-    ...typography.bodySmStrong,
-    color: colors.ink,
-  },
-  emptyText: {
-    ...typography.bodyMd,
-    color: colors.body,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: colors.canvasSoft,
+    },
+    content: {
+      padding: spacing.xl,
+      gap: spacing.lg,
+    },
+    header: {
+      gap: spacing.lg,
+    },
+    title: {
+      ...typography.displayXs,
+      color: colors.ink,
+    },
+    summaryCard: {
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+    },
+    summaryText: {
+      ...typography.bodyMdStrong,
+      color: colors.ink,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.xs,
+    },
+    sectionTitle: {
+      ...typography.bodySmStrong,
+      color: colors.body,
+    },
+    sectionTotal: {
+      ...typography.bodySmStrong,
+      color: colors.ink,
+    },
+    emptyText: {
+      ...typography.bodyMd,
+      color: colors.body,
+    },
+  });

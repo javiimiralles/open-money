@@ -1,6 +1,6 @@
+import { useCallback, useMemo } from 'react';
 import { Stack, useRouter } from 'expo-router';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
-import { useCallback, useMemo } from 'react';
 import { useSQLiteContext } from 'expo-sqlite';
 
 import { Button } from '@/components/Button';
@@ -9,9 +9,12 @@ import { RecurringRuleRow } from '@/components/RecurringRuleRow';
 import { setRecurringRuleActive } from '@/db/repositories/recurring-rules-repo';
 import { toSqlExecutor } from '@/db/sqlite-adapter';
 import { useRecurring } from '@/hooks/use-recurring';
-import { colors, spacing, typography } from '@/theme/tokens';
+import { spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
 
 export default function RecurringScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
   const sqlite = useSQLiteContext();
   const db = useMemo(() => toSqlExecutor(sqlite), [sqlite]);
@@ -72,24 +75,25 @@ export default function RecurringScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.canvasSoft,
-  },
-  content: {
-    padding: spacing.xl,
-    gap: spacing.lg,
-  },
-  header: {
-    gap: spacing.lg,
-  },
-  description: {
-    ...typography.bodyMd,
-    color: colors.body,
-  },
-  emptyText: {
-    ...typography.bodyMd,
-    color: colors.body,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: colors.canvasSoft,
+    },
+    content: {
+      padding: spacing.xl,
+      gap: spacing.lg,
+    },
+    header: {
+      gap: spacing.lg,
+    },
+    description: {
+      ...typography.bodyMd,
+      color: colors.body,
+    },
+    emptyText: {
+      ...typography.bodyMd,
+      color: colors.body,
+    },
+  });
