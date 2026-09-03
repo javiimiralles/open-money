@@ -48,6 +48,7 @@ const makeStyles = (colors: ThemeColors) =>
     row: {
       flexDirection: 'row',
       justifyContent: 'space-evenly',
+      alignSelf: 'stretch',
       paddingTop: spacing.sm,
     },
     button: {
