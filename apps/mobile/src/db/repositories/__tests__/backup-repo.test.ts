@@ -34,7 +34,7 @@ describe('backup-repo', () => {
     const file = await dumpAllTables(db);
 
     expect(file.app).toBe('open-money');
-    expect(file.schemaVersion).toBe(6);
+    expect(file.schemaVersion).toBe(7);
     expect(file.data.accounts).toHaveLength(1);
     expect(file.data.transactions).toHaveLength(1);
     expect(file.data.categories.length).toBeGreaterThan(1);
@@ -86,6 +86,19 @@ describe('backup-repo', () => {
 
     const accounts = await listAccountsWithBalances(db);
     expect(accounts[0].color).toBe('#9fe870');
+    db.close();
+  });
+
+  it('keeps the primary flag through dump and restore', async () => {
+    const { db, accountId } = await createSeededDb();
+    await db.runAsync('UPDATE accounts SET is_primary = 1 WHERE id = ?', [accountId]);
+    const file = await dumpAllTables(db);
+
+    await db.runAsync('UPDATE accounts SET is_primary = 0 WHERE id = ?', [accountId]);
+    await replaceAllTables(db, file);
+
+    const accounts = await listAccountsWithBalances(db);
+    expect(accounts[0].isPrimary).toBe(true);
     db.close();
   });
 
