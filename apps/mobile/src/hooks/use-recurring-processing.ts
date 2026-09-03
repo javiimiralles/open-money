@@ -9,7 +9,8 @@ import { AppState, type AppStateStatus } from 'react-native';
 
 import { toSqlExecutor } from '@/db/sqlite-adapter';
 import {
-  getLastRecurringBatch,
+  clearLastRecurringBatch,
+  loadActiveRecurringBatch,
   processRecurringOnOpen,
   undoLastRecurringBatch,
   type RecurringLastBatch,
@@ -30,18 +31,9 @@ export function useRecurringProcessing(): UseRecurringProcessingResult {
   const [notice, setNotice] = useState<RecurringLastBatch | null>(null);
   const [processing, setProcessing] = useState(false);
   const hasRunRef = useRef(false);
-  const dismissedBatchIdRef = useRef<string | null>(null);
 
   const refreshNotice = useCallback(async () => {
-    const batch = await getLastRecurringBatch(db);
-    if (batch && dismissedBatchIdRef.current && batch.batchId === dismissedBatchIdRef.current) {
-      setNotice(null);
-      return;
-    }
-    if (batch && dismissedBatchIdRef.current && batch.batchId !== dismissedBatchIdRef.current) {
-      dismissedBatchIdRef.current = null;
-    }
-    setNotice(batch);
+    setNotice(await loadActiveRecurringBatch(db));
   }, [db]);
 
   const runNow = useCallback(async () => {
@@ -50,7 +42,6 @@ export function useRecurringProcessing(): UseRecurringProcessingResult {
     try {
       const result = await processRecurringOnOpen(db, todayIso());
       if (result) {
-        dismissedBatchIdRef.current = null;
         await refreshNotice();
       }
     } catch {
@@ -69,7 +60,6 @@ export function useRecurringProcessing(): UseRecurringProcessingResult {
         hasRunRef.current = true;
         const result = await processRecurringOnOpen(db, todayIso()).catch(() => null);
         if (active && result) {
-          dismissedBatchIdRef.current = null;
           await refreshNotice();
         }
       }
@@ -91,16 +81,15 @@ export function useRecurringProcessing(): UseRecurringProcessingResult {
     return () => sub.remove();
   }, [runNow]);
 
+  // Dismissing is persisted: the acknowledged batch is removed so the
+  // notice never resurfaces on later app opens.
   const dismiss = useCallback(async () => {
-    if (notice?.batchId) {
-      dismissedBatchIdRef.current = notice.batchId;
-    }
+    await clearLastRecurringBatch(db);
     setNotice(null);
-  }, [notice]);
+  }, [db]);
 
   const undo = useCallback(async () => {
     await undoLastRecurringBatch(db);
-    dismissedBatchIdRef.current = null;
     setNotice(null);
   }, [db]);
 
