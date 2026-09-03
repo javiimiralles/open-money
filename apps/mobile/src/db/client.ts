@@ -13,6 +13,7 @@ export interface SqlExecutor {
   getFirstAsync<T>(sql: string, params?: unknown[]): Promise<T | null>;
   getAllAsync<T>(sql: string, params?: unknown[]): Promise<T[]>;
   runAsync(sql: string, params?: unknown[]): Promise<unknown>;
+  withTransactionAsync<T>(fn: () => Promise<T>): Promise<T>;
 }
 
 export class MigrationError extends Error {

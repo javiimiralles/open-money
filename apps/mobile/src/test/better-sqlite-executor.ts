@@ -31,6 +31,22 @@ export class BetterSqliteExecutor implements SqlExecutor {
     return this.db.prepare(sql).run(...params);
   }
 
+  async withTransactionAsync<T>(fn: () => Promise<T>): Promise<T> {
+    this.db.exec('BEGIN');
+    try {
+      const result = await fn();
+      this.db.exec('COMMIT');
+      return result;
+    } catch (error) {
+      try {
+        this.db.exec('ROLLBACK');
+      } catch {
+        // ignore rollback errors
+      }
+      throw error;
+    }
+  }
+
   close(): void {
     this.db.close();
   }

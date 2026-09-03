@@ -21,5 +21,20 @@ export function toSqlExecutor(db: SQLiteDatabase): SqlExecutor {
     async runAsync(sql: string, params: SQLiteBindValue[] = []): Promise<unknown> {
       return db.runAsync(sql, params);
     },
+    async withTransactionAsync<T>(fn: () => Promise<T>): Promise<T> {
+      await db.execAsync('BEGIN');
+      try {
+        const result = await fn();
+        await db.execAsync('COMMIT');
+        return result;
+      } catch (error) {
+        try {
+          await db.execAsync('ROLLBACK');
+        } catch {
+          // ignore rollback errors
+        }
+        throw error;
+      }
+    },
   };
 }

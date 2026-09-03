@@ -133,4 +133,14 @@ CREATE INDEX idx_transactions_account_date ON transactions(account_id, date);
 CREATE INDEX idx_transactions_destination_account ON transactions(destination_account_id);
 `,
   },
+  {
+    version: 4,
+    up: `
+-- Recurring batch grouping and idempotency (US-008).
+ALTER TABLE transactions ADD COLUMN recurring_batch_id TEXT;
+ALTER TABLE recurring_rules ADD COLUMN fx_rate REAL;
+CREATE INDEX idx_transactions_recurring_batch ON transactions(recurring_batch_id);
+CREATE UNIQUE INDEX idx_transactions_recurring_dedup ON transactions(recurring_rule_id, date) WHERE recurring_rule_id IS NOT NULL;
+`,
+  },
 ];
