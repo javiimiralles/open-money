@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -13,6 +14,7 @@ import { colors, spacing, typography } from '@/theme/tokens';
 type TestState = 'idle' | 'loading' | 'done';
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const sqlite = useSQLiteContext();
   const db = useMemo(() => toSqlExecutor(sqlite), [sqlite]);
   const [backendUrl, setBackendUrl] = useState('');
@@ -80,6 +82,16 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+      <Text style={styles.sectionTitle}>Categorías</Text>
+      <Card>
+        <View style={styles.form}>
+          <Text style={styles.description}>
+            Crea, edita y elimina tus categorías para clasificar los movimientos como prefieras.
+          </Text>
+          <Button label="Gestionar categorías" variant="secondary" onPress={() => router.push('/categories')} />
+        </View>
+      </Card>
+
       <Text style={styles.sectionTitle}>Backend de datos de mercado</Text>
       <Card variant="sage">
         <Text style={styles.description}>

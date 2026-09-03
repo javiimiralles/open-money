@@ -22,7 +22,7 @@ export function TransactionRow({ transaction, onPress }: TransactionRowProps) {
       detail += ` · ${formatMoney(transaction.destinationAmount, transaction.destinationCurrency ?? transaction.currency)}`;
     }
   } else {
-    detail = [transaction.accountName, transaction.categoryName].filter(Boolean).join(' · ');
+    detail = [transaction.accountName, transaction.categoryName ?? 'Sin categoría'].join(' · ');
   }
 
   return (
