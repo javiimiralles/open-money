@@ -191,7 +191,7 @@ As a user, I want to add instruments by ISIN or ticker (with online search assis
 - T-036: Buy and sell recording linked to an account, with balance impact.
 - T-037: Position calculation by average cost (quantity, average cost, invested) with validation of insufficient holdings on sells.
 
-## US-011: Portfolio (Simple View)
+## US-011: Portfolio (Simple View) [Done]
 As a user, I want a simple view of my portfolio with the current value and total gain/loss to track my investments without complex analysis.
 
 ### Acceptance Criteria
@@ -204,7 +204,7 @@ As a user, I want a simple view of my portfolio with the current value and total
 - T-038: Portfolio screen with positions and totals (value and P&L in EUR).
 - T-039: Price refresh via backend and offline last-known-price management.
 
-## US-012: Dashboard
+## US-012: Dashboard [Done]
 As a user, I want a main screen with my net worth, my recent transactions, and quick access to a new transaction to get a pulse on my finances at a glance.
 
 ### Acceptance Criteria
