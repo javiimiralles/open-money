@@ -2,7 +2,9 @@ import { migrate } from '@/db/client';
 import {
   getBackendSettings,
   getSetting,
+  getThemeMode,
   saveBackendSettings,
+  saveThemeMode,
   SETTINGS_KEYS,
   setSetting,
 } from '@/db/repositories/settings-repo';
@@ -50,6 +52,28 @@ describe('settings-repo', () => {
     const tricky = "it's an 'apostrophe' key";
     await setSetting(db, SETTINGS_KEYS.apiKey, tricky);
     expect(await getSetting(db, SETTINGS_KEYS.apiKey)).toBe(tricky);
+    db.close();
+  });
+
+  it('defaults the theme mode to system when nothing is stored', async () => {
+    const db = await createDb();
+    expect(await getThemeMode(db)).toBe('system');
+    db.close();
+  });
+
+  it('saves and reads the theme mode', async () => {
+    const db = await createDb();
+    await saveThemeMode(db, 'dark');
+    expect(await getThemeMode(db)).toBe('dark');
+    await saveThemeMode(db, 'light');
+    expect(await getThemeMode(db)).toBe('light');
+    db.close();
+  });
+
+  it('falls back to system for unknown stored theme values', async () => {
+    const db = await createDb();
+    await setSetting(db, SETTINGS_KEYS.themeMode, 'neon');
+    expect(await getThemeMode(db)).toBe('system');
     db.close();
   });
 });

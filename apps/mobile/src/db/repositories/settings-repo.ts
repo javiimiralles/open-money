@@ -8,9 +8,16 @@ import type { SqlExecutor } from '../client';
 export const SETTINGS_KEYS = {
   backendUrl: 'backend_url',
   apiKey: 'api_key',
+  themeMode: 'theme_mode',
 } as const;
 
 export type SettingsKey = (typeof SETTINGS_KEYS)[keyof typeof SETTINGS_KEYS];
+
+export type ThemeMode = 'system' | 'light' | 'dark';
+
+const THEME_MODES: readonly ThemeMode[] = ['system', 'light', 'dark'];
+
+export const DEFAULT_THEME_MODE: ThemeMode = 'system';
 
 export interface BackendSettings {
   backendUrl: string;
@@ -42,4 +49,17 @@ export async function saveBackendSettings(db: SqlExecutor, settings: BackendSett
     setSetting(db, SETTINGS_KEYS.backendUrl, settings.backendUrl),
     setSetting(db, SETTINGS_KEYS.apiKey, settings.apiKey),
   ]);
+}
+
+function isThemeMode(value: unknown): value is ThemeMode {
+  return typeof value === 'string' && (THEME_MODES as readonly string[]).includes(value);
+}
+
+export async function getThemeMode(db: SqlExecutor): Promise<ThemeMode> {
+  const raw = await getSetting(db, SETTINGS_KEYS.themeMode);
+  return isThemeMode(raw) ? raw : DEFAULT_THEME_MODE;
+}
+
+export async function saveThemeMode(db: SqlExecutor, mode: ThemeMode): Promise<void> {
+  await setSetting(db, SETTINGS_KEYS.themeMode, mode);
 }
