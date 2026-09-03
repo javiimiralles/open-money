@@ -7,6 +7,7 @@ import { SQLiteProvider, type SQLiteDatabase } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RecurringNotice } from '@/components/RecurringNotice';
 import { migrate, DATABASE_NAME } from '@/db/client';
@@ -21,7 +22,8 @@ const onDatabaseInit = (db: SQLiteDatabase) => migrate(toSqlExecutor(db));
 
 function RecurringHost() {
   const { colors } = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const insets = useSafeAreaInsets();
+  const styles = useMemo(() => makeStyles(colors, insets.top), [colors, insets.top]);
   const { notice, dismiss, undo } = useRecurringProcessing();
 
   return (
@@ -134,11 +136,11 @@ function RecurringHost() {
   );
 }
 
-const makeStyles = (colors: ThemeColors) =>
+const makeStyles = (colors: ThemeColors, topInset: number) =>
   StyleSheet.create({
     noticeWrapper: {
       paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
+      paddingTop: topInset + spacing.sm,
       backgroundColor: colors.canvasSoft,
     },
   });
