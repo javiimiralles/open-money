@@ -30,9 +30,17 @@ export function useRecurringProcessing(): UseRecurringProcessingResult {
   const [notice, setNotice] = useState<RecurringLastBatch | null>(null);
   const [processing, setProcessing] = useState(false);
   const hasRunRef = useRef(false);
+  const dismissedBatchIdRef = useRef<string | null>(null);
 
   const refreshNotice = useCallback(async () => {
     const batch = await getLastRecurringBatch(db);
+    if (batch && dismissedBatchIdRef.current && batch.batchId === dismissedBatchIdRef.current) {
+      setNotice(null);
+      return;
+    }
+    if (batch && dismissedBatchIdRef.current && batch.batchId !== dismissedBatchIdRef.current) {
+      dismissedBatchIdRef.current = null;
+    }
     setNotice(batch);
   }, [db]);
 
@@ -42,9 +50,7 @@ export function useRecurringProcessing(): UseRecurringProcessingResult {
     try {
       const result = await processRecurringOnOpen(db, todayIso());
       if (result) {
-        await refreshNotice();
-      } else {
-        // No new batch; still surface any pending unacknowledged batch
+        dismissedBatchIdRef.current = null;
         await refreshNotice();
       }
     } catch {
@@ -63,6 +69,7 @@ export function useRecurringProcessing(): UseRecurringProcessingResult {
         hasRunRef.current = true;
         const result = await processRecurringOnOpen(db, todayIso()).catch(() => null);
         if (active && result) {
+          dismissedBatchIdRef.current = null;
           await refreshNotice();
         }
       }
@@ -85,16 +92,15 @@ export function useRecurringProcessing(): UseRecurringProcessingResult {
   }, [runNow]);
 
   const dismiss = useCallback(async () => {
-    // Dismiss keeps batch undoable? Spec says notice has option to undo batch.
-    // Dismissing just hides it; undo is still possible via same batch until next batch.
-    // For MVP: dismiss clears visual; batch remains stored until next batch or undo.
-    // Here we hide locally but keep stored; alternatively clear storage.
-    // We keep stored so user can still undo if they navigate away.
+    if (notice?.batchId) {
+      dismissedBatchIdRef.current = notice.batchId;
+    }
     setNotice(null);
-  }, []);
+  }, [notice]);
 
   const undo = useCallback(async () => {
     await undoLastRecurringBatch(db);
+    dismissedBatchIdRef.current = null;
     setNotice(null);
   }, [db]);
 

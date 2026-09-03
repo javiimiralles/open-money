@@ -49,57 +49,80 @@ export async function processRecurringOnOpen(
 
   await db.withTransactionAsync(async () => {
     for (const rule of applicable) {
+      if (rule.type === 'transfer' && rule.destinationAccountId === null) {
+        continue;
+      }
       const dates = computeCatchUpDates(rule.nextExecution, asOfDate, rule.frequency, rule.intervalDays);
       if (dates.length === 0) {
         continue;
       }
-      snapshot.push({
-        ruleId: rule.id,
-        prevNextExecution: rule.nextExecution,
-        prevLastRunDate: rule.lastRunDate,
-      });
-
+      let perRuleApplied = 0;
       for (const date of dates) {
-        if (rule.type === 'transfer') {
-          if (rule.destinationAccountId === null) {
+        const existing = await db.getFirstAsync<{ id: number }>(
+          'SELECT id FROM transactions WHERE recurring_rule_id = ? AND date = ?',
+          [rule.id, date],
+        );
+        if (existing) {
+          continue;
+        }
+        try {
+          if (rule.type === 'transfer') {
+            const destinationAmount =
+              rule.fxRate !== null && rule.fxRate > 0
+                ? destinationAmountFromRate(rule.amount, rule.fxRate)
+                : rule.amount;
+            const fxRate = rule.fxRate ?? (rule.amount > 0 ? destinationAmount / rule.amount : null);
+            // Normalize: same-currency transfers should not store a rate
+            const storedFxRate = rule.fxRate !== null ? fxRate : null;
+            await insertTransaction(db, {
+              type: 'transfer',
+              date,
+              amount: rule.amount,
+              currency: rule.currency,
+              accountId: rule.accountId,
+              destinationAccountId: rule.destinationAccountId as number,
+              destinationAmount,
+              fxRate: storedFxRate,
+              notes: rule.notes,
+              source: 'recurring',
+              recurringRuleId: rule.id,
+              recurringBatchId: batchId,
+            });
+          } else {
+            await insertTransaction(db, {
+              type: rule.type as 'income' | 'expense',
+              date,
+              amount: rule.amount,
+              currency: rule.currency,
+              accountId: rule.accountId,
+              categoryId: rule.categoryId,
+              notes: rule.notes,
+              source: 'recurring',
+              recurringRuleId: rule.id,
+              recurringBatchId: batchId,
+            });
+          }
+          appliedCount += 1;
+          perRuleApplied += 1;
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          if (
+            message.includes('UNIQUE') ||
+            message.includes('unique') ||
+            message.toLowerCase().includes('constraint')
+          ) {
             continue;
           }
-          const destinationAmount =
-            rule.fxRate !== null && rule.fxRate > 0
-              ? destinationAmountFromRate(rule.amount, rule.fxRate)
-              : rule.amount;
-          const fxRate = rule.fxRate ?? (rule.amount > 0 ? destinationAmount / rule.amount : null);
-          // Normalize: same-currency transfers should not store a rate
-          const storedFxRate = rule.fxRate !== null ? fxRate : null;
-          await insertTransaction(db, {
-            type: 'transfer',
-            date,
-            amount: rule.amount,
-            currency: rule.currency,
-            accountId: rule.accountId,
-            destinationAccountId: rule.destinationAccountId,
-            destinationAmount,
-            fxRate: storedFxRate,
-            notes: rule.notes,
-            source: 'recurring',
-            recurringRuleId: rule.id,
-            recurringBatchId: batchId,
-          });
-        } else {
-          await insertTransaction(db, {
-            type: rule.type as 'income' | 'expense',
-            date,
-            amount: rule.amount,
-            currency: rule.currency,
-            accountId: rule.accountId,
-            categoryId: rule.categoryId,
-            notes: rule.notes,
-            source: 'recurring',
-            recurringRuleId: rule.id,
-            recurringBatchId: batchId,
-          });
+          throw error;
         }
-        appliedCount += 1;
+      }
+
+      if (perRuleApplied > 0) {
+        snapshot.push({
+          ruleId: rule.id,
+          prevNextExecution: rule.nextExecution,
+          prevLastRunDate: rule.lastRunDate,
+        });
       }
 
       const lastDate = dates[dates.length - 1];
@@ -159,11 +182,7 @@ export async function undoLastRecurringBatch(db: SqlExecutor): Promise<number> {
   }
   let deleted = 0;
   await db.withTransactionAsync(async () => {
-    const result = (await db.runAsync('DELETE FROM transactions WHERE recurring_batch_id = ?', [
-      batch.batchId,
-    ])) as { changes?: number };
-    deleted = result?.changes ?? 0;
-    // Fallback count if driver doesn't return changes
+    deleted = await deleteTransactionsByBatch(db, batch.batchId);
     if (deleted === 0 && batch.count > 0) {
       deleted = batch.count;
     }
@@ -172,7 +191,5 @@ export async function undoLastRecurringBatch(db: SqlExecutor): Promise<number> {
     }
     await db.runAsync('DELETE FROM settings WHERE key = ?', [RECURRING_LAST_BATCH_KEY]);
   });
-  // Ensure we report at least the batch count when driver omits changes
-  void deleteTransactionsByBatch;
   return deleted;
 }
