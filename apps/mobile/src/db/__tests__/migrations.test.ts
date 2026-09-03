@@ -9,7 +9,7 @@ describe('migrations', () => {
     await migrate(db);
 
     const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    expect(version?.user_version).toBe(4);
+    expect(version?.user_version).toBe(5);
 
     const tables = await db.getAllAsync<{ name: string }>(
       "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
@@ -60,6 +60,19 @@ describe('migrations', () => {
     db.close();
   });
 
+  it('applies migration v5 with the unique instrument symbol index', async () => {
+    const db = new BetterSqliteExecutor();
+    await migrate(db);
+
+    const index = await db.getFirstAsync<{ name: string; sql: string }>(
+      "SELECT name, sql FROM sqlite_master WHERE type='index' AND name = 'idx_instruments_symbol'",
+    );
+    expect(index?.name).toBe('idx_instruments_symbol');
+    expect(index?.sql).toContain('UNIQUE');
+
+    db.close();
+  });
+
   it('is idempotent: running migrate twice does not duplicate seed data', async () => {
     const db = new BetterSqliteExecutor();
     await migrate(db);
@@ -93,7 +106,7 @@ describe('migrations', () => {
     await db.execAsync('PRAGMA user_version = 999');
     await migrate(db);
     const versionAfter = (await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version'))?.user_version;
-    expect(versionBefore).toBe(4);
+    expect(versionBefore).toBe(5);
     expect(versionAfter).toBe(999);
 
     db.close();

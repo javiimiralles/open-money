@@ -143,4 +143,11 @@ CREATE INDEX idx_transactions_recurring_batch ON transactions(recurring_batch_id
 CREATE UNIQUE INDEX idx_transactions_recurring_dedup ON transactions(recurring_rule_id, date) WHERE recurring_rule_id IS NOT NULL;
 `,
   },
+  {
+    version: 5,
+    up: `
+-- Instruments are looked up by symbol on search upserts (US-010).
+CREATE UNIQUE INDEX idx_instruments_symbol ON instruments(symbol);
+`,
+  },
 ];
