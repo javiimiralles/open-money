@@ -2,8 +2,8 @@
  * Market data backend client.
  *
  * The backend is stateless and market-only (US-009). This client only needs
- * the configured URL + API key for health checks and instrument search
- * (US-010). It never sends personal data.
+ * the configured URL + API key for health checks, instrument search (US-010)
+ * and quotes (US-011). It never sends personal data.
  */
 
 import type { SqlExecutor } from '@/db/client';
@@ -37,8 +37,28 @@ export interface InstrumentSearchResult {
   kind: 'stock' | 'etf';
 }
 
+export interface Quote {
+  symbol: string;
+  price: number;
+  currency: string;
+  variationPct: number | null;
+  timestamp: string | null;
+}
+
+export interface QuoteError {
+  symbol: string;
+  message: string;
+}
+
+export interface FetchQuotesResult {
+  quotes: Quote[];
+  errors: QuoteError[];
+}
+
 const HEALTH_PATH = '/health';
 const SEARCH_PATH = '/search';
+const QUOTE_PATH = '/quote';
+const MAX_QUOTE_SYMBOLS = 20;
 const REQUEST_TIMEOUT_MS = 8000;
 
 export function isValidBackendUrl(url: string): boolean {
@@ -180,4 +200,102 @@ export async function searchInstruments(
     }
   }
   return results;
+}
+
+function normalizeQuote(item: unknown): Quote | null {
+  if (typeof item !== 'object' || item === null) {
+    return null;
+  }
+  const candidate = item as Record<string, unknown>;
+  if (typeof candidate.symbol !== 'string' || candidate.symbol.trim() === '') {
+    return null;
+  }
+  if (typeof candidate.price !== 'number' || !Number.isFinite(candidate.price)) {
+    return null;
+  }
+  return {
+    symbol: candidate.symbol.trim(),
+    price: candidate.price,
+    currency:
+      typeof candidate.currency === 'string' && candidate.currency.trim() !== ''
+        ? candidate.currency.trim().toUpperCase()
+        : 'EUR',
+    variationPct: typeof candidate.variationPct === 'number' ? candidate.variationPct : null,
+    timestamp: typeof candidate.timestamp === 'string' && candidate.timestamp !== '' ? candidate.timestamp : null,
+  };
+}
+
+function normalizeQuoteError(item: unknown): QuoteError | null {
+  if (typeof item !== 'object' || item === null) {
+    return null;
+  }
+  const candidate = item as Record<string, unknown>;
+  if (typeof candidate.symbol !== 'string' || candidate.symbol.trim() === '') {
+    return null;
+  }
+  return {
+    symbol: candidate.symbol.trim(),
+    message: typeof candidate.message === 'string' ? candidate.message : 'Quote failed',
+  };
+}
+
+/**
+ * Fetches latest quotes through the backend (`GET /quote?symbols=`). Only
+ * the symbol list leaves the device. Symbols are sent in batches of at most
+ * 20 (backend limit); per-symbol failures come back in `errors` while the
+ * rest resolve normally. Throws BackendNotConfiguredError when the backend
+ * is not set up and BackendUnreachableError otherwise.
+ */
+export async function fetchQuotes(
+  db: SqlExecutor,
+  symbols: string[],
+  fetchImpl: typeof fetch = fetch,
+  settingsOverride?: BackendSettings,
+): Promise<FetchQuotesResult> {
+  const seen = new Set<string>();
+  const deduped: string[] = [];
+  for (const symbol of symbols) {
+    const trimmed = symbol.trim();
+    if (trimmed === '' || seen.has(trimmed.toUpperCase())) {
+      continue;
+    }
+    seen.add(trimmed.toUpperCase());
+    deduped.push(trimmed);
+  }
+  if (deduped.length === 0) {
+    return { quotes: [], errors: [] };
+  }
+
+  const quotes: Quote[] = [];
+  const errors: QuoteError[] = [];
+  for (let offset = 0; offset < deduped.length; offset += MAX_QUOTE_SYMBOLS) {
+    const batch = deduped.slice(offset, offset + MAX_QUOTE_SYMBOLS);
+    const path = `${QUOTE_PATH}?symbols=${batch.map((s) => encodeURIComponent(s)).join(',')}`;
+    const response = await requestBackend(db, path, fetchImpl, settingsOverride);
+    if (response.status === 401) {
+      throw new BackendUnreachableError('API key rechazada (401).');
+    }
+    if (!response.ok) {
+      throw new BackendUnreachableError(`El backend respondió con estado ${response.status}.`);
+    }
+    const payload = (await response.json()) as { quotes?: unknown; errors?: unknown };
+    if (!Array.isArray(payload?.quotes)) {
+      throw new BackendUnreachableError('La respuesta del backend no es válida.');
+    }
+    for (const item of payload.quotes) {
+      const normalized = normalizeQuote(item);
+      if (normalized) {
+        quotes.push(normalized);
+      }
+    }
+    if (Array.isArray(payload?.errors)) {
+      for (const item of payload.errors) {
+        const normalized = normalizeQuoteError(item);
+        if (normalized) {
+          errors.push(normalized);
+        }
+      }
+    }
+  }
+  return { quotes, errors };
 }

@@ -3,6 +3,7 @@ import { saveBackendSettings } from '@/db/repositories/settings-repo';
 import {
   BackendNotConfiguredError,
   BackendUnreachableError,
+  fetchQuotes,
   isValidBackendUrl,
   searchInstruments,
   testConnection,
@@ -200,6 +201,122 @@ describe('searchInstruments', () => {
     await expect(
       searchInstruments(db, 'apple', fetchMock as unknown as typeof fetch),
     ).rejects.toThrow('no es válida');
+    db.close();
+  });
+});
+
+describe('fetchQuotes', () => {
+  async function createDbWithSettings(backendUrl: string, apiKey: string) {
+    const db = new BetterSqliteExecutor();
+    await migrate(db);
+    await saveBackendSettings(db, { backendUrl, apiKey });
+    return db;
+  }
+
+  it('returns empty lists without calling the backend for blank symbols', async () => {
+    const db = await createDbWithSettings('https://api.example.com', 'secret');
+    const fetchMock = jest.fn();
+    const result = await fetchQuotes(db, ['   ', ''], fetchMock as unknown as typeof fetch);
+    expect(result).toEqual({ quotes: [], errors: [] });
+    expect(fetchMock).not.toHaveBeenCalled();
+    db.close();
+  });
+
+  it('throws BackendNotConfiguredError when the backend is not configured', async () => {
+    const db = new BetterSqliteExecutor();
+    await migrate(db);
+    await expect(fetchQuotes(db, ['AAPL'], jest.fn() as unknown as typeof fetch)).rejects.toBeInstanceOf(
+      BackendNotConfiguredError,
+    );
+    db.close();
+  });
+
+  it('calls /quote with encoded symbols and returns normalized quotes and errors', async () => {
+    const db = await createDbWithSettings('https://api.example.com/', 'secret');
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        quotes: [
+          {
+            symbol: 'SAN.MC',
+            price: 4.32,
+            currency: 'eur',
+            variationPct: 1.2,
+            timestamp: '2026-09-03T10:15:30.000Z',
+          },
+          { symbol: '  ', price: 1 },
+          { symbol: 'NOPRICE' },
+        ],
+        errors: [{ symbol: 'UNKNOWN', message: 'Not found' }],
+      }),
+    });
+
+    const result = await fetchQuotes(db, ['SAN.MC'], fetchMock as unknown as typeof fetch);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.example.com/quote?symbols=SAN.MC',
+      expect.objectContaining({ headers: { 'X-API-Key': 'secret' } }),
+    );
+    expect(result).toEqual({
+      quotes: [
+        {
+          symbol: 'SAN.MC',
+          price: 4.32,
+          currency: 'EUR',
+          variationPct: 1.2,
+          timestamp: '2026-09-03T10:15:30.000Z',
+        },
+      ],
+      errors: [{ symbol: 'UNKNOWN', message: 'Not found' }],
+    });
+    db.close();
+  });
+
+  it('deduplicates symbols and batches requests over 20 symbols', async () => {
+    const db = await createDbWithSettings('https://api.example.com', 'secret');
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ quotes: [], errors: [] }),
+    });
+
+    const symbols = Array.from({ length: 22 }, (_, i) => `SYM${i}`);
+    await fetchQuotes(db, [...symbols, 'sym0', '  '], fetchMock as unknown as typeof fetch);
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const firstUrl = (fetchMock.mock.calls[0] as unknown[])[0] as string;
+    const secondUrl = (fetchMock.mock.calls[1] as unknown[])[0] as string;
+    expect(firstUrl.split('symbols=')[1]?.split(',')).toHaveLength(20);
+    expect(secondUrl.split('symbols=')[1]?.split(',')).toHaveLength(2);
+    db.close();
+  });
+
+  it('throws BackendUnreachableError on 401, server errors and network failures', async () => {
+    const db = await createDbWithSettings('https://api.example.com', 'wrong-key');
+    const unauthorized = jest.fn().mockResolvedValue({ ok: false, status: 401 });
+    await expect(fetchQuotes(db, ['AAPL'], unauthorized as unknown as typeof fetch)).rejects.toBeInstanceOf(
+      BackendUnreachableError,
+    );
+
+    const failing = jest.fn().mockResolvedValue({ ok: false, status: 502 });
+    await expect(fetchQuotes(db, ['AAPL'], failing as unknown as typeof fetch)).rejects.toThrow('502');
+
+    const network = jest.fn().mockRejectedValue(new Error('Network request failed'));
+    await expect(fetchQuotes(db, ['AAPL'], network as unknown as typeof fetch)).rejects.toThrow(
+      'No se pudo conectar',
+    );
+    db.close();
+  });
+
+  it('throws BackendUnreachableError on an invalid payload', async () => {
+    const db = await createDbWithSettings('https://api.example.com', 'key');
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ quotes: null }),
+    });
+    await expect(fetchQuotes(db, ['AAPL'], fetchMock as unknown as typeof fetch)).rejects.toThrow('no es válida');
     db.close();
   });
 });
