@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { useRouter } from 'expo-router';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AccountRow } from '@/components/AccountRow';
+import { AccountCardScroller } from '@/components/AccountCardScroller';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { useAccounts } from '@/hooks/use-accounts';
@@ -28,40 +28,30 @@ export default function AccountsScreen() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
-      <FlatList
-        data={items}
-        keyExtractor={(item) => String(item.id)}
-        renderItem={({ item }) => <AccountRow account={item} onPress={() => openAccount(item.id)} />}
-        contentContainerStyle={styles.content}
-        ListHeaderComponent={
-          <View style={styles.header}>
-            <Text style={styles.title}>Cuentas</Text>
-            <Button label="Nueva cuenta" onPress={openNewAccount} />
-          </View>
-        }
-        ListFooterComponent={
-          items.length > 0 ? (
-            <Card variant="sage">
-              <Text style={styles.totalLabel}>Total en EUR</Text>
-              <Text style={styles.totalValue}>{formatMoney(totalEur, 'EUR')}</Text>
-              {hasMissingRates ? (
-                <Text style={styles.missingRateNote}>
-                  Alguna divisa no tiene tasa de cambio guardada; se muestra con tasa 1:1.
-                </Text>
-              ) : null}
-            </Card>
-          ) : null
-        }
-        ListEmptyComponent={
-          loading ? null : (
-            <Card variant="sage">
-              <Text style={styles.emptyText}>
-                Todavía no tienes cuentas. Crea la primera para empezar a organizar tu dinero.
+      <ScrollView contentContainerStyle={styles.content}>
+        {items.length > 0 ? (
+          <Card variant="sage">
+            <Text style={styles.totalLabel}>Patrimonio total</Text>
+            <Text style={styles.totalValue}>{formatMoney(totalEur, 'EUR')}</Text>
+            {hasMissingRates ? (
+              <Text style={styles.missingRateNote}>
+                Alguna divisa no tiene tasa de cambio guardada; se muestra con tasa 1:1.
               </Text>
-            </Card>
-          )
-        }
-      />
+            ) : null}
+          </Card>
+        ) : null}
+        <Text style={styles.title}>Cuentas</Text>
+        {items.length > 0 ? (
+          <AccountCardScroller accounts={items} onPress={openAccount} />
+        ) : loading ? null : (
+          <Card variant="sage">
+            <Text style={styles.emptyText}>
+              Todavía no tienes cuentas. Crea la primera para empezar a organizar tu dinero.
+            </Text>
+          </Card>
+        )}
+        <Button label="Nueva cuenta" onPress={openNewAccount} />
+      </ScrollView>
     </View>
   );
 }
@@ -74,9 +64,6 @@ const makeStyles = (colors: ThemeColors) =>
     },
     content: {
       padding: spacing.xl,
-      gap: spacing.lg,
-    },
-    header: {
       gap: spacing.lg,
     },
     title: {

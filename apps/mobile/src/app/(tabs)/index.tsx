@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AccountRow } from '@/components/AccountRow';
+import { AccountCardScroller } from '@/components/AccountCardScroller';
 import { Card } from '@/components/Card';
 import { QuickActions } from '@/components/QuickActions';
 import { TransactionRow } from '@/components/TransactionRow';
@@ -67,11 +67,7 @@ export default function DashboardScreen() {
             </Card>
             <Text style={styles.sectionTitle}>Cuentas</Text>
             {accounts.length > 0 ? (
-              <View style={styles.accountsList}>
-                {accounts.map((account) => (
-                  <AccountRow key={account.id} account={account} onPress={() => openAccount(account.id)} />
-                ))}
-              </View>
+              <AccountCardScroller accounts={accounts} onPress={openAccount} />
             ) : loading ? null : (
               <Card variant="sage">
                 <Text style={styles.emptyText}>
@@ -132,9 +128,6 @@ const makeStyles = (colors: ThemeColors) =>
     sectionTitle: {
       ...typography.bodyMdStrong,
       color: colors.ink,
-    },
-    accountsList: {
-      gap: spacing.lg,
     },
     emptyText: {
       ...typography.bodyMd,
