@@ -131,12 +131,18 @@ export function useTransactionForm(
         setAccounts(accountRows);
         setCategories(categoryRows);
         setRates(rateRows);
+        if (transactionId === null) {
+          const primary = accountRows.find((account) => account.isPrimary);
+          if (primary) {
+            setValues((current) => ({ ...current, accountId: primary.id }));
+          }
+        }
       },
     );
     return () => {
       active = false;
     };
-  }, [db]);
+  }, [db, transactionId]);
 
   useEffect(() => {
     if (transactionId === null) {
