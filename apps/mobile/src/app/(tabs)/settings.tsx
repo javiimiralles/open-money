@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
@@ -8,6 +8,7 @@ import { Card } from '@/components/Card';
 import { TextField } from '@/components/TextField';
 import { toSqlExecutor } from '@/db/sqlite-adapter';
 import { getBackendSettings, saveBackendSettings } from '@/db/repositories/settings-repo';
+import { useBackup } from '@/hooks/use-backup';
 import { isValidBackendUrl, testConnection, type ConnectionTestResult } from '@/services/api-client';
 import { colors, spacing, typography } from '@/theme/tokens';
 
@@ -46,6 +47,14 @@ export default function SettingsScreen() {
       active = false;
     };
   }, [db]);
+
+  const handleBackupImported = useCallback(() => {
+    getBackendSettings(db).then((settings) => {
+      setBackendUrl(settings.backendUrl);
+      setApiKey(settings.apiKey);
+    });
+  }, [db]);
+  const backup = useBackup(handleBackupImported);
 
   const handleSave = async () => {
     const trimmedUrl = backendUrl.trim();
@@ -149,6 +158,38 @@ export default function SettingsScreen() {
           {testState === 'done' && testResult ? (
             <Text style={[styles.testResult, { color: resultColor }]}>{testResult.message}</Text>
           ) : null}
+        </View>
+      </Card>
+
+      <Text style={styles.sectionTitle}>Copia de seguridad y exportación</Text>
+      <Card>
+        <View style={styles.form}>
+          <Text style={styles.description}>
+            Exporta una copia completa de tus datos en JSON para guardarla fuera del móvil, o impórtala
+            para restaurar la app. También puedes exportar tus movimientos a CSV.
+          </Text>
+          <Button
+            label="Exportar copia (JSON)"
+            loading={backup.busy === 'export-json'}
+            disabled={backup.busy !== null}
+            onPress={backup.exportBackup}
+          />
+          <Button
+            label="Importar copia (JSON)"
+            variant="tertiary"
+            loading={backup.busy === 'import-json'}
+            disabled={backup.busy !== null}
+            onPress={backup.requestImportBackup}
+          />
+          <Button
+            label="Exportar movimientos (CSV)"
+            variant="secondary"
+            loading={backup.busy === 'export-csv'}
+            disabled={backup.busy !== null}
+            onPress={backup.exportCsv}
+          />
+          {backup.message ? <Text style={styles.savedText}>{backup.message}</Text> : null}
+          {backup.error ? <Text style={styles.errorText}>{backup.error}</Text> : null}
         </View>
       </Card>
     </ScrollView>
