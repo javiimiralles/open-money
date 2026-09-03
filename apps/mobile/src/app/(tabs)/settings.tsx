@@ -82,6 +82,17 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+      <Text style={styles.sectionTitle}>Pagos recurrentes</Text>
+      <Card>
+        <View style={styles.form}>
+          <Text style={styles.description}>
+            Crea reglas periódicas de ingresos, gastos o transferencias. Se aplican automáticamente al abrir la
+            app y puedes deshacer el último lote.
+          </Text>
+          <Button label="Gestionar pagos recurrentes" variant="secondary" onPress={() => router.push('/recurring')} />
+        </View>
+      </Card>
+
       <Text style={styles.sectionTitle}>Categorías</Text>
       <Card>
         <View style={styles.form}>

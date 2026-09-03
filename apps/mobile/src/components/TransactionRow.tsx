@@ -25,6 +25,7 @@ export function TransactionRow({ transaction, onPress }: TransactionRowProps) {
     detail = [transaction.accountName, transaction.categoryName ?? 'Sin categoría'].join(' · ');
   }
 
+  const isRecurring = transaction.source === 'recurring';
   return (
     <Pressable
       accessibilityRole="button"
@@ -35,6 +36,7 @@ export function TransactionRow({ transaction, onPress }: TransactionRowProps) {
         <Text style={styles.detail} numberOfLines={1}>
           {detail}
         </Text>
+        {isRecurring ? <Text style={styles.recurringTag}>Recurrente</Text> : null}
       </View>
       <Text
         style={[
@@ -83,5 +85,10 @@ const styles = StyleSheet.create({
   },
   transfer: {
     color: colors.ink,
+  },
+  recurringTag: {
+    ...typography.caption,
+    color: colors.mute,
+    fontStyle: 'italic',
   },
 });

@@ -129,7 +129,7 @@ As a user, I want a base catalog of categories in Spanish and to be able to crea
 - T-021: Category CRUD (name, type) with a management screen.
 - T-022: Deletion rules: transactions move to "Uncategorized"; block if an active recurring transaction uses it.
 
-## US-007: Multi-Currency
+## US-007: Multi-Currency [Done]
 As a user, I want to manage accounts and instruments in different currencies with EUR as the base so that I can see all totals in euros.
 
 ### Acceptance Criteria
