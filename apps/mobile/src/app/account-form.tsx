@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -136,6 +136,19 @@ export default function AccountFormScreen() {
                 })}
               </View>
             </View>
+            <View style={styles.primaryRow}>
+              <View style={styles.primaryText}>
+                <Text style={styles.label}>Cuenta principal</Text>
+                <Text style={styles.primaryHint}>Aparece la primera en el listado y preseleccionada en los movimientos.</Text>
+              </View>
+              <Switch
+                accessibilityLabel="Cuenta principal"
+                value={form.values.isPrimary}
+                onValueChange={form.setIsPrimary}
+                trackColor={{ false: colors.mute, true: colors.primary }}
+                thumbColor={colors.canvas}
+              />
+            </View>
             <Button
               label={form.isEditing ? 'Guardar cambios' : 'Crear cuenta'}
               loading={form.saving}
@@ -216,5 +229,19 @@ const makeStyles = (colors: ThemeColors) =>
     },
     colorSwatchSelected: {
       borderColor: colors.ink,
+    },
+    primaryRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.md,
+    },
+    primaryText: {
+      flex: 1,
+      gap: spacing.xxs,
+    },
+    primaryHint: {
+      ...typography.caption,
+      color: colors.body,
     },
   });
