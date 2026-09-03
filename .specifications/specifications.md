@@ -143,7 +143,7 @@ As a user, I want to manage accounts and instruments in different currencies wit
 - T-024: Rate update from the backend (online, optional).
 - T-025: EUR conversion utility applied to all aggregates.
 
-## US-008: Recurring Payments and Automation
+## US-008: Recurring Payments and Automation [Done]
 As a user, I want to define periodic income, expenses, transfers, and investments so that they are recorded automatically when they are due.
 
 ### Acceptance Criteria
@@ -160,7 +160,7 @@ As a user, I want to define periodic income, expenses, transfers, and investment
 - T-029: Recurring screen: list with next execution, pause/resume, edit, delete.
 - T-030: Integration of investment rules with the purchase flow (estimated price or draft).
 
-## US-009: Market Data Backend
+## US-009: Market Data Backend [Done]
 As an owner, I want a small stateless backend in the cloud that exposes instrument search and quotes so that the app has a stable and extensible market source without storing any personal data.
 
 ### Acceptance Criteria
@@ -176,7 +176,7 @@ As an owner, I want a small stateless backend in the cloud that exposes instrume
 - T-033: /quote endpoint with short-lived cache (e.g. 5 minutes).
 - T-034: Deployment (Render/Fly.io/Railway) and in-app configuration documentation.
 
-## US-010: Investments — Instruments and Trades
+## US-010: Investments — Instruments and Trades [Done]
 As a user, I want to add instruments by ISIN or ticker (with online search assistance) and record buys and sells to keep track of my investments.
 
 ### Acceptance Criteria
