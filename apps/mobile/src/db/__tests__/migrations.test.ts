@@ -9,7 +9,7 @@ describe('migrations', () => {
     await migrate(db);
 
     const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    expect(version?.user_version).toBe(5);
+    expect(version?.user_version).toBe(6);
 
     const tables = await db.getAllAsync<{ name: string }>(
       "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
@@ -73,6 +73,24 @@ describe('migrations', () => {
     db.close();
   });
 
+  it('applies migration v6 with the nullable account color column', async () => {
+    const db = new BetterSqliteExecutor();
+    await migrate(db);
+
+    const columns = await db.getAllAsync<{ name: string }>('PRAGMA table_info(accounts)');
+    expect(columns.map((column) => column.name)).toContain('color');
+
+    await db.runAsync(
+      "INSERT INTO accounts (name, currency, initial_balance, color) VALUES ('Coloreada', 'EUR', 0, '#9fe870')",
+    );
+    const row = await db.getFirstAsync<{ color: string | null }>(
+      "SELECT color FROM accounts WHERE name = 'Coloreada'",
+    );
+    expect(row?.color).toBe('#9fe870');
+
+    db.close();
+  });
+
   it('is idempotent: running migrate twice does not duplicate seed data', async () => {
     const db = new BetterSqliteExecutor();
     await migrate(db);
@@ -106,7 +124,7 @@ describe('migrations', () => {
     await db.execAsync('PRAGMA user_version = 999');
     await migrate(db);
     const versionAfter = (await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version'))?.user_version;
-    expect(versionBefore).toBe(5);
+    expect(versionBefore).toBe(6);
     expect(versionAfter).toBe(999);
 
     db.close();

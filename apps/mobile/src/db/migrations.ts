@@ -150,4 +150,11 @@ CREATE UNIQUE INDEX idx_transactions_recurring_dedup ON transactions(recurring_r
 CREATE UNIQUE INDEX idx_instruments_symbol ON instruments(symbol);
 `,
   },
+  {
+    version: 6,
+    up: `
+-- Optional user-chosen color identifying an account (hex string, NULL = none).
+ALTER TABLE accounts ADD COLUMN color TEXT;
+`,
+  },
 ];
