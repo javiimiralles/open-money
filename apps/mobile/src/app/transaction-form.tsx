@@ -7,7 +7,7 @@ import { Card } from '@/components/Card';
 import { DateField } from '@/components/DateField';
 import { SelectField } from '@/components/SelectField';
 import { TextField } from '@/components/TextField';
-import { useTransactionForm } from '@/hooks/use-transaction-form';
+import { useTransactionForm, type TransactionFormType } from '@/hooks/use-transaction-form';
 import { useTheme, type ThemeColors } from '@/theme/theme';
 import { rounded, spacing, typography } from '@/theme/tokens';
 
@@ -17,13 +17,19 @@ const TYPE_OPTIONS = [
   { value: 'transfer', label: 'Transferencia' },
 ] as const;
 
+function isTransactionFormType(value: string | undefined): value is TransactionFormType {
+  return value === 'income' || value === 'expense' || value === 'transfer';
+}
+
 export default function TransactionFormScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
-  const params = useLocalSearchParams<{ id?: string }>();
+  const params = useLocalSearchParams<{ id?: string; type?: string }>();
   const transactionId = params.id ? Number(params.id) : null;
-  const form = useTransactionForm(transactionId);
+  const initialType: TransactionFormType =
+    transactionId === null && isTransactionFormType(params.type) ? params.type : 'expense';
+  const form = useTransactionForm(transactionId, initialType);
 
   const handleSave = async () => {
     const saved = await form.save();

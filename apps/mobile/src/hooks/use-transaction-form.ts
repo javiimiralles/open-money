@@ -96,11 +96,14 @@ function transferDefaults(
   return { destinationAmount: String(destinationAmountFromRate(amount, rate)), fxRate: String(rate) };
 }
 
-export function useTransactionForm(transactionId: number | null): UseTransactionFormResult {
+export function useTransactionForm(
+  transactionId: number | null,
+  initialType: TransactionFormType = 'expense',
+): UseTransactionFormResult {
   const sqlite = useSQLiteContext();
   const db = useMemo(() => toSqlExecutor(sqlite), [sqlite]);
   const [values, setValues] = useState<TransactionFormValues>({
-    type: 'expense',
+    type: transactionId === null ? initialType : 'expense',
     date: todayIso(),
     amount: '',
     accountId: null,
