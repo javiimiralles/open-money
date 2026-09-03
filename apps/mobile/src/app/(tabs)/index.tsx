@@ -127,7 +127,7 @@ const makeStyles = (colors: ThemeColors) =>
     },
     netWorthNote: {
       ...typography.caption,
-      color: colors.warning,
+      color: colors.warningDeep,
     },
     sectionTitle: {
       ...typography.bodyMdStrong,
