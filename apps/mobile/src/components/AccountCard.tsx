@@ -31,9 +31,16 @@ export function AccountCard({ account, onPress }: AccountCardProps) {
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
       <View style={styles.header}>
-        <Text style={styles.name} numberOfLines={1}>
-          {account.name}
-        </Text>
+        <View style={styles.nameRow}>
+          <Text style={styles.name} numberOfLines={1}>
+            {account.name}
+          </Text>
+          {account.isPrimary ? (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>Principal</Text>
+            </View>
+          ) : null}
+        </View>
         {account.identifier ? (
           <Text style={styles.identifier} numberOfLines={1}>
             {account.identifier}
@@ -59,7 +66,7 @@ const makeStyles = (colors: ThemeColors, background: string | null, text: Readab
   StyleSheet.create({
     card: {
       flexGrow: 1,
-      minHeight: 152,
+      minHeight: 100,
       justifyContent: 'space-between',
       backgroundColor: background ?? colors.canvas,
       borderRadius: rounded.xl,
@@ -72,9 +79,25 @@ const makeStyles = (colors: ThemeColors, background: string | null, text: Readab
     header: {
       gap: spacing.xxs,
     },
+    nameRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+    },
+    badge: {
+      backgroundColor: text.primary,
+      borderRadius: rounded.pill,
+      paddingVertical: spacing.xxs,
+      paddingHorizontal: spacing.sm,
+    },
+    badgeText: {
+      ...typography.caption,
+      color: background ?? colors.canvas,
+    },
     name: {
       ...typography.bodyMdStrong,
       color: text.primary,
+      flexShrink: 1,
     },
     identifier: {
       ...typography.caption,
