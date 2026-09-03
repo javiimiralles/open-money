@@ -39,12 +39,29 @@ function mapKind(quoteType?: string): 'stock' | 'etf' {
   return 'stock';
 }
 
+const YAHOO_TIMEOUT_MS = 8_000;
+
+async function fetchWithTimeout(
+  fetchImpl: FetchImpl,
+  url: string,
+  init: RequestInit,
+  timeoutMs = YAHOO_TIMEOUT_MS,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetchImpl(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export async function searchYahoo(
   query: string,
   fetchImpl: FetchImpl = fetch,
 ): Promise<InstrumentSearchResult[]> {
   const url = `${YAHOO_SEARCH_URL}?q=${encodeURIComponent(query)}&quotesCount=10&newsCount=0&enableFuzzyQuery=false`;
-  const response = await fetchImpl(url, {
+  const response = await fetchWithTimeout(fetchImpl, url, {
     headers: { Accept: 'application/json', 'User-Agent': 'open-money-backend/1.0' },
   });
 
@@ -69,7 +86,7 @@ export async function searchYahoo(
     seen.add(symbol.toUpperCase());
     results.push({
       symbol,
-      name: (q.longname ?? q.shortname ?? symbol).trim(),
+      name: (q.longname || q.shortname || symbol).trim(),
       currency: (q.currency ?? 'USD').trim().toUpperCase(),
       market: q.exchange?.trim() ?? null,
       isin: null,
@@ -86,7 +103,7 @@ export async function fetchYahooQuote(
 ): Promise<QuoteResult> {
   const encoded = encodeURIComponent(symbol);
   const url = `${YAHOO_CHART_URL}/${encoded}?interval=1d&range=1d`;
-  const response = await fetchImpl(url, {
+  const response = await fetchWithTimeout(fetchImpl, url, {
     headers: { Accept: 'application/json', 'User-Agent': 'open-money-backend/1.0' },
   });
 

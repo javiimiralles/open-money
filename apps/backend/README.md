@@ -54,7 +54,7 @@ curl -H "X-API-Key: your-key" "http://localhost:3000/quote?symbols=AAPL,MSFT"
 
 ## Deployment on Render
 
-1. Push `apps/backend/render.yaml` is already in the repo. In Render: **New → Blueprint** and connect the `open-money` repository. Render reads `render.yaml` automatically.
+1. The `render.yaml` file is already in the repository root (and also at `apps/backend/render.yaml`). In Render: **New → Blueprint** and connect the `open-money` repository. By default Render looks for `render.yaml` at the repo root; if you use the copy under `apps/backend`, set the Blueprint Path field to `apps/backend/render.yaml`.
 2. Alternatively **New → Web Service**: Root directory `apps/backend`, Build `pnpm install && pnpm --filter backend build`, Start `node dist/index.js`, Health check path `/health`, Runtime Node 22.
 3. Set environment variable `API_KEY` in the Render dashboard (Environment → Add, value is secret, `sync: false` in `render.yaml` means Render won't overwrite it from the file). Optionally set `CACHE_TTL_MS`.
 4. Deploy. Once live, copy the public URL (e.g. `https://open-money-backend.onrender.com`).
