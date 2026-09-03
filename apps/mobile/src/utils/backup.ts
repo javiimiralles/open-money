@@ -141,7 +141,7 @@ function assertReference(
   }
   if (!targets.has(value)) {
     throw new BackupValidationError(
-      `Invalid backup: ${table}.${column} references a missing ${targetTable} row.`,
+      `Archivo no válido: ${table}.${column} referencia una fila inexistente de ${targetTable}.`,
     );
   }
 }
@@ -149,12 +149,12 @@ function assertReference(
 function validateDataShape(data: Record<string, unknown>): asserts data is Record<BackupTableName, unknown> {
   for (const table of BACKUP_TABLES) {
     if (!Array.isArray(data[table])) {
-      throw new BackupValidationError(`Invalid backup: table "${table}" is missing or not a list.`);
+      throw new BackupValidationError(`Archivo no válido: falta la tabla "${table}" o no es una lista.`);
     }
   }
   for (const key of Object.keys(data)) {
     if (!(BACKUP_TABLES as readonly string[]).includes(key)) {
-      throw new BackupValidationError(`Invalid backup: unknown table "${key}".`);
+      throw new BackupValidationError(`Archivo no válido: tabla desconocida "${key}".`);
     }
   }
 }
@@ -164,11 +164,11 @@ function validateRows(data: BackupData): void {
     const allowed = new Set(TABLE_COLUMNS[table]);
     for (const row of data[table]) {
       if (!isPlainObject(row)) {
-        throw new BackupValidationError(`Invalid backup: table "${table}" contains an invalid row.`);
+        throw new BackupValidationError(`Archivo no válido: la tabla "${table}" contiene una fila no válida.`);
       }
       for (const key of Object.keys(row)) {
         if (!allowed.has(key)) {
-          throw new BackupValidationError(`Invalid backup: table "${table}" has an unknown column "${key}".`);
+          throw new BackupValidationError(`Archivo no válido: la tabla "${table}" tiene una columna desconocida "${key}".`);
         }
       }
     }
@@ -176,13 +176,13 @@ function validateRows(data: BackupData): void {
   for (const table of REFERENCED_TABLES) {
     for (const row of data[table]) {
       if (typeof row.id !== 'number') {
-        throw new BackupValidationError(`Invalid backup: table "${table}" has a row without a numeric id.`);
+        throw new BackupValidationError(`Archivo no válido: la tabla "${table}" tiene una fila sin id numérico.`);
       }
     }
   }
   for (const row of data.settings) {
     if (typeof row.key !== 'string') {
-      throw new BackupValidationError('Invalid backup: table "settings" has a row without a string key.');
+      throw new BackupValidationError('Archivo no válido: la tabla "settings" tiene una fila sin clave de texto.');
     }
   }
 }
@@ -245,21 +245,21 @@ export function serializeBackup(file: BackupFile): string {
  */
 export function validateBackup(value: unknown, currentSchemaVersion: number): BackupFile {
   if (!isPlainObject(value)) {
-    throw new BackupValidationError('Invalid backup: the file does not contain a backup object.');
+    throw new BackupValidationError('Archivo no válido: no contiene una copia de seguridad.');
   }
   if (value.app !== 'open-money' || value.backupVersion !== 1) {
-    throw new BackupValidationError('Invalid backup: not an Open Money backup file.');
+    throw new BackupValidationError('Archivo no válido: no es una copia de seguridad de Open Money.');
   }
   if (typeof value.schemaVersion !== 'number' || typeof value.exportedAt !== 'string') {
-    throw new BackupValidationError('Invalid backup: missing backup metadata.');
+    throw new BackupValidationError('Archivo no válido: faltan los metadatos de la copia.');
   }
   if (value.schemaVersion > currentSchemaVersion) {
     throw new BackupValidationError(
-      'Invalid backup: it was created by a newer app version. Update the app and try again.',
+      'Archivo no válido: fue creado por una versión más reciente de la app. Actualiza la app e inténtalo de nuevo.',
     );
   }
   if (!isPlainObject(value.data)) {
-    throw new BackupValidationError('Invalid backup: missing data tables.');
+    throw new BackupValidationError('Archivo no válido: faltan las tablas de datos.');
   }
   validateDataShape(value.data);
   const data = value.data as BackupData;
@@ -279,7 +279,7 @@ export function parseBackup(json: string, currentSchemaVersion: number): BackupF
   try {
     parsed = JSON.parse(json);
   } catch {
-    throw new BackupValidationError('Invalid backup: the file is not valid JSON.');
+    throw new BackupValidationError('Archivo no válido: el fichero no es un JSON válido.');
   }
   return validateBackup(parsed, currentSchemaVersion);
 }

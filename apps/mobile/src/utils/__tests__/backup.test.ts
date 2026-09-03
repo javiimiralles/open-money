@@ -58,14 +58,14 @@ describe('backup format', () => {
 
   it('rejects files that are not valid JSON', () => {
     expect(() => parseBackup('not json{', CURRENT_SCHEMA_VERSION)).toThrow(
-      'not valid JSON',
+      'no es un JSON válido',
     );
   });
 
   it('rejects non-object payloads and foreign backup formats', () => {
-    expect(() => validateBackup([1, 2], CURRENT_SCHEMA_VERSION)).toThrow('backup object');
+    expect(() => validateBackup([1, 2], CURRENT_SCHEMA_VERSION)).toThrow('no contiene una copia');
     expect(() => validateBackup({ app: 'other-app', backupVersion: 1 }, CURRENT_SCHEMA_VERSION)).toThrow(
-      'not an Open Money backup',
+      'no es una copia de seguridad de Open Money',
     );
   });
 
@@ -74,21 +74,21 @@ describe('backup format', () => {
     delete partial.transactions;
     expect(() =>
       validateBackup({ ...validFile(), data: partial }, CURRENT_SCHEMA_VERSION),
-    ).toThrow('table "transactions" is missing');
+    ).toThrow('falta la tabla "transactions"');
 
     expect(() =>
       validateBackup(
         { ...validFile(), data: { ...validData(), accounts: {} } },
         CURRENT_SCHEMA_VERSION,
       ),
-    ).toThrow('table "accounts" is missing');
+    ).toThrow('falta la tabla "accounts"');
 
     expect(() =>
       validateBackup(
         { ...validFile(), data: { ...validData(), unknown_table: [] } },
         CURRENT_SCHEMA_VERSION,
       ),
-    ).toThrow('unknown table');
+    ).toThrow('tabla desconocida');
   });
 
   it('rejects rows with unknown columns and non-numeric ids', () => {
@@ -100,7 +100,7 @@ describe('backup format', () => {
         },
         CURRENT_SCHEMA_VERSION,
       ),
-    ).toThrow('unknown column "bogus"');
+    ).toThrow('columna desconocida "bogus"');
 
     expect(() =>
       validateBackup(
@@ -110,20 +110,20 @@ describe('backup format', () => {
         },
         CURRENT_SCHEMA_VERSION,
       ),
-    ).toThrow('without a numeric id');
+    ).toThrow('sin id numérico');
   });
 
   it('rejects dangling references', () => {
     const data = validData();
     data.transactions[0] = { ...data.transactions[0], account_id: 99 };
     expect(() => validateBackup({ ...validFile(), data }, CURRENT_SCHEMA_VERSION)).toThrow(
-      'transactions.account_id references a missing accounts row',
+      'transactions.account_id referencia una fila inexistente de accounts',
     );
   });
 
   it('rejects backups created by a newer app version', () => {
     expect(() =>
       validateBackup({ ...validFile(), schemaVersion: 99 }, CURRENT_SCHEMA_VERSION),
-    ).toThrow('newer app version');
+    ).toThrow('versión más reciente');
   });
 });
