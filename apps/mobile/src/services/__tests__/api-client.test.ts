@@ -1,6 +1,12 @@
 import { migrate } from '@/db/client';
 import { saveBackendSettings } from '@/db/repositories/settings-repo';
-import { isValidBackendUrl, testConnection } from '@/services/api-client';
+import {
+  BackendNotConfiguredError,
+  BackendUnreachableError,
+  isValidBackendUrl,
+  searchInstruments,
+  testConnection,
+} from '@/services/api-client';
 import { BetterSqliteExecutor } from '@/test/better-sqlite-executor';
 
 describe('isValidBackendUrl', () => {
@@ -106,6 +112,94 @@ describe('testConnection', () => {
       'https://typed.example.com/health',
       expect.objectContaining({ headers: { 'X-API-Key': 'typed-key' } }),
     );
+    db.close();
+  });
+});
+
+describe('searchInstruments', () => {
+  async function createDbWithSettings(backendUrl: string, apiKey: string) {
+    const db = new BetterSqliteExecutor();
+    await migrate(db);
+    await saveBackendSettings(db, { backendUrl, apiKey });
+    return db;
+  }
+
+  it('returns an empty list for a blank query without calling the backend', async () => {
+    const db = await createDbWithSettings('https://api.example.com', 'secret');
+    const fetchMock = jest.fn();
+    const results = await searchInstruments(db, '   ', fetchMock as unknown as typeof fetch);
+    expect(results).toEqual([]);
+    expect(fetchMock).not.toHaveBeenCalled();
+    db.close();
+  });
+
+  it('throws BackendNotConfiguredError when the backend is not configured', async () => {
+    const db = new BetterSqliteExecutor();
+    await migrate(db);
+    await expect(
+      searchInstruments(db, 'santander', jest.fn() as unknown as typeof fetch),
+    ).rejects.toBeInstanceOf(BackendNotConfiguredError);
+    db.close();
+  });
+
+  it('calls /search with the encoded query and returns normalized results', async () => {
+    const db = await createDbWithSettings('https://api.example.com/', 'secret');
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        results: [
+          { symbol: 'SAN.MC', name: 'Banco Santander', currency: 'eur', market: 'BME', isin: null, kind: 'stock' },
+          { symbol: '  ', name: 'Sin símbolo' },
+        ],
+      }),
+    });
+
+    const results = await searchInstruments(db, 'santa nder', fetchMock as unknown as typeof fetch);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.example.com/search?q=santa%20nder',
+      expect.objectContaining({ headers: { 'X-API-Key': 'secret' } }),
+    );
+    expect(results).toEqual([
+      { symbol: 'SAN.MC', name: 'Banco Santander', currency: 'EUR', market: 'BME', isin: null, kind: 'stock' },
+    ]);
+    db.close();
+  });
+
+  it('throws BackendUnreachableError on 401', async () => {
+    const db = await createDbWithSettings('https://api.example.com', 'wrong-key');
+    const fetchMock = jest.fn().mockResolvedValue({ ok: false, status: 401 });
+    await expect(
+      searchInstruments(db, 'apple', fetchMock as unknown as typeof fetch),
+    ).rejects.toBeInstanceOf(BackendUnreachableError);
+    db.close();
+  });
+
+  it('throws BackendUnreachableError on server errors and network failures', async () => {
+    const db = await createDbWithSettings('https://api.example.com', 'key');
+    const failingFetch = jest.fn().mockResolvedValue({ ok: false, status: 502 });
+    await expect(
+      searchInstruments(db, 'apple', failingFetch as unknown as typeof fetch),
+    ).rejects.toThrow('502');
+
+    const networkFetch = jest.fn().mockRejectedValue(new Error('Network request failed'));
+    await expect(
+      searchInstruments(db, 'apple', networkFetch as unknown as typeof fetch),
+    ).rejects.toThrow('No se pudo conectar');
+    db.close();
+  });
+
+  it('throws BackendUnreachableError on an invalid payload', async () => {
+    const db = await createDbWithSettings('https://api.example.com', 'key');
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ results: null }),
+    });
+    await expect(
+      searchInstruments(db, 'apple', fetchMock as unknown as typeof fetch),
+    ).rejects.toThrow('no es válida');
     db.close();
   });
 });
