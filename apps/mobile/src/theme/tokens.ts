@@ -1,32 +1,13 @@
 /**
  * Design tokens derived from DESIGN.md (version alpha).
- * Single source of truth for colors, typography, spacing, and radii.
+ * Single source of truth for typography, spacing, and radii.
+ * Colors live in ./palettes (light + dark); `colors` stays as an alias
+ * of the light palette until the theme refactor lands.
  */
 
-export const colors = {
-  primary: '#9fe870',
-  onPrimary: '#0e0f0c',
-  primaryActive: '#cdffad',
-  primaryNeutral: '#c5edab',
-  primaryPale: '#e2f6d5',
-  ink: '#0e0f0c',
-  inkDeep: '#163300',
-  body: '#454745',
-  mute: '#868685',
-  canvas: '#ffffff',
-  canvasSoft: '#e8ebe6',
-  positive: '#2ead4b',
-  positiveDeep: '#054d28',
-  warning: '#ffd11a',
-  warningDeep: '#b86700',
-  warningContent: '#4a3b1c',
-  negative: '#d03238',
-  negativeDeep: '#a72027',
-  negativeDarkest: '#a7000d',
-  negativeBg: '#320707',
-  accentOrange: '#ffc091',
-  accentCyan: '#38c8ff',
-} as const;
+import { lightColors as colors } from './palettes';
+
+export { colors };
 
 export const typography = {
   displayMega: { fontFamily: 'Manrope_800ExtraBold', fontSize: 126, lineHeight: 107.1 },

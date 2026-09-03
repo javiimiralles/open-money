@@ -25,6 +25,30 @@ colors:
   accent-orange: "#ffc091"
   accent-cyan: "#38c8ff"
 
+dark:
+  primary: "#9fe870"
+  on-primary: "#0e0f0c"
+  primary-active: "#cdffad"
+  primary-neutral: "#2f4423"
+  primary-pale: "#1c2a16"
+  ink: "#e8ebe6"
+  ink-deep: "#b7e39b"
+  body: "#b7bab5"
+  mute: "#8f918d"
+  canvas: "#1a1c19"
+  canvas-soft: "#0e0f0c"
+  positive: "#58d06f"
+  positive-deep: "#7fd97a"
+  warning: "#ffd11a"
+  warning-deep: "#e8b34b"
+  warning-content: "#4a3b1c"
+  negative: "#ff5f57"
+  negative-deep: "#ff7a70"
+  negative-darkest: "#ff6b61"
+  negative-bg: "#320707"
+  accent-orange: "#ffc091"
+  accent-cyan: "#38c8ff"
+
 typography:
   display-mega:
     fontFamily: Manrope, Inter, system-ui, -apple-system, sans-serif
@@ -335,6 +359,27 @@ Cards are universally pill-rounded — `{rounded.xl}` 24 px is the brand's signa
 ### Brand Accent — Tertiary
 - **Accent Orange** (`{colors.accent-orange}` — `#ffc091`): Bright peach used inside illustrative content / pricing cards.
 - **Accent Cyan** (`{colors.accent-cyan}` — `#38c8ff`): Bright sky-blue used as a tertiary illustration accent.
+
+## Dark Mode
+
+The dark palette (`dark:` in the frontmatter, implemented in `apps/mobile/src/theme/palettes.ts`)
+derives from the light palette with three rules:
+
+1. **Polarity-flipped surfaces and text.** Page canvas `{colors.canvas-soft}` becomes brand ink `#0e0f0c`;
+   text ink becomes `#e8ebe6` (the footer pattern: light text on ink). Cards lift one step to `#1a1c19`
+   so surface contrast keeps carrying elevation; secondary text lightens (`body` → `#b7bab5`,
+   `mute` → `#8f918d`).
+2. **Brand accent untouched.** `{colors.primary}` stays `#9fe870` on neutral surfaces in both modes
+   (the `hero-band-dark` precedent: brand green on ink). `on-primary`, `primary-active`, `warning`,
+   `warning-content`, `negative-bg` and the illustration accents are mode-independent for the same reason.
+3. **Semantic hues preserved, values lifted for AA contrast on dark.** Tinted surfaces go dark
+   (`primary-pale` → `#1c2a16`, `primary-neutral` → `#2f4423`); status text lightens
+   (`positive` → `#58d06f`, `positive-deep` → `#7fd97a`, `ink-deep` → `#b7e39b` to pair with dark
+   `primary-pale` chips, `warning-deep` → `#e8b34b`, `negative` → `#ff5f57`,
+   `negative-deep` → `#ff7a70`, `negative-darkest` → `#ff6b61`).
+
+Mode selection (system / light / dark) lives in Settings and persists locally; components resolve
+colors through the theme provider instead of importing a static palette.
 
 ## Typography
 
