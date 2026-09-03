@@ -19,7 +19,7 @@ export const lightColors = {
   body: '#454745',
   mute: '#868685',
   canvas: '#ffffff',
-  canvasSoft: '#e8ebe6',
+  canvasSoft: '#f5f5f5',
   positive: '#2ead4b',
   positiveDeep: '#054d28',
   warning: '#ffd11a',

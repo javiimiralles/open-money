@@ -115,7 +115,7 @@ const makeStyles = (colors: ThemeColors) =>
     },
     netWorth: {
       alignItems: 'center',
-      gap: spacing.xs,
+      gap: spacing.md,
     },
     netWorthLabel: {
       ...typography.bodySm,
