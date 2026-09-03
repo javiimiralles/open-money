@@ -22,6 +22,7 @@ export interface AccountFormValues {
   identifier: string;
   currency: string;
   initialBalance: string;
+  color: string | null;
 }
 
 export interface AccountFormErrors {
@@ -44,6 +45,7 @@ export interface UseAccountFormResult {
   setIdentifier: (value: string) => void;
   setCurrency: (value: string) => void;
   setInitialBalance: (value: string) => void;
+  setColor: (value: string | null) => void;
   save: () => Promise<boolean>;
   requestDelete: () => Promise<DeleteRequestResult>;
   performDelete: () => Promise<void>;
@@ -57,6 +59,7 @@ export function useAccountForm(accountId: number | null): UseAccountFormResult {
     identifier: '',
     currency: 'EUR',
     initialBalance: '',
+    color: null,
   });
   const [errors, setErrors] = useState<AccountFormErrors>({});
   const [loading, setLoading] = useState(accountId !== null);
@@ -77,6 +80,7 @@ export function useAccountForm(accountId: number | null): UseAccountFormResult {
         identifier: account.identifier ?? '',
         currency: account.currency,
         initialBalance: String(account.initialBalance),
+        color: account.color,
       });
       setLoading(false);
     });
@@ -111,6 +115,7 @@ export function useAccountForm(accountId: number | null): UseAccountFormResult {
       identifier: values.identifier.trim() || null,
       currency: values.currency,
       initialBalance: parseAmount(values.initialBalance) ?? 0,
+      color: values.color,
     };
 
     setSaving(true);
@@ -164,6 +169,7 @@ export function useAccountForm(accountId: number | null): UseAccountFormResult {
     setIdentifier: (identifier: string) => setValues((v) => ({ ...v, identifier })),
     setCurrency: (currency: string) => setValues((v) => ({ ...v, currency })),
     setInitialBalance: (initialBalance: string) => setValues((v) => ({ ...v, initialBalance })),
+    setColor: (color: string | null) => setValues((v) => ({ ...v, color })),
     save,
     requestDelete,
     performDelete,

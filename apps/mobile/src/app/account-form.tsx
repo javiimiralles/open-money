@@ -6,6 +6,7 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { TextField } from '@/components/TextField';
 import { useAccountForm } from '@/hooks/use-account-form';
+import { ACCOUNT_COLORS } from '@/theme/account-colors';
 import { rounded, spacing, typography } from '@/theme/tokens';
 import { useTheme, type ThemeColors } from '@/theme/theme';
 
@@ -106,6 +107,35 @@ export default function AccountFormScreen() {
               keyboardType="decimal-pad"
               error={form.errors.initialBalance}
             />
+            <View style={styles.field}>
+              <Text style={styles.label}>Color</Text>
+              <View style={styles.colorRow}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Sin color"
+                  accessibilityState={{ selected: form.values.color === null }}
+                  onPress={() => form.setColor(null)}
+                  style={[styles.colorSwatchNone, form.values.color === null && styles.colorSwatchSelected]}
+                />
+                {ACCOUNT_COLORS.map((color) => {
+                  const selected = form.values.color === color;
+                  return (
+                    <Pressable
+                      key={color}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Color ${color}`}
+                      accessibilityState={{ selected }}
+                      onPress={() => form.setColor(color)}
+                      style={[
+                        styles.colorSwatch,
+                        { backgroundColor: color },
+                        selected && styles.colorSwatchSelected,
+                      ]}
+                    />
+                  );
+                })}
+              </View>
+            </View>
             <Button
               label={form.isEditing ? 'Guardar cambios' : 'Crear cuenta'}
               loading={form.saving}
@@ -163,5 +193,28 @@ const makeStyles = (colors: ThemeColors) =>
     },
     currencyChipTextSelected: {
       color: colors.onPrimary,
+    },
+    colorRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    colorSwatch: {
+      width: 40,
+      height: 40,
+      borderRadius: rounded.full,
+      borderWidth: 3,
+      borderColor: 'transparent',
+    },
+    colorSwatchNone: {
+      width: 40,
+      height: 40,
+      borderRadius: rounded.full,
+      borderWidth: 3,
+      borderColor: colors.mute,
+      backgroundColor: colors.canvas,
+    },
+    colorSwatchSelected: {
+      borderColor: colors.ink,
     },
   });
