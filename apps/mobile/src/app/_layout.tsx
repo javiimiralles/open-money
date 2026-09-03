@@ -93,6 +93,38 @@ function RecurringHost() {
             headerShadowVisible: false,
           }}
         />
+        <Stack.Screen
+          name="instrument-search"
+          options={{
+            presentation: 'modal',
+            headerShown: true,
+            title: 'Añadir instrumento',
+            headerStyle: { backgroundColor: colors.canvas },
+            headerTitleStyle: typography.bodyMdStrong,
+            headerShadowVisible: false,
+          }}
+        />
+        <Stack.Screen
+          name="trade-form"
+          options={{
+            presentation: 'modal',
+            headerShown: true,
+            title: 'Registrar operación',
+            headerStyle: { backgroundColor: colors.canvas },
+            headerTitleStyle: typography.bodyMdStrong,
+            headerShadowVisible: false,
+          }}
+        />
+        <Stack.Screen
+          name="instrument-detail"
+          options={{
+            headerShown: true,
+            title: 'Detalle',
+            headerStyle: { backgroundColor: colors.canvas },
+            headerTitleStyle: typography.bodyMdStrong,
+            headerShadowVisible: false,
+          }}
+        />
       </Stack>
     </>
   );
