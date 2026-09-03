@@ -5,7 +5,11 @@
  */
 
 import { listDueRecurringRules, updateRecurringRuleSchedule } from '@/db/repositories/recurring-rules-repo';
-import { deleteTransactionsByBatch, insertTransaction } from '@/db/repositories/transactions-repo';
+import {
+  countTransactionsByBatch,
+  deleteTransactionsByBatch,
+  insertTransaction,
+} from '@/db/repositories/transactions-repo';
 import { computeCatchUpDates, nextOccurrence } from '@/utils/recurrence';
 import { destinationAmountFromRate } from '@/utils/transfer';
 import type { SqlExecutor } from '@/db/client';
@@ -173,6 +177,24 @@ export async function getLastRecurringBatch(db: SqlExecutor): Promise<RecurringL
 
 export async function clearLastRecurringBatch(db: SqlExecutor): Promise<void> {
   await db.runAsync('DELETE FROM settings WHERE key = ?', [RECURRING_LAST_BATCH_KEY]);
+}
+
+/**
+ * Loads the stored batch only if its transactions still exist. Stale batches
+ * (e.g. applied transactions later deleted) are cleared and hidden so the
+ * notice does not resurface on every app open.
+ */
+export async function loadActiveRecurringBatch(db: SqlExecutor): Promise<RecurringLastBatch | null> {
+  const batch = await getLastRecurringBatch(db);
+  if (!batch) {
+    return null;
+  }
+  const remaining = await countTransactionsByBatch(db, batch.batchId);
+  if (remaining === 0) {
+    await clearLastRecurringBatch(db);
+    return null;
+  }
+  return batch;
 }
 
 export async function undoLastRecurringBatch(db: SqlExecutor): Promise<number> {

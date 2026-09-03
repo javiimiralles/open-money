@@ -1,10 +1,12 @@
 import { migrate } from '@/db/client';
 import { insertAccount, listAccountsWithBalances } from '@/db/repositories/accounts-repo';
-import { insertRecurringRule, getRecurringRuleById } from '@/db/repositories/recurring-rules-repo';
-import { listTransactions } from '@/db/repositories/transactions-repo';
+import { insertRecurringRule, deleteRecurringRule, getRecurringRuleById } from '@/db/repositories/recurring-rules-repo';
+import { deleteTransactionsByBatch, listTransactions } from '@/db/repositories/transactions-repo';
 import { BetterSqliteExecutor } from '@/test/better-sqlite-executor';
 import {
+  clearLastRecurringBatch,
   getLastRecurringBatch,
+  loadActiveRecurringBatch,
   processRecurringOnOpen,
   undoLastRecurringBatch,
 } from '@/services/recurring-engine';
@@ -246,6 +248,118 @@ describe('recurring-engine', () => {
     await processRecurringOnOpen(db, '2026-09-07');
     const transactions = await listTransactions(db);
     expect(transactions.map((t) => t.date).sort()).toEqual(['2026-09-01', '2026-09-04', '2026-09-07']);
+    db.close();
+  });
+
+  it('loadActiveRecurringBatch returns the stored batch while its transactions exist', async () => {
+    const db = await createDb();
+    const accountId = await createAccount(db);
+    await insertRecurringRule(db, {
+      type: 'expense',
+      amount: 10,
+      currency: 'EUR',
+      accountId,
+      destinationAccountId: null,
+      categoryId: null,
+      instrumentId: null,
+      notes: null,
+      frequency: 'weekly',
+      intervalDays: null,
+      nextExecution: '2026-09-01',
+      active: true,
+      fxRate: null,
+    });
+
+    const result = await processRecurringOnOpen(db, '2026-09-08');
+    const batch = await loadActiveRecurringBatch(db);
+    expect(batch?.batchId).toBe(result?.batchId);
+    expect(batch?.count).toBe(2);
+    db.close();
+  });
+
+  it('dismissed batch never resurfaces: clear + reopen shows no notice', async () => {
+    const db = await createDb();
+    const accountId = await createAccount(db);
+    await insertRecurringRule(db, {
+      type: 'expense',
+      amount: 10,
+      currency: 'EUR',
+      accountId,
+      destinationAccountId: null,
+      categoryId: null,
+      instrumentId: null,
+      notes: null,
+      frequency: 'weekly',
+      intervalDays: null,
+      nextExecution: '2026-09-01',
+      active: true,
+      fxRate: null,
+    });
+
+    await processRecurringOnOpen(db, '2026-09-08');
+    await clearLastRecurringBatch(db);
+
+    // Simulates reopening the app: no persisted notice and no new batch
+    expect(await loadActiveRecurringBatch(db)).toBeNull();
+    expect(await processRecurringOnOpen(db, '2026-09-08')).toBeNull();
+    expect(await loadActiveRecurringBatch(db)).toBeNull();
+    db.close();
+  });
+
+  it('loadActiveRecurringBatch clears a stale batch whose transactions were deleted', async () => {
+    const db = await createDb();
+    const accountId = await createAccount(db);
+    await insertRecurringRule(db, {
+      type: 'expense',
+      amount: 10,
+      currency: 'EUR',
+      accountId,
+      destinationAccountId: null,
+      categoryId: null,
+      instrumentId: null,
+      notes: null,
+      frequency: 'weekly',
+      intervalDays: null,
+      nextExecution: '2026-09-01',
+      active: true,
+      fxRate: null,
+    });
+
+    const result = await processRecurringOnOpen(db, '2026-09-08');
+    expect(result).not.toBeNull();
+    await deleteTransactionsByBatch(db, result!.batchId);
+
+    expect(await loadActiveRecurringBatch(db)).toBeNull();
+    expect(await getLastRecurringBatch(db)).toBeNull();
+    db.close();
+  });
+
+  it('undo still works after the rule was deleted', async () => {
+    const db = await createDb();
+    const accountId = await createAccount(db);
+    const ruleId = await insertRecurringRule(db, {
+      type: 'expense',
+      amount: 10,
+      currency: 'EUR',
+      accountId,
+      destinationAccountId: null,
+      categoryId: null,
+      instrumentId: null,
+      notes: null,
+      frequency: 'weekly',
+      intervalDays: null,
+      nextExecution: '2026-09-01',
+      active: true,
+      fxRate: null,
+    });
+
+    await processRecurringOnOpen(db, '2026-09-08');
+    await deleteRecurringRule(db, ruleId);
+
+    const undone = await undoLastRecurringBatch(db);
+    expect(undone).toBeGreaterThan(0);
+    expect(await listTransactions(db)).toHaveLength(0);
+    expect(await loadActiveRecurringBatch(db)).toBeNull();
     db.close();
   });
 });
