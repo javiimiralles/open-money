@@ -1,4 +1,4 @@
-import { formatMoney, parseAmount } from '@/utils/money';
+import { formatMoney, formatPercent, parseAmount } from '@/utils/money';
 
 describe('parseAmount', () => {
   it('parses dot-decimal amounts', () => {
@@ -53,5 +53,19 @@ describe('formatMoney', () => {
 
   it('formats thousands', () => {
     expect(formatMoney(1000, 'EUR')).toBe('1.000,00 EUR');
+  });
+});
+
+describe('formatPercent', () => {
+  it('formats positive ratios with a plus sign', () => {
+    expect(formatPercent(0.25)).toBe('+25,00 %');
+  });
+
+  it('formats negative ratios with a minus sign', () => {
+    expect(formatPercent(-0.1234)).toBe('-12,34 %');
+  });
+
+  it('formats zero', () => {
+    expect(formatPercent(0)).toBe('+0,00 %');
   });
 });

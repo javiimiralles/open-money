@@ -37,3 +37,9 @@ export function formatMoney(amount: number, currency: string): string {
   const sign = negative ? '-' : '';
   return `${sign}${grouped},${decPart} ${currency}`;
 }
+
+export function formatPercent(ratio: number): string {
+  const sign = ratio >= 0 ? '+' : '-';
+  const abs = Math.abs(ratio * 100).toFixed(2).replace('.', ',');
+  return `${sign}${abs} %`;
+}
