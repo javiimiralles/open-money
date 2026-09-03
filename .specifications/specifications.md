@@ -76,13 +76,13 @@ As a user, I want to create, edit, and delete accounts with any name I choose to
 As a user, I want to record an income or expense in a few seconds with date, amount, account, category, and notes to keep a frictionless record.
 
 ### Acceptance Criteria
-- Given any main screen, When I tap the floating "+" button, Then the transaction form opens with today's date, "expense" type by default, and a numeric keypad for the amount.
+- Given the dashboard, When I tap a quick action (income, expense, or transfer), Then the transaction form opens with today's date, the tapped type preselected, and a numeric keypad for the amount.
 - Given the form, When I select type (income/expense), amount > 0, account, and optional category, and save, Then the transaction is recorded and the account balance is updated.
 - Given an existing transaction, When I open it from the list, Then I can edit all its fields or delete it with confirmation.
 - Given the form, When I try to save without a valid amount or without an account, Then a validation error is shown and nothing is saved.
 
 ### Tasks
-- T-010: Global FAB accessible from all main screens.
+- T-010: Quick actions on the dashboard (income, expense, transfer) opening the transaction form.
 - T-011: Quick transaction form (type, date picker, numeric amount, account, type-filtered category, notes).
 - T-012: Transaction edit and delete with balance updates.
 - T-013: Form validations (amount > 0, account required).
