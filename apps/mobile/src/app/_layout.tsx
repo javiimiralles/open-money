@@ -75,6 +75,27 @@ export default function RootLayout() {
               headerShadowVisible: false,
             }}
           />
+          <Stack.Screen
+            name="categories"
+            options={{
+              headerShown: true,
+              title: 'Categorías',
+              headerStyle: { backgroundColor: colors.canvas },
+              headerTitleStyle: typography.bodyMdStrong,
+              headerShadowVisible: false,
+            }}
+          />
+          <Stack.Screen
+            name="category-form"
+            options={{
+              presentation: 'modal',
+              headerShown: true,
+              title: 'Nueva categoría',
+              headerStyle: { backgroundColor: colors.canvas },
+              headerTitleStyle: typography.bodyMdStrong,
+              headerShadowVisible: false,
+            }}
+          />
         </Stack>
       </SQLiteProvider>
     </ThemeProvider>
