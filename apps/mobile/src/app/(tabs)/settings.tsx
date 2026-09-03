@@ -5,16 +5,26 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
+import { SelectField, type SelectOption } from '@/components/SelectField';
 import { TextField } from '@/components/TextField';
 import { toSqlExecutor } from '@/db/sqlite-adapter';
 import { getBackendSettings, saveBackendSettings } from '@/db/repositories/settings-repo';
 import { useBackup } from '@/hooks/use-backup';
 import { isValidBackendUrl, testConnection, type ConnectionTestResult } from '@/services/api-client';
-import { colors, spacing, typography } from '@/theme/tokens';
+import { spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors, type ThemeMode } from '@/theme/theme';
 
 type TestState = 'idle' | 'loading' | 'done';
 
+const THEME_OPTIONS: SelectOption<ThemeMode>[] = [
+  { value: 'system', label: 'Sistema' },
+  { value: 'light', label: 'Claro' },
+  { value: 'dark', label: 'Oscuro' },
+];
+
 export default function SettingsScreen() {
+  const { colors, mode, setMode } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
   const sqlite = useSQLiteContext();
   const db = useMemo(() => toSqlExecutor(sqlite), [sqlite]);
@@ -91,6 +101,16 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+      <Text style={styles.sectionTitle}>Apariencia</Text>
+      <Card>
+        <View style={styles.form}>
+          <Text style={styles.description}>
+            Elige cómo se ve la app. Con «Sistema» sigue el tema de tu móvil.
+          </Text>
+          <SelectField label="Tema" value={mode} options={THEME_OPTIONS} onChange={(value) => void setMode(value)} />
+        </View>
+      </Card>
+
       <Text style={styles.sectionTitle}>Pagos recurrentes</Text>
       <Card>
         <View style={styles.form}>
@@ -196,35 +216,36 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.canvasSoft,
-  },
-  content: {
-    padding: spacing.xl,
-    gap: spacing.lg,
-  },
-  sectionTitle: {
-    ...typography.displayXs,
-    color: colors.ink,
-  },
-  description: {
-    ...typography.bodyMd,
-    color: colors.body,
-  },
-  form: {
-    gap: spacing.lg,
-  },
-  savedText: {
-    ...typography.bodySm,
-    color: colors.positiveDeep,
-  },
-  errorText: {
-    ...typography.bodySm,
-    color: colors.negativeDarkest,
-  },
-  testResult: {
-    ...typography.bodySmStrong,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: colors.canvasSoft,
+    },
+    content: {
+      padding: spacing.xl,
+      gap: spacing.lg,
+    },
+    sectionTitle: {
+      ...typography.displayXs,
+      color: colors.ink,
+    },
+    description: {
+      ...typography.bodyMd,
+      color: colors.body,
+    },
+    form: {
+      gap: spacing.lg,
+    },
+    savedText: {
+      ...typography.bodySm,
+      color: colors.positiveDeep,
+    },
+    errorText: {
+      ...typography.bodySm,
+      color: colors.negativeDarkest,
+    },
+    testResult: {
+      ...typography.bodySmStrong,
+    },
+  });

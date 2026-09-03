@@ -1,4 +1,5 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useMemo } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
@@ -7,7 +8,8 @@ import { DateField } from '@/components/DateField';
 import { SelectField } from '@/components/SelectField';
 import { TextField } from '@/components/TextField';
 import { useRecurringForm, type RecurringFormType } from '@/hooks/use-recurring-form';
-import { colors, rounded, spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
+import { rounded, spacing, typography } from '@/theme/tokens';
 
 const TYPE_OPTIONS: { value: RecurringFormType; label: string }[] = [
   { value: 'expense', label: 'Gasto' },
@@ -23,6 +25,8 @@ const FREQUENCY_OPTIONS = [
 ];
 
 export default function RecurringFormScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
   const ruleId = params.id ? Number(params.id) : null;
@@ -197,7 +201,7 @@ export default function RecurringFormScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.canvasSoft,

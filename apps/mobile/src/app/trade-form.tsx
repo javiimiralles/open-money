@@ -1,4 +1,5 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
@@ -7,7 +8,8 @@ import { DateField } from '@/components/DateField';
 import { SelectField } from '@/components/SelectField';
 import { TextField } from '@/components/TextField';
 import { useTradeForm, type TradeFormType } from '@/hooks/use-trade-form';
-import { colors, rounded, spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
+import { rounded, spacing, typography } from '@/theme/tokens';
 import { formatMoney } from '@/utils/money';
 
 const TYPE_OPTIONS: { value: TradeFormType; label: string }[] = [
@@ -16,6 +18,8 @@ const TYPE_OPTIONS: { value: TradeFormType; label: string }[] = [
 ];
 
 export default function TradeFormScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
   const params = useLocalSearchParams<{ instrumentId?: string; type?: string }>();
   const instrumentId = params.instrumentId ? Number(params.instrumentId) : 0;
@@ -124,7 +128,7 @@ export default function TradeFormScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.canvasSoft,

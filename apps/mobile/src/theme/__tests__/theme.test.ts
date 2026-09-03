@@ -1,7 +1,7 @@
+import { resolveIsDark } from '../theme';
+
 jest.mock('expo-sqlite', () => ({ useSQLiteContext: jest.fn() }));
 jest.mock('expo-system-ui', () => ({ setBackgroundColorAsync: jest.fn() }));
-
-import { resolveIsDark } from '../theme';
 
 describe('resolveIsDark', () => {
   it.each([

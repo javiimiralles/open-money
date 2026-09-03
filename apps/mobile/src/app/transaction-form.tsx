@@ -1,4 +1,5 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useMemo } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
@@ -7,7 +8,8 @@ import { DateField } from '@/components/DateField';
 import { SelectField } from '@/components/SelectField';
 import { TextField } from '@/components/TextField';
 import { useTransactionForm } from '@/hooks/use-transaction-form';
-import { colors, rounded, spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
+import { rounded, spacing, typography } from '@/theme/tokens';
 
 const TYPE_OPTIONS = [
   { value: 'expense', label: 'Gasto' },
@@ -16,6 +18,8 @@ const TYPE_OPTIONS = [
 ] as const;
 
 export default function TransactionFormScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
   const transactionId = params.id ? Number(params.id) : null;
@@ -155,7 +159,7 @@ export default function TransactionFormScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.canvasSoft,

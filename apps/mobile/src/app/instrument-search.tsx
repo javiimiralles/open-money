@@ -1,11 +1,13 @@
 import { Stack, useRouter } from 'expo-router';
+import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { TextField } from '@/components/TextField';
 import { useInstrumentSearch, type ManualInstrumentKind } from '@/hooks/use-instrument-search';
-import { colors, rounded, spacing, typography } from '@/theme/tokens';
+import { useTheme, type ThemeColors } from '@/theme/theme';
+import { rounded, spacing, typography } from '@/theme/tokens';
 
 const KIND_OPTIONS: { value: ManualInstrumentKind; label: string }[] = [
   { value: 'stock', label: 'Acción' },
@@ -13,6 +15,8 @@ const KIND_OPTIONS: { value: ManualInstrumentKind; label: string }[] = [
 ];
 
 export default function InstrumentSearchScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
   const form = useInstrumentSearch();
 
@@ -143,7 +147,7 @@ export default function InstrumentSearchScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.canvasSoft,

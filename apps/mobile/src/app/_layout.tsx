@@ -1,29 +1,33 @@
 import { Manrope_400Regular, Manrope_800ExtraBold } from '@expo-google-fonts/manrope';
 import { Inter_400Regular, Inter_600SemiBold } from '@expo-google-fonts/inter';
 import { useFonts } from 'expo-font';
-import { Stack, ThemeProvider, DefaultTheme } from 'expo-router';
+import { Stack, ThemeProvider as NavigationThemeProvider, DefaultTheme, DarkTheme } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { SQLiteProvider, type SQLiteDatabase } from 'expo-sqlite';
-import { useEffect } from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { RecurringNotice } from '@/components/RecurringNotice';
 import { migrate, DATABASE_NAME } from '@/db/client';
 import { toSqlExecutor } from '@/db/sqlite-adapter';
 import { useRecurringProcessing } from '@/hooks/use-recurring-processing';
-import { colors, spacing, typography } from '@/theme/tokens';
+import { spacing, typography } from '@/theme/tokens';
+import { ThemeProvider, useTheme, type ThemeColors } from '@/theme/theme';
 
 SplashScreen.preventAutoHideAsync();
 
 const onDatabaseInit = (db: SQLiteDatabase) => migrate(toSqlExecutor(db));
 
 function RecurringHost() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { notice, dismiss, undo } = useRecurringProcessing();
 
   return (
     <>
       {notice ? (
-        <View style={hostStyles.noticeWrapper}>
+        <View style={styles.noticeWrapper}>
           <RecurringNotice count={notice.count} onUndo={undo} onDismiss={dismiss} />
         </View>
       ) : null}
@@ -130,29 +134,54 @@ function RecurringHost() {
   );
 }
 
-const hostStyles = StyleSheet.create({
-  noticeWrapper: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    backgroundColor: colors.canvasSoft,
-  },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    noticeWrapper: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+      backgroundColor: colors.canvasSoft,
+    },
+  });
 
 const onDatabaseError = (error: Error) => {
   console.error('Database initialization failed:', error);
 };
 
-const navigationTheme = {
-  ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
-    primary: colors.primary,
-    background: colors.canvasSoft,
-    card: colors.canvas,
-    text: colors.ink,
-    border: colors.canvasSoft,
-  },
-};
+function ThemedApp() {
+  const { colors, isDark, isReady } = useTheme();
+
+  const navigationTheme = useMemo(() => {
+    const base = isDark ? DarkTheme : DefaultTheme;
+    return {
+      ...base,
+      colors: {
+        ...base.colors,
+        primary: colors.primary,
+        background: colors.canvasSoft,
+        card: colors.canvas,
+        text: colors.ink,
+        border: colors.canvasSoft,
+      },
+    };
+  }, [colors, isDark]);
+
+  useEffect(() => {
+    if (isReady) {
+      void SplashScreen.hideAsync();
+    }
+  }, [isReady]);
+
+  if (!isReady) {
+    return null;
+  }
+
+  return (
+    <NavigationThemeProvider value={navigationTheme}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <RecurringHost />
+    </NavigationThemeProvider>
+  );
+}
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
@@ -162,21 +191,15 @@ export default function RootLayout() {
     Inter_600SemiBold,
   });
 
-  useEffect(() => {
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded, fontError]);
-
   if (!fontsLoaded && !fontError) {
     return null;
   }
 
   return (
-    <ThemeProvider value={navigationTheme}>
-      <SQLiteProvider databaseName={DATABASE_NAME} onInit={onDatabaseInit} onError={onDatabaseError}>
-        <RecurringHost />
-      </SQLiteProvider>
-    </ThemeProvider>
+    <SQLiteProvider databaseName={DATABASE_NAME} onInit={onDatabaseInit} onError={onDatabaseError}>
+      <ThemeProvider>
+        <ThemedApp />
+      </ThemeProvider>
+    </SQLiteProvider>
   );
 }
