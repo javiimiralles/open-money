@@ -1,6 +1,9 @@
 packages:
   - apps/*
 
+allowBuilds:
+  esbuild: true
+
 minimumReleaseAgeExclude:
   - '@expo/ui@57.0.15'
   - '@expo/cli@57.0.21'
