@@ -1,8 +1,8 @@
 /**
  * Design tokens derived from DESIGN.md (version alpha).
  * Single source of truth for typography, spacing, and radii.
- * Colors live in ./palettes (light + dark); `colors` stays as an alias
- * of the light palette until the theme refactor lands.
+ * Colors live in ./palettes (light + dark); `colors` is a light-only alias
+ * kept for backward compatibility.
  */
 
 import { lightColors as colors } from './palettes';

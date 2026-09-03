@@ -379,7 +379,8 @@ derives from the light palette with three rules:
    `negative-deep` → `#ff7a70`, `negative-darkest` → `#ff6b61`).
 
 Mode selection (system / light / dark) lives in Settings and persists locally; components resolve
-colors through the theme provider instead of importing a static palette.
+colors through the theme provider instead of importing a static palette. The dark card
+(`card-feature-dark` / `Card variant="dark"`) keeps a dark surface in both modes (`ink` when light, `canvas` `#1a1c19` when dark) so `primary`/`warning` on dark stays legible.
 
 ## Typography
 

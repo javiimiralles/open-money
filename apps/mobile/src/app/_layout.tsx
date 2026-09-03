@@ -145,6 +145,7 @@ const makeStyles = (colors: ThemeColors) =>
 
 const onDatabaseError = (error: Error) => {
   console.error('Database initialization failed:', error);
+  void SplashScreen.hideAsync();
 };
 
 function ThemedApp() {

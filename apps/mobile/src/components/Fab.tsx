@@ -33,7 +33,7 @@ const makeStyles = (colors: ThemeColors) =>
       backgroundColor: colors.primary,
       alignItems: 'center',
       justifyContent: 'center',
-      shadowColor: colors.ink,
+      shadowColor: '#0e0f0c',
       shadowOpacity: 0.2,
       shadowRadius: 8,
       shadowOffset: { width: 0, height: 4 },

@@ -12,16 +12,16 @@ export interface CardProps {
   children: React.ReactNode;
 }
 
-const getVariantStyles = (colors: ThemeColors): Record<CardVariant, { backgroundColor: string }> => ({
+const getVariantStyles = (colors: ThemeColors, isDark: boolean): Record<CardVariant, { backgroundColor: string }> => ({
   content: { backgroundColor: colors.canvas },
   sage: { backgroundColor: colors.canvasSoft },
   green: { backgroundColor: colors.primaryPale },
-  dark: { backgroundColor: colors.ink },
+  dark: { backgroundColor: isDark ? colors.canvas : colors.ink },
 });
 
 export function Card({ variant = 'content', style, children }: CardProps) {
-  const { colors } = useTheme();
-  const variantStyle = useMemo(() => getVariantStyles(colors)[variant], [colors, variant]);
+  const { colors, isDark } = useTheme();
+  const variantStyle = useMemo(() => getVariantStyles(colors, isDark)[variant], [colors, isDark, variant]);
   return (
     <View style={[styles.base, { backgroundColor: variantStyle.backgroundColor }, style]}>
       {children}
