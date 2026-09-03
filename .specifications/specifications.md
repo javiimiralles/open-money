@@ -102,7 +102,7 @@ As a user, I want to list my transactions with filters by category, dates, accou
 - T-016: Filtered results summary (number of transactions and net sum).
 - T-017: SQLite queries with indexes for combined filters.
 
-## US-005: Transfers Between Own Accounts
+## US-005: Transfers Between Own Accounts [Done]
 As a user, I want to transfer money between my accounts to move balance without recording income or expenses.
 
 ### Acceptance Criteria
@@ -115,7 +115,7 @@ As a user, I want to transfer money between my accounts to move balance without 
 - T-019: Currency exchange support in transfers with editable exchange rate.
 - T-020: Atomic transfer model (single entity, two legs) and representation in the transaction list.
 
-## US-006: Categories
+## US-006: Categories [Done]
 As a user, I want a base catalog of categories in Spanish and to be able to create, edit, and delete my own categories to classify my transactions as I see fit.
 
 ### Acceptance Criteria
