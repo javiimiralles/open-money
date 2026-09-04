@@ -103,6 +103,17 @@ describe('stats', () => {
     it('ignores a max month beyond the range', () => {
       expect(getMonthKeys('2026-09-01', '2026-09-30', '2026-12')).toEqual(['2026-09']);
     });
+
+    it('keeps all keys when the max month equals the range end', () => {
+      expect(getMonthKeys('2026-04-01', '2026-09-30', '2026-09')).toEqual([
+        '2026-04',
+        '2026-05',
+        '2026-06',
+        '2026-07',
+        '2026-08',
+        '2026-09',
+      ]);
+    });
   });
 
   describe('formatMonthLabelEs', () => {
