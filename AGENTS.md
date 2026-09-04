@@ -1,13 +1,10 @@
 # AGENTS.md — Open Money
 
-Personal (non-commercial) finance app: a 100% local mobile app + a stateless backend for market data.
+Personal (non-commercial) finance app: a 100% local mobile app. No backend, no cloud, no market data.
 
 ## Agreed architecture (do not change without asking the owner)
 - **Mobile app**: React Native with Expo + TypeScript, Android first. Personal data 100% local in SQLite (expo-sqlite). No user accounts or cloud storage.
-- **Backend**: Node.js + Express, stateless, market data ONLY (instrument search `/search`, quotes `/quote`, exchange rates). Static API key. **It must never persist personal data.**
-- Market providers: Yahoo Finance (unofficial) for stocks/ETFs; CoinGecko for crypto. ISIN search is "best effort" (may fail → manual entry).
 - Recurring payments: processed when the app opens (idempotent catch-up), not in the background.
-- Portfolio: average-price valuation; no commission fields.
 
 ## Conventions
 - **Languages**:
@@ -28,4 +25,4 @@ Personal (non-commercial) finance app: a 100% local mobile app + a stateless bac
 - Follow the visual design system defined in **`DESIGN.md`** (colors, typography, spacing, components, sizing tokens). When a style decision is in doubt, refer to it instead of inventing values.
 
 ## Gotchas
-- The backend is market-only: never send accounts, transactions or any personal data to the cloud.
+- Everything runs on-device in SQLite; there is no backend or cloud of any kind.
