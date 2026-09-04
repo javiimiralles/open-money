@@ -7,6 +7,9 @@ import {
   insertTransaction,
   listTransactions,
   listTransactionsFiltered,
+  sumExpenseTotalsByCategory,
+  sumMonthlyTotalsByTypeAndCurrency,
+  sumTotalsByTypeAndCurrency,
   updateTransaction,
   type IncomeExpenseInput,
   type TransactionInput,
@@ -407,5 +410,72 @@ describe('transactions-repo', () => {
     expect(rows[0].amount).toBe(10);
     db.close();
   });
+  });
+
+  describe('statistics aggregations', () => {
+    async function seed() {
+      const db = await createDb();
+      const accountEur = await createAccount(db, 'Banco', 'EUR', 0);
+      const accountUsd = await createAccount(db, 'Dólares', 'USD', 0);
+      await db.runAsync("INSERT INTO categories (name, kind) VALUES ('Comida', 'expense')");
+      await db.runAsync("INSERT INTO categories (name, kind) VALUES ('Salario', 'income')");
+      const comida = (await db.getFirstAsync<{ id: number }>("SELECT id FROM categories WHERE name = 'Comida'"))?.id ?? 0;
+      const salario = (await db.getFirstAsync<{ id: number }>("SELECT id FROM categories WHERE name = 'Salario'"))?.id ?? 0;
+      await insertTransaction(db, input({ type: 'income', date: '2026-09-05', amount: 1000, accountId: accountEur, categoryId: salario }));
+      await insertTransaction(db, input({ type: 'income', date: '2026-09-10', amount: 200, currency: 'USD', accountId: accountUsd, categoryId: salario }));
+      await insertTransaction(db, input({ date: '2026-09-06', amount: 40, accountId: accountEur, categoryId: comida }));
+      await insertTransaction(db, input({ date: '2026-09-07', amount: 15, accountId: accountEur, categoryId: null }));
+      await insertTransaction(db, input({ date: '2026-08-01', amount: 30, accountId: accountEur, categoryId: comida }));
+      await insertTransaction(
+        db,
+        transferInput({ date: '2026-09-12', accountId: accountEur, destinationAccountId: accountUsd, amount: 50, destinationAmount: 55 }),
+      );
+      return { db, accountEur, accountUsd, comida, salario };
+    }
+
+    it('sums income and expense totals by type and currency, excluding transfers', async () => {
+      const { db } = await seed();
+
+      const rows = await sumTotalsByTypeAndCurrency(db, '2026-09-01', '2026-09-30');
+
+      expect(rows).toHaveLength(3);
+      expect(rows).toContainEqual({ type: 'income', currency: 'EUR', total: 1000 });
+      expect(rows).toContainEqual({ type: 'income', currency: 'USD', total: 200 });
+      expect(rows).toContainEqual({ type: 'expense', currency: 'EUR', total: 55 });
+      db.close();
+    });
+
+    it('restricts totals to the inclusive date range', async () => {
+      const { db } = await seed();
+
+      const rows = await sumTotalsByTypeAndCurrency(db, '2026-08-01', '2026-08-31');
+
+      expect(rows).toEqual([{ type: 'expense', currency: 'EUR', total: 30 }]);
+      db.close();
+    });
+
+    it('groups monthly totals by month, type and currency', async () => {
+      const { db } = await seed();
+
+      const rows = await sumMonthlyTotalsByTypeAndCurrency(db, '2026-08-01', '2026-09-30');
+
+      expect(rows).toContainEqual({ month: '2026-08', type: 'expense', currency: 'EUR', total: 30 });
+      expect(rows).toContainEqual({ month: '2026-09', type: 'income', currency: 'EUR', total: 1000 });
+      expect(rows).toContainEqual({ month: '2026-09', type: 'income', currency: 'USD', total: 200 });
+      expect(rows).toContainEqual({ month: '2026-09', type: 'expense', currency: 'EUR', total: 55 });
+      expect(rows.every((row) => row.type !== 'transfer')).toBe(true);
+      db.close();
+    });
+
+    it('groups expenses by category, keeping uncategorized rows with a null name', async () => {
+      const { db, comida } = await seed();
+
+      const rows = await sumExpenseTotalsByCategory(db, '2026-09-01', '2026-09-30');
+
+      expect(rows).toHaveLength(2);
+      expect(rows).toContainEqual({ categoryId: comida, categoryName: 'Comida', currency: 'EUR', total: 40 });
+      expect(rows).toContainEqual({ categoryId: null, categoryName: null, currency: 'EUR', total: 15 });
+      db.close();
+    });
   });
 });

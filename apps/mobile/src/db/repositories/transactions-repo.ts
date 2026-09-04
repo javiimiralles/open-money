@@ -353,3 +353,93 @@ export async function listTransactions(db: SqlExecutor, limit?: number): Promise
   );
   return rows.map(mapTransactionWithDetails);
 }
+
+/**
+ * Income/expense totals grouped by type and currency for a date range.
+ * Transfers are excluded: they move balance between own accounts.
+ * EUR conversion happens in JS (utils/stats) using the stored rates.
+ */
+export interface TypeCurrencyTotal {
+  type: 'income' | 'expense';
+  currency: string;
+  total: number;
+}
+
+/**
+ * Income/expense totals grouped by month (`YYYY-MM`), type and currency.
+ * Used for the month-over-month comparison on the stats screen.
+ */
+export interface MonthTypeCurrencyTotal extends TypeCurrencyTotal {
+  month: string;
+}
+
+/**
+ * Expense totals grouped by category and currency.
+ * `categoryName` is null for uncategorized expenses.
+ */
+export interface CategoryExpenseTotal {
+  categoryId: number | null;
+  categoryName: string | null;
+  currency: string;
+  total: number;
+}
+
+interface CategoryExpenseRow {
+  category_id: number | null;
+  category_name: string | null;
+  currency: string;
+  total: number;
+}
+
+export async function sumTotalsByTypeAndCurrency(
+  db: SqlExecutor,
+  fromDate: string,
+  toDate: string,
+): Promise<TypeCurrencyTotal[]> {
+  const rows = await db.getAllAsync<TypeCurrencyTotal>(
+    `SELECT t.type AS type, t.currency AS currency, SUM(t.amount) AS total
+     FROM transactions t
+     WHERE t.type IN ('income', 'expense') AND t.date >= ? AND t.date <= ?
+     GROUP BY t.type, t.currency`,
+    [fromDate, toDate],
+  );
+  return rows;
+}
+
+export async function sumMonthlyTotalsByTypeAndCurrency(
+  db: SqlExecutor,
+  fromDate: string,
+  toDate: string,
+): Promise<MonthTypeCurrencyTotal[]> {
+  const rows = await db.getAllAsync<MonthTypeCurrencyTotal>(
+    `SELECT substr(t.date, 1, 7) AS month, t.type AS type, t.currency AS currency, SUM(t.amount) AS total
+     FROM transactions t
+     WHERE t.type IN ('income', 'expense') AND t.date >= ? AND t.date <= ?
+     GROUP BY substr(t.date, 1, 7), t.type, t.currency
+     ORDER BY month`,
+    [fromDate, toDate],
+  );
+  return rows;
+}
+
+export async function sumExpenseTotalsByCategory(
+  db: SqlExecutor,
+  fromDate: string,
+  toDate: string,
+): Promise<CategoryExpenseTotal[]> {
+  const rows = await db.getAllAsync<CategoryExpenseRow>(
+    `SELECT t.category_id, c.name AS category_name, t.currency AS currency, SUM(t.amount) AS total
+     FROM transactions t
+     LEFT JOIN categories c ON c.id = t.category_id
+     WHERE t.type = 'expense' AND t.date >= ? AND t.date <= ?
+     GROUP BY t.category_id, t.currency
+     ORDER BY total DESC`,
+    [fromDate, toDate],
+  );
+  return rows.map((row) => ({
+    categoryId: row.category_id,
+    categoryName: row.category_name,
+    currency: row.currency,
+    total: row.total,
+  }));
+}
