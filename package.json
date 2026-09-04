@@ -4,7 +4,6 @@
   "private": true,
   "packageManager": "pnpm@11.9.0",
   "scripts": {
-    "mobile": "pnpm --filter mobile",
-    "backend": "pnpm --filter backend"
+    "mobile": "pnpm --filter mobile"
   }
 }
