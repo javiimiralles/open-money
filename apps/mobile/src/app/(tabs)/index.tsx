@@ -148,7 +148,7 @@ const makeStyles = (colors: ThemeColors) =>
     },
     netWorthValue: {
       ...typography.displayMd,
-      color: colors.primary,
+      color: colors.ink,
     },
     netWorthNote: {
       ...typography.caption,

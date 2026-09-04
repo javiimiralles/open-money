@@ -106,8 +106,8 @@ const makeStyles = (colors: ThemeColors) =>
       gap: spacing.sm,
       backgroundColor: colors.canvas,
       borderWidth: 1,
-      borderColor: colors.ink,
-      borderRadius: rounded.md,
+      borderColor: colors.mute,
+      borderRadius: rounded.xl,
       paddingVertical: spacing.md,
       paddingHorizontal: spacing.lg,
     },
@@ -128,8 +128,8 @@ const makeStyles = (colors: ThemeColors) =>
     },
     options: {
       borderWidth: 1,
-      borderColor: colors.ink,
-      borderRadius: rounded.md,
+      borderColor: colors.mute,
+      borderRadius: rounded.xl,
       overflow: 'hidden',
     },
     option: {

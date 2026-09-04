@@ -107,7 +107,7 @@ export async function listAccountsWithBalances(db: SqlExecutor): Promise<Account
             ), 0)
           AS balance
      FROM accounts a
-     ORDER BY a.is_primary DESC, a.name COLLATE NOCASE`,
+     ORDER BY a.is_primary DESC, a.created_at ASC, a.name COLLATE NOCASE ASC`,
   );
   return rows.map(mapAccountWithBalance);
 }
