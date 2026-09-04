@@ -326,30 +326,129 @@ function buildFilters(filters: TransactionFilters): { where: string; params: unk
 }
 
 /**
+ * Pagination options for transaction listing.
+ * `offset` rows are skipped before returning up to `limit` rows.
+ */
+export interface TransactionPagination {
+  limit?: number;
+  offset?: number;
+}
+
+/**
  * Lists transactions matching the given filters in reverse chronological
  * order (newest first). All criteria are combined with AND.
+ * Supports `LIMIT`/`OFFSET` pagination for infinite scroll.
  */
 export async function listTransactionsFiltered(
   db: SqlExecutor,
   filters: TransactionFilters,
+  pagination?: TransactionPagination,
 ): Promise<TransactionWithDetails[]> {
   const { where, params } = buildFilters(filters);
+  const queryParams = [...params];
+  let paginationClause = '';
+  if (pagination?.limit !== undefined) {
+    paginationClause += ' LIMIT ?';
+    queryParams.push(pagination.limit);
+  }
+  if (pagination?.offset !== undefined) {
+    if (pagination.limit === undefined) {
+      paginationClause += ' LIMIT -1';
+    }
+    paginationClause += ' OFFSET ?';
+    queryParams.push(pagination.offset);
+  }
   const rows = await db.getAllAsync<TransactionDetailsRow>(
-    `${DETAILS_SELECT}${where} ORDER BY t.date DESC, t.id DESC`,
-    params,
+    `${DETAILS_SELECT}${where} ORDER BY t.date DESC, t.id DESC${paginationClause}`,
+    queryParams,
   );
   return rows.map(mapTransactionWithDetails);
 }
 
 /**
- * Lists transactions in reverse chronological order (newest first).
- * `limit` is optional; used by the dashboard for recent movements.
+ * Counts transactions matching the given filters without loading rows.
+ * Used to size infinite-scroll lists and summaries.
  */
-export async function listTransactions(db: SqlExecutor, limit?: number): Promise<TransactionWithDetails[]> {
+export async function countTransactionsFiltered(db: SqlExecutor, filters: TransactionFilters): Promise<number> {
+  const { where, params } = buildFilters(filters);
+  const row = await db.getFirstAsync<{ count: number }>(
+    `SELECT COUNT(*) AS count FROM transactions t${where}`,
+    params,
+  );
+  return row?.count ?? 0;
+}
+
+interface FilteredSummaryRow {
+  type: TransactionType;
+  currency: string;
+  total: number;
+  count: number;
+}
+
+/**
+ * Summarizes all transactions matching the given filters without loading
+ * rows: total count, signed net, and currency (null when mixed or empty).
+ * Transfers count toward `count` but are neutral in `net`.
+ */
+export async function summarizeTransactionsFiltered(
+  db: SqlExecutor,
+  filters: TransactionFilters,
+): Promise<{ count: number; net: number; currency: string | null; mixedCurrencies: boolean }> {
+  const { where, params } = buildFilters(filters);
+  const rows = await db.getAllAsync<FilteredSummaryRow>(
+    `SELECT t.type AS type, t.currency AS currency, SUM(t.amount) AS total, COUNT(*) AS count
+     FROM transactions t${where}
+     GROUP BY t.type, t.currency`,
+    params,
+  );
+  let count = 0;
+  let net = 0;
+  const currencies = new Set<string>();
+  for (const row of rows) {
+    count += row.count;
+    currencies.add(row.currency);
+    if (row.type === 'income') {
+      net += row.total;
+    } else if (row.type === 'expense') {
+      net -= row.total;
+    }
+  }
+  const mixedCurrencies = currencies.size > 1;
+  return {
+    count,
+    net,
+    currency: mixedCurrencies || currencies.size === 0 ? null : [...currencies][0],
+    mixedCurrencies,
+  };
+}
+
+/**
+ * Lists transactions in reverse chronological order (newest first).
+ * `limit`/`offset` are optional; `limit` is used by the dashboard for
+ * recent movements and `offset` enables pagination.
+ */
+export async function listTransactions(
+  db: SqlExecutor,
+  limit?: number,
+  offset?: number,
+): Promise<TransactionWithDetails[]> {
   const { where, params } = buildFilters(EMPTY_TRANSACTION_FILTERS);
+  const queryParams = [...params];
+  let paginationClause = '';
+  if (limit !== undefined) {
+    paginationClause += ' LIMIT ?';
+    queryParams.push(limit);
+  }
+  if (offset !== undefined) {
+    if (limit === undefined) {
+      paginationClause += ' LIMIT -1';
+    }
+    paginationClause += ' OFFSET ?';
+    queryParams.push(offset);
+  }
   const rows = await db.getAllAsync<TransactionDetailsRow>(
-    `${DETAILS_SELECT}${where} ORDER BY t.date DESC, t.id DESC${limit ? ' LIMIT ?' : ''}`,
-    limit ? [...params, limit] : params,
+    `${DETAILS_SELECT}${where} ORDER BY t.date DESC, t.id DESC${paginationClause}`,
+    queryParams,
   );
   return rows.map(mapTransactionWithDetails);
 }

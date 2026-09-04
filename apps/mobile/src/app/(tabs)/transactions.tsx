@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { Modal, Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/Card';
@@ -21,7 +21,7 @@ export default function TransactionsScreen() {
   const router = useRouter();
   const filters = useTransactionFilters();
   const [panelOpen, setPanelOpen] = useState(false);
-  const { groups, summary, loading } = useTransactions(filters.query);
+  const { groups, summary, loading, loadingMore, hasMore, loadMore } = useTransactions(filters.query);
 
   const sections = useMemo(
     () =>
@@ -56,6 +56,11 @@ export default function TransactionsScreen() {
         )}
         stickySectionHeadersEnabled={false}
         contentContainerStyle={styles.content}
+        onEndReached={hasMore && !loading ? loadMore : null}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          loadingMore ? <ActivityIndicator accessibilityLabel="Cargando más movimientos" /> : null
+        }
         ListHeaderComponent={
           <View style={styles.header}>
             <Text style={styles.title}>Movimientos</Text>
