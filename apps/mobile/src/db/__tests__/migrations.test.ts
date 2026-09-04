@@ -123,6 +123,15 @@ describe('migrations', () => {
     const settings = await db.getAllAsync<{ key: string }>('SELECT key FROM settings');
     expect(settings).toEqual([]);
 
+    const maxRow = await db.getFirstAsync<{ max_id: number }>('SELECT MAX(id) AS max_id FROM recurring_rules');
+    const maxId = maxRow?.max_id ?? 0;
+    const insertResult = (await db.runAsync(
+      `INSERT INTO recurring_rules (type, amount, currency, account_id, frequency, next_execution, active)
+       VALUES ('expense', 10, 'EUR', 1, 'monthly', '2026-11-01', 1)`,
+    )) as { lastInsertRowid: number };
+    const newId = insertResult.lastInsertRowid ?? (await db.getFirstAsync<{ id: number }>('SELECT id FROM recurring_rules ORDER BY id DESC LIMIT 1'))?.id;
+    expect(newId).toBe(maxId + 1);
+
     db.close();
   });
 

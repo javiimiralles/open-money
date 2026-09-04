@@ -32,7 +32,7 @@ function filenameTimestamp(now: Date): string {
   );
 }
 
-export function useBackup(onImported: () => void): UseBackupResult {
+export function useBackup(onImported?: () => void): UseBackupResult {
   const sqlite = useSQLiteContext();
   const db = useMemo(() => toSqlExecutor(sqlite), [sqlite]);
   const [busy, setBusy] = useState<BackupBusyAction>(null);
@@ -74,7 +74,7 @@ export function useBackup(onImported: () => void): UseBackupResult {
       }
       const file = parseBackup(contents, await getSchemaVersion(db));
       await replaceAllTables(db, file);
-      onImported();
+      onImported?.();
       setMessage('Copia de seguridad importada correctamente.');
     } catch (actionError) {
       setError(

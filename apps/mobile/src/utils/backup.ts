@@ -213,10 +213,28 @@ function stripLegacyInvestmentData(data: Record<string, unknown>): void {
     delete data[table];
   }
   const rules = data.recurring_rules;
+  const removedIds = new Set<unknown>();
   if (Array.isArray(rules)) {
+    const kept: unknown[] = [];
     for (const row of rules) {
       if (isPlainObject(row)) {
         delete row.instrument_id;
+        if (row.type === 'investment') {
+          if (row.id !== undefined) removedIds.add(row.id);
+          continue;
+        }
+      }
+      kept.push(row);
+    }
+    data.recurring_rules = kept;
+  }
+  if (removedIds.size > 0) {
+    const txs = data.transactions;
+    if (Array.isArray(txs)) {
+      for (const row of txs) {
+        if (isPlainObject(row) && removedIds.has(row.recurring_rule_id)) {
+          row.recurring_rule_id = null;
+        }
       }
     }
   }

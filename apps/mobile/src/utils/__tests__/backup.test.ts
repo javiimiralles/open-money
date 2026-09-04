@@ -214,4 +214,91 @@ describe('backup format', () => {
     expect(parsed.data.recurring_rules).toHaveLength(1);
     expect('instrument_id' in parsed.data.recurring_rules[0]).toBe(false);
   });
+
+  it('strips legacy investment recurring_rules and nulls referencing transactions', () => {
+    const data = {
+      ...validData(),
+      recurring_rules: [
+        {
+          id: 10,
+          type: 'investment',
+          amount: 100,
+          currency: 'EUR',
+          account_id: 1,
+          destination_account_id: null,
+          category_id: 1,
+          instrument_id: 1,
+          notes: null,
+          frequency: 'monthly',
+          interval_days: null,
+          next_execution: '2026-10-01',
+          active: 1,
+          last_run_date: null,
+          created_at: '2026-09-01',
+          fx_rate: null,
+        },
+        {
+          id: 11,
+          type: 'expense',
+          amount: 10,
+          currency: 'EUR',
+          account_id: 1,
+          destination_account_id: null,
+          category_id: 1,
+          instrument_id: null,
+          notes: null,
+          frequency: 'monthly',
+          interval_days: null,
+          next_execution: '2026-10-01',
+          active: 1,
+          last_run_date: null,
+          created_at: '2026-09-01',
+          fx_rate: null,
+        },
+      ],
+      transactions: [
+        {
+          id: 1,
+          type: 'expense',
+          date: '2026-02-01',
+          amount: 12.5,
+          currency: 'EUR',
+          account_id: 1,
+          category_id: 1,
+          notes: 'Lunch',
+          destination_account_id: null,
+          destination_amount: null,
+          fx_rate: null,
+          source: 'manual',
+          recurring_rule_id: 10,
+          created_at: '2026-02-01',
+          updated_at: '2026-02-01',
+          recurring_batch_id: null,
+        },
+        {
+          id: 2,
+          type: 'expense',
+          date: '2026-02-02',
+          amount: 5,
+          currency: 'EUR',
+          account_id: 1,
+          category_id: 1,
+          notes: null,
+          destination_account_id: null,
+          destination_amount: null,
+          fx_rate: null,
+          source: 'recurring',
+          recurring_rule_id: 11,
+          created_at: '2026-02-02',
+          updated_at: '2026-02-02',
+          recurring_batch_id: null,
+        },
+      ],
+    };
+    const parsed = validateBackup({ ...validFile(), data }, CURRENT_SCHEMA_VERSION);
+    expect(parsed.data.recurring_rules).toHaveLength(1);
+    expect(parsed.data.recurring_rules[0].id).toBe(11);
+    expect(parsed.data.transactions.find((r) => r.id === 1)?.recurring_rule_id).toBeNull();
+    expect(parsed.data.transactions.find((r) => r.id === 2)?.recurring_rule_id).toBe(11);
+  });
 });
