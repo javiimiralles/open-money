@@ -2,6 +2,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { AccountCardScroller } from '@/components/AccountCardScroller';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { DateField } from '@/components/DateField';
@@ -96,24 +97,36 @@ export default function TransactionFormScreen() {
               keyboardType="decimal-pad"
               error={form.errors.amount}
             />
-            <SelectField
-              label={form.values.type === 'transfer' ? 'Cuenta de origen' : 'Cuenta'}
-              value={form.values.accountId}
-              options={form.accountOptions}
-              onChange={form.setAccountId}
-              placeholder="Selecciona una cuenta"
-              error={form.errors.accountId}
-            />
+            <View style={styles.field}>
+              <Text style={styles.label}>{form.values.type === 'transfer' ? 'Cuenta de origen' : 'Cuenta'}</Text>
+              {form.accountCards.length > 0 ? (
+                <AccountCardScroller
+                  accounts={form.accountCards}
+                  selectedId={form.values.accountId}
+                  onPress={form.setAccountId}
+                />
+              ) : (
+                <Text style={styles.emptyText}>Todavía no tienes cuentas. Crea la primera desde Cuentas.</Text>
+              )}
+              {form.errors.accountId ? <Text style={styles.error}>{form.errors.accountId}</Text> : null}
+            </View>
             {form.values.type === 'transfer' ? (
               <>
-                <SelectField
-                  label="Cuenta de destino"
-                  value={form.values.destinationAccountId}
-                  options={form.accountOptions}
-                  onChange={form.setDestinationAccountId}
-                  placeholder="Selecciona la cuenta de destino"
-                  error={form.errors.destinationAccountId}
-                />
+                <View style={styles.field}>
+                  <Text style={styles.label}>Cuenta de destino</Text>
+                  {form.accountCards.length > 0 ? (
+                    <AccountCardScroller
+                      accounts={form.accountCards}
+                      selectedId={form.values.destinationAccountId}
+                      onPress={form.setDestinationAccountId}
+                    />
+                  ) : (
+                    <Text style={styles.emptyText}>Todavía no tienes cuentas. Crea la primera desde Cuentas.</Text>
+                  )}
+                  {form.errors.destinationAccountId ? (
+                    <Text style={styles.error}>{form.errors.destinationAccountId}</Text>
+                  ) : null}
+                </View>
                 {form.isCrossCurrency ? (
                   <>
                     <TextField
@@ -183,6 +196,14 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   label: {
     ...typography.bodySmStrong,
     color: colors.ink,
+  },
+  error: {
+    ...typography.caption,
+    color: colors.negativeDarkest,
+  },
+  emptyText: {
+    ...typography.bodyMd,
+    color: colors.body,
   },
   typeRow: {
     flexDirection: 'row',
