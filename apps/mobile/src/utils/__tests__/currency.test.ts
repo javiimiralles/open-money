@@ -1,6 +1,7 @@
 import { migrate } from '@/db/client';
+import type { AccountWithBalance } from '@/db/repositories/accounts-repo';
 import { BetterSqliteExecutor } from '@/test/better-sqlite-executor';
-import { convertToEur, getLatestRatesToEur } from '@/utils/currency';
+import { convertToEur, getLatestRatesToEur, toAccountListItems } from '@/utils/currency';
 
 describe('convertToEur', () => {
   it('returns the amount unchanged for EUR', () => {
@@ -44,5 +45,44 @@ describe('getLatestRatesToEur', () => {
     expect(await getLatestRatesToEur(db)).toEqual({});
 
     db.close();
+  });
+});
+
+describe('toAccountListItems', () => {
+  const baseAccount: AccountWithBalance = {
+    id: 1,
+    name: 'Cash',
+    identifier: null,
+    currency: 'EUR',
+    initialBalance: 100,
+    color: null,
+    isPrimary: true,
+    createdAt: '2026-01-01',
+    updatedAt: '2026-01-01',
+    balance: 150,
+  };
+
+  it('attaches the EUR equivalent to every account', () => {
+    const accounts: AccountWithBalance[] = [
+      baseAccount,
+      { ...baseAccount, id: 2, name: 'Broker', currency: 'USD', balance: 100, isPrimary: false },
+    ];
+
+    expect(toAccountListItems(accounts, { USD: 0.9 })).toEqual([
+      { ...accounts[0], eurEquivalent: 150, rateMissing: false },
+      { ...accounts[1], eurEquivalent: 90, rateMissing: false },
+    ]);
+  });
+
+  it('flags accounts whose rate is missing', () => {
+    const accounts: AccountWithBalance[] = [{ ...baseAccount, id: 3, currency: 'USD' }];
+
+    expect(toAccountListItems(accounts, {})).toEqual([
+      { ...accounts[0], eurEquivalent: 150, rateMissing: true },
+    ]);
+  });
+
+  it('returns an empty list when there are no accounts', () => {
+    expect(toAccountListItems([], {})).toEqual([]);
   });
 });
