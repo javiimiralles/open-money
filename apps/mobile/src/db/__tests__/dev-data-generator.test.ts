@@ -46,7 +46,7 @@ describe('dev-data-generator', () => {
 
     for (const transaction of dataset.transactions) {
       expect(transaction.amount).toBeGreaterThan(0);
-      expect(Number.isInteger(roundToCents(transaction.amount) * 100)).toBe(true);
+      expect(roundToCents(transaction.amount)).toBe(transaction.amount);
       expect(transaction.date).toMatch(ISO_DATE);
       expect(transaction.date >= FIRST_DAY).toBe(true);
       expect(transaction.date <= TODAY).toBe(true);

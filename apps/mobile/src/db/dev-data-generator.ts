@@ -309,7 +309,8 @@ function pushMonthlyFixed(context: MonthContext): void {
     { type: 'transfer', amount: 100, currency: 'EUR', accountKey: 'primary', destinationAccountKey: 'cash', destinationAmount: 100, fxRate: null, categoryId: null, notes: 'Retirada cajero' },
     10,
   );
-  const eurToGbp = roundToCents(100 / DEV_RATES_TO_EUR.GBP);
+  const eurToGbpRate = roundToCents(1 / DEV_RATES_TO_EUR.GBP);
+  const eurToGbp = roundToCents(100 * eurToGbpRate);
   pushTransaction(
     context,
     {
@@ -319,7 +320,7 @@ function pushMonthlyFixed(context: MonthContext): void {
       accountKey: 'primary',
       destinationAccountKey: 'gbp',
       destinationAmount: eurToGbp,
-      fxRate: roundToCents(eurToGbp / 100),
+      fxRate: eurToGbpRate,
       categoryId: null,
       notes: 'Ahorro en libras',
     },
