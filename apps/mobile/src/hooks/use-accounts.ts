@@ -8,7 +8,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { listAccountsWithBalances, type AccountWithBalance } from '@/db/repositories/accounts-repo';
 import { toSqlExecutor } from '@/db/sqlite-adapter';
-import { convertToEur, getLatestRatesToEur } from '@/utils/currency';
+import { getLatestRatesToEur, toAccountListItems } from '@/utils/currency';
 
 export interface AccountListItem extends AccountWithBalance {
   eurEquivalent: number;
@@ -30,11 +30,7 @@ export function useAccounts(): UseAccountsResult {
 
   const load = useCallback(async () => {
     const [accounts, rates] = await Promise.all([listAccountsWithBalances(db), getLatestRatesToEur(db)]);
-    const nextItems = accounts.map((account) => {
-      const conversion = convertToEur(account.balance, account.currency, rates);
-      return { ...account, eurEquivalent: conversion.amountEur, rateMissing: conversion.rateMissing };
-    });
-    setItems(nextItems);
+    setItems(toAccountListItems(accounts, rates));
     setLoading(false);
   }, [db]);
 

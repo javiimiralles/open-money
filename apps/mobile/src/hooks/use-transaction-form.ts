@@ -17,9 +17,10 @@ import {
   type TransactionInput,
 } from '@/db/repositories/transactions-repo';
 import { toSqlExecutor } from '@/db/sqlite-adapter';
-import { getLatestRatesToEur } from '@/utils/currency';
+import type { AccountListItem } from '@/hooks/use-accounts';
+import { getLatestRatesToEur, toAccountListItems } from '@/utils/currency';
 import { todayIso } from '@/utils/dates';
-import { formatMoney, parseAmount } from '@/utils/money';
+import { parseAmount } from '@/utils/money';
 import { crossRate, destinationAmountFromRate, rateFromAmounts } from '@/utils/transfer';
 
 export type TransactionFormType = 'income' | 'expense' | 'transfer';
@@ -49,7 +50,7 @@ export interface UseTransactionFormResult {
   values: TransactionFormValues;
   errors: TransactionFormErrors;
   accounts: AccountWithBalance[];
-  accountOptions: { label: string; value: number }[];
+  accountCards: AccountListItem[];
   categoryOptions: { label: string; value: number }[];
   loading: boolean;
   saving: boolean;
@@ -171,14 +172,7 @@ export function useTransactionForm(
     };
   }, [db, transactionId]);
 
-  const accountOptions = useMemo(
-    () =>
-      accounts.map((account) => ({
-        label: `${account.name} · ${formatMoney(account.balance, account.currency)}`,
-        value: account.id,
-      })),
-    [accounts],
-  );
+  const accountCards = useMemo(() => toAccountListItems(accounts, rates), [accounts, rates]);
 
   const categoryOptions = useMemo(
     () =>
@@ -402,7 +396,7 @@ export function useTransactionForm(
     values,
     errors,
     accounts,
-    accountOptions,
+    accountCards,
     categoryOptions,
     loading,
     saving,
