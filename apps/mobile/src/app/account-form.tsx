@@ -39,9 +39,6 @@ export default function AccountFormScreen() {
     if (result.transactions > 0) {
       linked.push(`${result.transactions} movimiento(s)`);
     }
-    if (result.trades > 0) {
-      linked.push(`${result.trades} operación(es)`);
-    }
     const message =
       linked.length > 0
         ? `La cuenta tiene ${linked.join(' y ')} que se eliminarán también. ¿Continuar?`

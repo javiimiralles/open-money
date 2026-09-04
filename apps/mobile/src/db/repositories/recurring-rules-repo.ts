@@ -4,7 +4,7 @@
 
 import type { SqlExecutor } from '../client';
 
-export type RecurringRuleType = 'income' | 'expense' | 'transfer' | 'investment';
+export type RecurringRuleType = 'income' | 'expense' | 'transfer';
 export type RecurrenceFrequency = 'weekly' | 'monthly' | 'yearly' | 'every_n_days';
 
 export interface RecurringRule {
@@ -15,7 +15,6 @@ export interface RecurringRule {
   accountId: number;
   destinationAccountId: number | null;
   categoryId: number | null;
-  instrumentId: number | null;
   notes: string | null;
   frequency: RecurrenceFrequency;
   intervalDays: number | null;
@@ -39,7 +38,6 @@ export interface RecurringRuleInput {
   accountId: number;
   destinationAccountId: number | null;
   categoryId: number | null;
-  instrumentId: number | null;
   notes: string | null;
   frequency: RecurrenceFrequency;
   intervalDays: number | null;
@@ -56,7 +54,6 @@ interface RecurringRuleRow {
   account_id: number;
   destination_account_id: number | null;
   category_id: number | null;
-  instrument_id: number | null;
   notes: string | null;
   frequency: RecurrenceFrequency;
   interval_days: number | null;
@@ -82,7 +79,6 @@ function mapRule(row: RecurringRuleRow): RecurringRule {
     accountId: row.account_id,
     destinationAccountId: row.destination_account_id,
     categoryId: row.category_id,
-    instrumentId: row.instrument_id,
     notes: row.notes,
     frequency: row.frequency,
     intervalDays: row.interval_days,
@@ -112,7 +108,6 @@ const DETAILS_SELECT = `
     r.account_id,
     r.destination_account_id,
     r.category_id,
-    r.instrument_id,
     r.notes,
     r.frequency,
     r.interval_days,
@@ -133,8 +128,8 @@ const DETAILS_SELECT = `
 export async function insertRecurringRule(db: SqlExecutor, input: RecurringRuleInput): Promise<number> {
   await db.runAsync(
     `INSERT INTO recurring_rules
-      (type, amount, currency, account_id, destination_account_id, category_id, instrument_id, notes, frequency, interval_days, next_execution, active, fx_rate)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (type, amount, currency, account_id, destination_account_id, category_id, notes, frequency, interval_days, next_execution, active, fx_rate)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       input.type,
       input.amount,
@@ -142,7 +137,6 @@ export async function insertRecurringRule(db: SqlExecutor, input: RecurringRuleI
       input.accountId,
       input.destinationAccountId,
       input.categoryId,
-      input.instrumentId,
       input.notes,
       input.frequency,
       input.intervalDays,
@@ -162,7 +156,7 @@ export async function updateRecurringRule(
 ): Promise<void> {
   await db.runAsync(
     `UPDATE recurring_rules
-     SET type = ?, amount = ?, currency = ?, account_id = ?, destination_account_id = ?, category_id = ?, instrument_id = ?, notes = ?, frequency = ?, interval_days = ?, next_execution = ?, active = ?, fx_rate = ?
+     SET type = ?, amount = ?, currency = ?, account_id = ?, destination_account_id = ?, category_id = ?, notes = ?, frequency = ?, interval_days = ?, next_execution = ?, active = ?, fx_rate = ?
      WHERE id = ?`,
     [
       input.type,
@@ -171,7 +165,6 @@ export async function updateRecurringRule(
       input.accountId,
       input.destinationAccountId,
       input.categoryId,
-      input.instrumentId,
       input.notes,
       input.frequency,
       input.intervalDays,

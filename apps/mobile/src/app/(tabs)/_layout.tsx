@@ -43,13 +43,6 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
-          name="portfolio"
-          options={{
-            title: 'Cartera',
-            tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="chart-line" color={color} size={size} />,
-          }}
-        />
-        <Tabs.Screen
           name="settings"
           options={{
             title: 'Ajustes',

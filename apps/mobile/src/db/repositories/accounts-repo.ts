@@ -2,9 +2,9 @@
  * Accounts repository: CRUD, calculated balances, and deletion guards.
  *
  * At most one account is the primary one; setting a new primary demotes
- * the previous. Balances include investment trades (US-010): buys subtract
- * their total from the funding account and sells add it back. Trade amounts
- * are stored in the account currency, so no conversion is needed here.
+ * the previous. Balances are derived from the initial balance plus the
+ * signed transaction legs (income adds, expenses and sent transfers
+ * subtract, received transfers add).
  */
 
 import type { SqlExecutor } from '../client';
@@ -93,19 +93,11 @@ export async function listAccountsWithBalances(db: SqlExecutor): Promise<Account
              SELECT SUM(t.amount) FROM transactions t
              WHERE t.account_id = a.id AND t.type = 'transfer'
            ), 0)
-          + COALESCE((
-              SELECT SUM(COALESCE(t.destination_amount, t.amount)) FROM transactions t
-              WHERE t.destination_account_id = a.id AND t.type = 'transfer'
-            ), 0)
-          - COALESCE((
-              SELECT SUM(t.quantity * t.price) FROM trades t
-              WHERE t.account_id = a.id AND t.type = 'buy'
-            ), 0)
-          + COALESCE((
-              SELECT SUM(t.quantity * t.price) FROM trades t
-              WHERE t.account_id = a.id AND t.type = 'sell'
-            ), 0)
-          AS balance
+           + COALESCE((
+               SELECT SUM(COALESCE(t.destination_amount, t.amount)) FROM transactions t
+               WHERE t.destination_account_id = a.id AND t.type = 'transfer'
+             ), 0)
+           AS balance
      FROM accounts a
      ORDER BY a.is_primary DESC, a.created_at ASC, a.name COLLATE NOCASE ASC`,
   );

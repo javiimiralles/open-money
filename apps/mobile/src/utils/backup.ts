@@ -12,8 +12,6 @@ export type BackupTableName =
   | 'categories'
   | 'transactions'
   | 'recurring_rules'
-  | 'instruments'
-  | 'trades'
   | 'exchange_rates'
   | 'settings';
 
@@ -41,11 +39,15 @@ export const BACKUP_TABLES: readonly BackupTableName[] = [
   'categories',
   'transactions',
   'recurring_rules',
-  'instruments',
-  'trades',
   'exchange_rates',
   'settings',
 ];
+
+/**
+ * Tables and columns dropped with investments. Old backup files still
+ * contain them; they are stripped on import so legacy files stay usable.
+ */
+const LEGACY_INVESTMENT_TABLES: readonly string[] = ['instruments', 'trades'];
 
 const TABLE_COLUMNS: Record<BackupTableName, readonly string[]> = {
   accounts: ['id', 'name', 'identifier', 'currency', 'initial_balance', 'color', 'is_primary', 'created_at', 'updated_at'],
@@ -76,7 +78,6 @@ const TABLE_COLUMNS: Record<BackupTableName, readonly string[]> = {
     'account_id',
     'destination_account_id',
     'category_id',
-    'instrument_id',
     'notes',
     'frequency',
     'interval_days',
@@ -86,30 +87,6 @@ const TABLE_COLUMNS: Record<BackupTableName, readonly string[]> = {
     'created_at',
     'fx_rate',
   ],
-  instruments: [
-    'id',
-    'symbol',
-    'name',
-    'currency',
-    'market',
-    'isin',
-    'kind',
-    'last_price',
-    'last_price_at',
-    'created_at',
-  ],
-  trades: [
-    'id',
-    'instrument_id',
-    'type',
-    'date',
-    'quantity',
-    'price',
-    'currency',
-    'account_id',
-    'notes',
-    'created_at',
-  ],
   exchange_rates: ['id', 'currency', 'rate_to_eur', 'fetched_at', 'is_manual'],
   settings: ['key', 'value'],
 };
@@ -117,7 +94,6 @@ const TABLE_COLUMNS: Record<BackupTableName, readonly string[]> = {
 const REFERENCED_TABLES: readonly BackupTableName[] = [
   'accounts',
   'categories',
-  'instruments',
   'recurring_rules',
 ];
 
@@ -190,7 +166,6 @@ function validateRows(data: BackupData): void {
 function validateReferences(data: BackupData): void {
   const accounts = idSet(data.accounts);
   const categories = idSet(data.categories);
-  const instruments = idSet(data.instruments);
   const recurringRules = idSet(data.recurring_rules);
 
   for (const row of data.recurring_rules) {
@@ -203,13 +178,6 @@ function validateReferences(data: BackupData): void {
       'accounts',
     );
     assertReference('recurring_rules', 'category_id', row.category_id ?? null, categories, 'categories');
-    assertReference(
-      'recurring_rules',
-      'instrument_id',
-      row.instrument_id ?? null,
-      instruments,
-      'instruments',
-    );
   }
   for (const row of data.transactions) {
     assertReference('transactions', 'account_id', row.account_id ?? null, accounts, 'accounts');
@@ -229,14 +197,29 @@ function validateReferences(data: BackupData): void {
       'recurring_rules',
     );
   }
-  for (const row of data.trades) {
-    assertReference('trades', 'instrument_id', row.instrument_id ?? null, instruments, 'instruments');
-    assertReference('trades', 'account_id', row.account_id ?? null, accounts, 'accounts');
-  }
 }
 
 export function serializeBackup(file: BackupFile): string {
   return JSON.stringify(file);
+}
+
+/**
+ * Strips investment data from backups exported before investments were
+ * removed, so legacy files stay importable. The stripped rows are dropped
+ * from the validated file, keeping the import faithful to the new schema.
+ */
+function stripLegacyInvestmentData(data: Record<string, unknown>): void {
+  for (const table of LEGACY_INVESTMENT_TABLES) {
+    delete data[table];
+  }
+  const rules = data.recurring_rules;
+  if (Array.isArray(rules)) {
+    for (const row of rules) {
+      if (isPlainObject(row)) {
+        delete row.instrument_id;
+      }
+    }
+  }
 }
 
 /**
@@ -261,6 +244,7 @@ export function validateBackup(value: unknown, currentSchemaVersion: number): Ba
   if (!isPlainObject(value.data)) {
     throw new BackupValidationError('Archivo no válido: faltan las tablas de datos.');
   }
+  stripLegacyInvestmentData(value.data);
   validateDataShape(value.data);
   const data = value.data as BackupData;
   validateRows(data);

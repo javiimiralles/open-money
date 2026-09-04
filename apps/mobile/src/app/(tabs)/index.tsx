@@ -20,7 +20,7 @@ export default function DashboardScreen() {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { accounts, netWorthEur, unpricedCount, hasMissingRates, recentTransactions, loading } = useDashboard();
+  const { accounts, netWorthEur, hasMissingRates, recentTransactions, loading } = useDashboard();
   const greeting = useMemo(() => getGreeting(new Date().getHours()), []);
   const [balancesHidden, setBalancesHidden] = useState(false);
 
@@ -66,13 +66,6 @@ export default function DashboardScreen() {
                 <Text style={styles.netWorthValue} numberOfLines={1} adjustsFontSizeToFit>
                   {balancesHidden ? MONEY_MASK : formatMoney(netWorthEur, 'EUR')}
                 </Text>
-                {unpricedCount > 0 ? (
-                  <Text style={styles.netWorthNote}>
-                    {unpricedCount === 1
-                      ? '1 posición sin precio no incluida en el total.'
-                      : `${unpricedCount} posiciones sin precio no incluidas en el total.`}
-                  </Text>
-                ) : null}
                 {hasMissingRates ? (
                   <Text style={styles.netWorthNote}>
                     Alguna divisa no tiene tasa de cambio guardada; se muestra con tasa 1:1.

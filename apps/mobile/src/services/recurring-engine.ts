@@ -41,8 +41,7 @@ export async function processRecurringOnOpen(
   db: SqlExecutor,
   asOfDate: string,
 ): Promise<RecurringProcessResult | null> {
-  const dueRules = await listDueRecurringRules(db, asOfDate);
-  const applicable = dueRules.filter((rule) => rule.type !== 'investment');
+  const applicable = await listDueRecurringRules(db, asOfDate);
   if (applicable.length === 0) {
     return null;
   }

@@ -13,7 +13,6 @@ import {
   insertAccount,
   updateAccount,
 } from '@/db/repositories/accounts-repo';
-import { countTradesForAccount } from '@/db/repositories/trades-repo';
 import { toSqlExecutor } from '@/db/sqlite-adapter';
 import { parseAmount } from '@/utils/money';
 
@@ -33,7 +32,7 @@ export interface AccountFormErrors {
 
 export type DeleteRequestResult =
   | { status: 'blocked'; recurringRules: number }
-  | { status: 'confirm'; transactions: number; trades: number };
+  | { status: 'confirm'; transactions: number };
 
 export interface UseAccountFormResult {
   values: AccountFormValues;
@@ -138,17 +137,16 @@ export function useAccountForm(accountId: number | null): UseAccountFormResult {
 
   const requestDelete = useCallback(async (): Promise<DeleteRequestResult> => {
     if (accountId === null) {
-      return { status: 'confirm', transactions: 0, trades: 0 };
+      return { status: 'confirm', transactions: 0 };
     }
-    const [recurringRules, transactions, trades] = await Promise.all([
+    const [recurringRules, transactions] = await Promise.all([
       countActiveRecurringRulesForAccount(db, accountId),
       countTransactionsForAccount(db, accountId),
-      countTradesForAccount(db, accountId),
     ]);
     if (recurringRules > 0) {
       return { status: 'blocked', recurringRules };
     }
-    return { status: 'confirm', transactions, trades };
+    return { status: 'confirm', transactions };
   }, [db, accountId]);
 
   const performDelete = useCallback(async (): Promise<void> => {

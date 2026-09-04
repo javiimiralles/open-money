@@ -1,6 +1,5 @@
 /**
  * Recurring rule create/edit form state, validation, save, and delete flow.
- * Investment type is hidden in the MVP (deferred to US-010).
  */
 
 import { useSQLiteContext } from 'expo-sqlite';
@@ -23,7 +22,7 @@ import { todayIso } from '@/utils/dates';
 import { parseAmount } from '@/utils/money';
 import { crossRate, destinationAmountFromRate, rateFromAmounts } from '@/utils/transfer';
 
-export type RecurringFormType = Exclude<RecurringRuleType, 'investment'>;
+export type RecurringFormType = RecurringRuleType;
 
 export interface RecurringFormValues {
   type: RecurringFormType;
@@ -153,10 +152,8 @@ export function useRecurringForm(ruleId: number | null): UseRecurringFormResult 
     let active = true;
     getRecurringRuleById(db, ruleId).then((rule) => {
       if (!active || !rule) return;
-      // Only expense/income/transfer are editable in MVP
-      const type = (rule.type === 'investment' ? 'expense' : rule.type) as RecurringFormType;
       setValues({
-        type,
+        type: rule.type,
         amount: String(rule.amount),
         accountId: rule.accountId,
         categoryId: rule.categoryId ?? 0,
@@ -269,7 +266,6 @@ export function useRecurringForm(ruleId: number | null): UseRecurringFormResult 
       accountId: values.accountId,
       destinationAccountId: values.type === 'transfer' ? values.destinationAccountId : null,
       categoryId: values.type === 'transfer' ? null : values.categoryId === 0 ? null : values.categoryId,
-      instrumentId: null,
       notes: values.notes.trim() || null,
       frequency: values.frequency,
       intervalDays,

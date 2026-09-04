@@ -18,9 +18,7 @@ import {
 
 const DELETE_ORDER: readonly BackupTableName[] = [
   'transactions',
-  'trades',
   'recurring_rules',
-  'instruments',
   'categories',
   'accounts',
   'exchange_rates',
@@ -30,10 +28,8 @@ const DELETE_ORDER: readonly BackupTableName[] = [
 const INSERT_ORDER: readonly BackupTableName[] = [
   'accounts',
   'categories',
-  'instruments',
   'recurring_rules',
   'transactions',
-  'trades',
   'exchange_rates',
   'settings',
 ];
