@@ -1,7 +1,16 @@
-import { migrate } from '@/db/client';
+import { migrate, MIGRATIONS } from '@/db/client';
 import { BASE_CATEGORIES, seedCategoriesSql } from '@/db/seed';
 import { countCategoriesByKind } from '@/db/repositories/categories-repo';
 import { BetterSqliteExecutor } from '@/test/better-sqlite-executor';
+
+async function migrateToVersion(db: BetterSqliteExecutor, version: number): Promise<void> {
+  for (const migration of MIGRATIONS.filter((entry) => entry.version <= version)) {
+    await db.execAsync('BEGIN');
+    await db.execAsync(migration.up);
+    await db.execAsync(`PRAGMA user_version = ${migration.version}`);
+    await db.execAsync('COMMIT');
+  }
+}
 
 describe('migrations', () => {
   it('applies migration v1 and seeds the base category catalog', async () => {
@@ -9,24 +18,20 @@ describe('migrations', () => {
     await migrate(db);
 
     const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    expect(version?.user_version).toBe(8);
+    expect(version?.user_version).toBe(9);
 
     const tables = await db.getAllAsync<{ name: string }>(
       "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
     );
     const tableNames = tables.map((t) => t.name);
-    expect(tableNames).toEqual(
-      expect.arrayContaining([
-        'accounts',
-        'transactions',
-        'categories',
-        'recurring_rules',
-        'instruments',
-        'trades',
-        'exchange_rates',
-        'settings',
-      ]),
-    );
+    expect(tableNames).toEqual([
+      'accounts',
+      'categories',
+      'exchange_rates',
+      'recurring_rules',
+      'settings',
+      'transactions',
+    ]);
 
     const total = await countCategoriesByKind(db, 'expense');
     const income = await countCategoriesByKind(db, 'income');
@@ -60,15 +65,62 @@ describe('migrations', () => {
     db.close();
   });
 
-  it('applies migration v5 with the unique instrument symbol index', async () => {
+  it('applies migration v9 dropping the investment schema and preserving rule links', async () => {
     const db = new BetterSqliteExecutor();
+    await migrateToVersion(db, 8);
+
+    await db.runAsync("INSERT INTO accounts (name, currency, initial_balance) VALUES ('Broker', 'EUR', 1000)");
+    await db.runAsync(
+      "INSERT INTO instruments (symbol, name, currency, kind) VALUES ('SAN.MC', 'Banco Santander', 'EUR', 'stock')",
+    );
+    await db.runAsync(
+      "INSERT INTO trades (instrument_id, type, date, quantity, price, currency, account_id) VALUES (1, 'buy', '2026-09-01', 10, 3.5, 'EUR', 1)",
+    );
+    await db.runAsync(
+      `INSERT INTO recurring_rules (type, amount, currency, account_id, frequency, next_execution, active)
+       VALUES ('investment', 100, 'EUR', 1, 'monthly', '2026-10-01', 1)`,
+    );
+    await db.runAsync(
+      `INSERT INTO recurring_rules (type, amount, currency, account_id, frequency, next_execution, active)
+       VALUES ('expense', 50, 'EUR', 1, 'monthly', '2026-10-01', 1)`,
+    );
+    await db.runAsync(
+      `INSERT INTO transactions (type, date, amount, currency, account_id, source, recurring_rule_id)
+       VALUES ('expense', '2026-09-01', 50, 'EUR', 1, 'recurring', 2)`,
+    );
+    await db.runAsync("INSERT INTO settings (key, value) VALUES ('backend_url', 'https://api.example.com')");
+    await db.runAsync("INSERT INTO settings (key, value) VALUES ('api_key', 'secret')");
+
     await migrate(db);
 
-    const index = await db.getFirstAsync<{ name: string; sql: string }>(
-      "SELECT name, sql FROM sqlite_master WHERE type='index' AND name = 'idx_instruments_symbol'",
+    const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
+    expect(version?.user_version).toBe(9);
+
+    const tables = await db.getAllAsync<{ name: string }>(
+      "SELECT name FROM sqlite_master WHERE type IN ('table', 'index') AND name IN ('instruments', 'trades', 'idx_instruments_symbol', 'idx_trades_instrument')",
     );
-    expect(index?.name).toBe('idx_instruments_symbol');
-    expect(index?.sql).toContain('UNIQUE');
+    expect(tables).toEqual([]);
+
+    const columns = await db.getAllAsync<{ name: string }>('PRAGMA table_info(recurring_rules)');
+    expect(columns.map((column) => column.name)).not.toContain('instrument_id');
+
+    const rules = await db.getAllAsync<{ id: number; type: string }>('SELECT id, type FROM recurring_rules');
+    expect(rules).toEqual([{ id: 2, type: 'expense' }]);
+
+    const links = await db.getAllAsync<{ recurring_rule_id: number | null }>(
+      'SELECT recurring_rule_id FROM transactions',
+    );
+    expect(links).toEqual([{ recurring_rule_id: 2 }]);
+
+    await expect(
+      db.runAsync(
+        `INSERT INTO recurring_rules (type, amount, currency, account_id, frequency, next_execution, active)
+         VALUES ('investment', 100, 'EUR', 1, 'monthly', '2026-11-01', 1)`,
+      ),
+    ).rejects.toThrow();
+
+    const settings = await db.getAllAsync<{ key: string }>('SELECT key FROM settings');
+    expect(settings).toEqual([]);
 
     db.close();
   });
@@ -163,7 +215,7 @@ describe('migrations', () => {
     await db.execAsync('PRAGMA user_version = 999');
     await migrate(db);
     const versionAfter = (await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version'))?.user_version;
-    expect(versionBefore).toBe(8);
+    expect(versionBefore).toBe(9);
     expect(versionAfter).toBe(999);
 
     db.close();

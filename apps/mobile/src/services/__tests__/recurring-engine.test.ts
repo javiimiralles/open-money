@@ -32,7 +32,6 @@ describe('recurring-engine', () => {
       accountId,
       destinationAccountId: null,
       categoryId: null,
-      instrumentId: null,
       notes: 'Alquiler',
       frequency: 'weekly',
       intervalDays: null,
@@ -66,7 +65,6 @@ describe('recurring-engine', () => {
       accountId,
       destinationAccountId: null,
       categoryId: null,
-      instrumentId: null,
       notes: null,
       frequency: 'weekly',
       intervalDays: null,
@@ -93,7 +91,6 @@ describe('recurring-engine', () => {
       accountId,
       destinationAccountId: null,
       categoryId: null,
-      instrumentId: null,
       notes: null,
       frequency: 'monthly',
       intervalDays: null,
@@ -151,7 +148,6 @@ describe('recurring-engine', () => {
       accountId,
       destinationAccountId: null,
       categoryId: null,
-      instrumentId: null,
       notes: null,
       frequency: 'weekly',
       intervalDays: null,
@@ -186,7 +182,6 @@ describe('recurring-engine', () => {
       accountId,
       destinationAccountId: null,
       categoryId: null,
-      instrumentId: null,
       notes: null,
       frequency: 'weekly',
       intervalDays: null,
@@ -196,31 +191,6 @@ describe('recurring-engine', () => {
     });
 
     const result = await processRecurringOnOpen(db, '2026-09-15');
-    expect(result).toBeNull();
-    expect(await listTransactions(db)).toHaveLength(0);
-    db.close();
-  });
-
-  it('skips investment rules (deferred to US-010)', async () => {
-    const db = await createDb();
-    const accountId = await createAccount(db);
-    await insertRecurringRule(db, {
-      type: 'investment',
-      amount: 100,
-      currency: 'EUR',
-      accountId,
-      destinationAccountId: null,
-      categoryId: null,
-      instrumentId: null,
-      notes: null,
-      frequency: 'monthly',
-      intervalDays: null,
-      nextExecution: '2026-09-01',
-      active: true,
-      fxRate: null,
-    });
-
-    const result = await processRecurringOnOpen(db, '2026-09-01');
     expect(result).toBeNull();
     expect(await listTransactions(db)).toHaveLength(0);
     db.close();
@@ -236,7 +206,6 @@ describe('recurring-engine', () => {
       accountId,
       destinationAccountId: null,
       categoryId: null,
-      instrumentId: null,
       notes: null,
       frequency: 'every_n_days',
       intervalDays: 3,
@@ -261,7 +230,6 @@ describe('recurring-engine', () => {
       accountId,
       destinationAccountId: null,
       categoryId: null,
-      instrumentId: null,
       notes: null,
       frequency: 'weekly',
       intervalDays: null,
@@ -287,7 +255,6 @@ describe('recurring-engine', () => {
       accountId,
       destinationAccountId: null,
       categoryId: null,
-      instrumentId: null,
       notes: null,
       frequency: 'weekly',
       intervalDays: null,
@@ -316,7 +283,6 @@ describe('recurring-engine', () => {
       accountId,
       destinationAccountId: null,
       categoryId: null,
-      instrumentId: null,
       notes: null,
       frequency: 'weekly',
       intervalDays: null,
@@ -344,7 +310,6 @@ describe('recurring-engine', () => {
       accountId,
       destinationAccountId: null,
       categoryId: null,
-      instrumentId: null,
       notes: null,
       frequency: 'weekly',
       intervalDays: null,

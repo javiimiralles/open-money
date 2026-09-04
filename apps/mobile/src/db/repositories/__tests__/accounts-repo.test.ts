@@ -8,8 +8,6 @@ import {
   listAccountsWithBalances,
   updateAccount,
 } from '@/db/repositories/accounts-repo';
-import { upsertInstrument } from '@/db/repositories/instruments-repo';
-import { insertTrade } from '@/db/repositories/trades-repo';
 import { BetterSqliteExecutor } from '@/test/better-sqlite-executor';
 
 describe('accounts-repo', () => {
@@ -341,44 +339,6 @@ describe('accounts-repo', () => {
 
     expect(await countTransactionsForAccount(db, origin)).toBe(2);
     expect(await countTransactionsForAccount(db, destination)).toBe(1);
-    db.close();
-  });
-
-  it('subtracts buys and adds sells to the balance', async () => {
-    const db = await createDb();
-    const id = await insertAccount(db, { name: 'Broker', identifier: null, currency: 'EUR', initialBalance: 1000 });
-    const instrumentId = await upsertInstrument(db, {
-      symbol: 'SAN.MC',
-      name: 'Banco Santander',
-      currency: 'EUR',
-      market: null,
-      isin: null,
-      kind: 'stock',
-    });
-
-    await insertTrade(db, {
-      instrumentId,
-      type: 'buy',
-      date: '2026-09-01',
-      quantity: 10,
-      price: 3.5,
-      currency: 'EUR',
-      accountId: id,
-      notes: null,
-    });
-    await insertTrade(db, {
-      instrumentId,
-      type: 'sell',
-      date: '2026-09-02',
-      quantity: 4,
-      price: 4,
-      currency: 'EUR',
-      accountId: id,
-      notes: null,
-    });
-
-    const accounts = await listAccountsWithBalances(db);
-    expect(accounts[0].balance).toBeCloseTo(1000 - 35 + 16);
     db.close();
   });
 

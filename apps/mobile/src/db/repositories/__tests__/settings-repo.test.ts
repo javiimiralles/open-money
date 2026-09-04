@@ -1,9 +1,7 @@
 import { migrate } from '@/db/client';
 import {
-  getBackendSettings,
   getSetting,
   getThemeMode,
-  saveBackendSettings,
   saveThemeMode,
   SETTINGS_KEYS,
   setSetting,
@@ -17,31 +15,21 @@ describe('settings-repo', () => {
     return db;
   }
 
-  it('returns empty settings when nothing is stored', async () => {
+  it('returns null for missing settings', async () => {
     const db = await createDb();
-    const settings = await getBackendSettings(db);
-    expect(settings).toEqual({ backendUrl: '', apiKey: '' });
-    db.close();
-  });
-
-  it('saves and reads backend settings', async () => {
-    const db = await createDb();
-    await saveBackendSettings(db, { backendUrl: 'https://api.example.com', apiKey: 'secret-key' });
-
-    const settings = await getBackendSettings(db);
-    expect(settings).toEqual({ backendUrl: 'https://api.example.com', apiKey: 'secret-key' });
+    expect(await getSetting(db, SETTINGS_KEYS.themeMode)).toBeNull();
     db.close();
   });
 
   it('upserts on conflict instead of duplicating rows', async () => {
     const db = await createDb();
-    await setSetting(db, SETTINGS_KEYS.apiKey, 'first');
-    await setSetting(db, SETTINGS_KEYS.apiKey, 'second');
+    await setSetting(db, SETTINGS_KEYS.themeMode, 'first');
+    await setSetting(db, SETTINGS_KEYS.themeMode, 'second');
 
-    expect(await getSetting(db, SETTINGS_KEYS.apiKey)).toBe('second');
+    expect(await getSetting(db, SETTINGS_KEYS.themeMode)).toBe('second');
     const count = await db.getFirstAsync<{ count: number }>(
       'SELECT COUNT(*) AS count FROM settings WHERE key = ?',
-      [SETTINGS_KEYS.apiKey],
+      [SETTINGS_KEYS.themeMode],
     );
     expect(count?.count).toBe(1);
     db.close();
@@ -50,8 +38,8 @@ describe('settings-repo', () => {
   it('stores special characters in values safely', async () => {
     const db = await createDb();
     const tricky = "it's an 'apostrophe' key";
-    await setSetting(db, SETTINGS_KEYS.apiKey, tricky);
-    expect(await getSetting(db, SETTINGS_KEYS.apiKey)).toBe(tricky);
+    await setSetting(db, SETTINGS_KEYS.themeMode, tricky);
+    expect(await getSetting(db, SETTINGS_KEYS.themeMode)).toBe(tricky);
     db.close();
   });
 

@@ -32,7 +32,6 @@ describe('recurring-rules-repo', () => {
       accountId: 1,
       destinationAccountId: null,
       categoryId: null,
-      instrumentId: null,
       notes: 'Alquiler',
       frequency: 'monthly',
       intervalDays: null,

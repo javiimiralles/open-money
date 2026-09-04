@@ -33,8 +33,6 @@ function validData(): BackupData {
       },
     ],
     recurring_rules: [],
-    instruments: [],
-    trades: [],
     exchange_rates: [],
     settings: [{ key: 'backend_url', value: 'https://api.example.com' }],
   };
@@ -182,5 +180,38 @@ describe('backup format', () => {
     expect(() =>
       validateBackup({ ...validFile(), schemaVersion: 99 }, CURRENT_SCHEMA_VERSION),
     ).toThrow('versión más reciente');
+  });
+
+  it('accepts legacy backups with investment tables by stripping them', () => {
+    const data = {
+      ...validData(),
+      recurring_rules: [
+        {
+          id: 1,
+          type: 'expense',
+          amount: 10,
+          currency: 'EUR',
+          account_id: 1,
+          destination_account_id: null,
+          category_id: 1,
+          instrument_id: null,
+          notes: null,
+          frequency: 'monthly',
+          interval_days: null,
+          next_execution: '2026-10-01',
+          active: 1,
+          last_run_date: null,
+          created_at: '2026-09-01',
+          fx_rate: null,
+        },
+      ],
+      instruments: [{ id: 1, symbol: 'SAN.MC', name: 'Banco Santander', currency: 'EUR' }],
+      trades: [{ id: 1, instrument_id: 1, type: 'buy', account_id: 1 }],
+    };
+    const parsed = validateBackup({ ...validFile(), data }, CURRENT_SCHEMA_VERSION);
+    expect('instruments' in parsed.data).toBe(false);
+    expect('trades' in parsed.data).toBe(false);
+    expect(parsed.data.recurring_rules).toHaveLength(1);
+    expect('instrument_id' in parsed.data.recurring_rules[0]).toBe(false);
   });
 });
