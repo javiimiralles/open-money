@@ -5,6 +5,7 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AccountCardScroller } from '@/components/AccountCardScroller';
+import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { QuickActions } from '@/components/QuickActions';
 import { TransactionRow } from '@/components/TransactionRow';
@@ -26,6 +27,10 @@ export default function DashboardScreen() {
 
   const openAccount = (id: number) => {
     router.push({ pathname: '/account-form', params: { id: String(id) } });
+  };
+
+  const openNewAccount = () => {
+    router.push('/account-form');
   };
 
   const openTransaction = (id: number) => {
@@ -76,13 +81,21 @@ export default function DashboardScreen() {
             </Card>
             <Text style={styles.sectionTitle}>Cuentas</Text>
             {accounts.length > 0 ? (
-              <AccountCardScroller accounts={accounts} onPress={openAccount} hidden={balancesHidden} />
+              <AccountCardScroller
+                accounts={accounts}
+                onPress={openAccount}
+                hidden={balancesHidden}
+                onAddAccount={openNewAccount}
+              />
             ) : loading ? null : (
-              <Card variant="sage">
-                <Text style={styles.emptyText}>
-                  Todavía no tienes cuentas. Crea la primera para empezar a organizar tu dinero.
-                </Text>
-              </Card>
+              <>
+                <Card variant="sage">
+                  <Text style={styles.emptyText}>
+                    Todavía no tienes cuentas. Crea la primera para empezar a organizar tu dinero.
+                  </Text>
+                </Card>
+                <Button label="Nueva cuenta" onPress={openNewAccount} />
+              </>
             )}
             <Text style={styles.sectionTitle}>Últimos movimientos</Text>
           </View>
