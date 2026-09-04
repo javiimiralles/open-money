@@ -176,4 +176,61 @@ ALTER TABLE categories ADD COLUMN icon TEXT;
 ${seedCategoryIconsSql()}
 `,
   },
+  {
+    version: 9,
+    up: `
+-- Drop investments: remove leftover investment rules (the engine never
+-- executed them) and the market backend settings, then drop the
+-- investment tables.
+DELETE FROM recurring_rules WHERE type = 'investment';
+DELETE FROM settings WHERE key IN ('backend_url', 'api_key');
+
+DROP TABLE trades;
+DROP TABLE instruments;
+
+-- Rebuild recurring_rules without the instrument_id column and without
+-- 'investment' in the type CHECK. foreign_keys stays ON (toggling it is a
+-- no-op inside the migration transaction), so the transactions links are
+-- preserved across the swap: the implicit DELETE of the DROP sets
+-- transactions.recurring_rule_id to NULL and it is restored afterwards.
+CREATE TEMP TABLE _tx_rule_links AS
+  SELECT id, recurring_rule_id FROM transactions WHERE recurring_rule_id IS NOT NULL;
+
+CREATE TABLE recurring_rules_new (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  type TEXT NOT NULL CHECK (type IN ('income', 'expense', 'transfer')),
+  amount REAL NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'EUR',
+  account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+  destination_account_id INTEGER REFERENCES accounts(id) ON DELETE CASCADE,
+  category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
+  notes TEXT,
+  frequency TEXT NOT NULL CHECK (frequency IN ('weekly', 'monthly', 'yearly', 'every_n_days')),
+  interval_days INTEGER,
+  next_execution TEXT NOT NULL,
+  active INTEGER NOT NULL DEFAULT 1,
+  last_run_date TEXT,
+  fx_rate REAL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+INSERT INTO recurring_rules_new
+  (id, type, amount, currency, account_id, destination_account_id, category_id, notes, frequency, interval_days, next_execution, active, last_run_date, fx_rate, created_at)
+  SELECT id, type, amount, currency, account_id, destination_account_id, category_id, notes, frequency, interval_days, next_execution, active, last_run_date, fx_rate, created_at
+  FROM recurring_rules;
+
+DROP TABLE recurring_rules;
+ALTER TABLE recurring_rules_new RENAME TO recurring_rules;
+
+UPDATE transactions
+SET recurring_rule_id = (
+  SELECT l.recurring_rule_id FROM _tx_rule_links l
+  JOIN recurring_rules r ON r.id = l.recurring_rule_id
+  WHERE l.id = transactions.id
+)
+WHERE id IN (SELECT id FROM _tx_rule_links);
+
+DROP TABLE _tx_rule_links;
+`,
+  },
 ];
