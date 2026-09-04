@@ -7,6 +7,7 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { SelectField, type SelectOption } from '@/components/SelectField';
 import { useBackup } from '@/hooks/use-backup';
+import { isDevBuild, useDevData } from '@/hooks/use-dev-data';
 import { spacing, typography } from '@/theme/tokens';
 import { useTheme, type ThemeColors, type ThemeMode } from '@/theme/theme';
 
@@ -22,6 +23,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const backup = useBackup();
+  const devData = useDevData();
 
   return (
     <ScrollView style={[styles.screen, { paddingTop: insets.top }]} contentContainerStyle={styles.content}>
@@ -87,6 +89,36 @@ export default function SettingsScreen() {
           {backup.error ? <Text style={styles.errorText}>{backup.error}</Text> : null}
         </View>
       </Card>
+
+      {isDevBuild() ? (
+        <>
+          <Text style={styles.sectionTitle}>Datos de prueba</Text>
+          <Card>
+            <View style={styles.form}>
+              <Text style={styles.description}>
+                Genera un año de movimientos, cuentas y reglas de ejemplo para probar la app. Solo visible en
+                desarrollo: «Generar» borra primero los datos actuales y «Borrar» lo deja todo como recién
+                instalado.
+              </Text>
+              <Button
+                label="Generar datos de prueba"
+                loading={devData.busy === 'seed'}
+                disabled={devData.busy !== null}
+                onPress={devData.requestSeedDevData}
+              />
+              <Button
+                label="Borrar todos los datos"
+                variant="tertiary"
+                loading={devData.busy === 'clear'}
+                disabled={devData.busy !== null}
+                onPress={devData.requestClearDevData}
+              />
+              {devData.message ? <Text style={styles.savedText}>{devData.message}</Text> : null}
+              {devData.error ? <Text style={styles.errorText}>{devData.error}</Text> : null}
+            </View>
+          </Card>
+        </>
+      ) : null}
     </ScrollView>
   );
 }
