@@ -36,13 +36,6 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
-          name="accounts"
-          options={{
-            title: 'Cuentas',
-            tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="wallet" color={color} size={size} />,
-          }}
-        />
-        <Tabs.Screen
           name="settings"
           options={{
             title: 'Ajustes',
