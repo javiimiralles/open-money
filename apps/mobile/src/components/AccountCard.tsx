@@ -6,13 +6,16 @@ import { rounded, spacing, typography } from '@/theme/tokens';
 import { useTheme, type ThemeColors } from '@/theme/theme';
 import { pickReadableText, type ReadableTextColors } from '@/utils/color';
 import { formatMoney } from '@/utils/money';
+import MaterialCommunityIcons from '@expo/vector-icons/build/MaterialCommunityIcons';
 
 export interface AccountCardProps {
   account: AccountListItem;
   onPress: () => void;
+  /** Selection highlight used by form pickers; off by default. */
+  selected?: boolean;
 }
 
-export function AccountCard({ account, onPress }: AccountCardProps) {
+export function AccountCard({ account, onPress, selected = false }: AccountCardProps) {
   const { colors } = useTheme();
   const text = useMemo<ReadableTextColors>(
     () =>
@@ -28,8 +31,14 @@ export function AccountCard({ account, onPress }: AccountCardProps) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityState={{ selected }}
       onPress={onPress}
-      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
+      style={({ pressed }) => [styles.card, selected && styles.cardSelected, pressed && styles.cardPressed]}>
+      {selected ? (
+        <View style={styles.selectedBadge}>
+          <MaterialCommunityIcons name="check" size={16} color={colors.onPrimary} />
+        </View>
+      ) : null}
       <View style={styles.header}>
         <View style={styles.nameRow}>
           <Text style={styles.name} numberOfLines={1}>
@@ -70,11 +79,24 @@ const makeStyles = (colors: ThemeColors, background: string | null, text: Readab
       justifyContent: 'space-between',
       backgroundColor: background ?? colors.canvas,
       borderRadius: rounded.xl,
+      borderWidth: 2,
+      borderColor: 'transparent',
       padding: spacing.xl,
       gap: spacing.md,
     },
+    cardSelected: {
+      borderColor: colors.primary,
+    },
     cardPressed: {
       opacity: 0.85,
+    },
+    selectedBadge: {
+      position: 'absolute',
+      top: spacing.sm,
+      right: spacing.sm,
+      backgroundColor: colors.primary,
+      borderRadius: rounded.full,
+      padding: spacing.xxs,
     },
     header: {
       gap: spacing.xxs,

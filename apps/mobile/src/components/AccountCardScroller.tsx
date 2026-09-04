@@ -10,14 +10,20 @@ export const ACCOUNT_CARD_WIDTH = 176;
 export interface AccountCardScrollerProps {
   accounts: AccountListItem[];
   onPress: (accountId: number) => void;
+  /** Highlights the matching card as selected; no highlight when null. */
+  selectedId?: number | null;
 }
 
-export function AccountCardScroller({ accounts, onPress }: AccountCardScrollerProps) {
+export function AccountCardScroller({ accounts, onPress, selectedId = null }: AccountCardScrollerProps) {
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.content}>
       {accounts.map((account) => (
         <View key={account.id} style={styles.item}>
-          <AccountCard account={account} onPress={() => onPress(account.id)} />
+          <AccountCard
+            account={account}
+            onPress={() => onPress(account.id)}
+            selected={account.id === selectedId}
+          />
         </View>
       ))}
     </ScrollView>
