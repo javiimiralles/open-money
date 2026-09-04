@@ -27,6 +27,18 @@ describe('categories-repo', () => {
     db.close();
   });
 
+  it('persists the optional category icon', async () => {
+    const db = await createDb();
+    const id = await insertCategory(db, { name: 'Caprichos', kind: 'expense', icon: 'star' });
+
+    expect(await getCategoryById(db, id)).toMatchObject({ id, icon: 'star' });
+
+    await updateCategory(db, id, { name: 'Caprichos', kind: 'expense', icon: null });
+
+    expect(await getCategoryById(db, id)).toMatchObject({ id, icon: null });
+    db.close();
+  });
+
   it('returns null for a missing category', async () => {
     const db = await createDb();
     expect(await getCategoryById(db, 999)).toBeNull();

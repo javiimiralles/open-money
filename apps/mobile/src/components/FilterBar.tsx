@@ -1,7 +1,7 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Button } from '@/components/Button';
 import { TextField } from '@/components/TextField';
 import { rounded, spacing, typography } from '@/theme/tokens';
 import { useTheme, type ThemeColors } from '@/theme/theme';
@@ -27,33 +27,46 @@ export function FilterBar({
 }: FilterBarProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const filtersActive = panelOpen || activeCount > 0;
   return (
     <View style={styles.container}>
-      <TextField
-        value={search}
-        onChangeText={onSearchChange}
-        placeholder="Buscar en notas…"
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
-      <View style={styles.row}>
-        <Button
-          variant="secondary"
-          label={panelOpen ? 'Ocultar filtros' : activeCount > 0 ? `Filtros (${activeCount})` : 'Filtros'}
+      <View style={styles.searchRow}>
+        <View style={styles.searchField}>
+          <TextField
+            value={search}
+            onChangeText={onSearchChange}
+            placeholder="Buscar en notas…"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Filtros"
+          accessibilityState={{ selected: filtersActive }}
           onPress={onTogglePanel}
-          style={styles.toggleButton}
-        />
-        {activeCount > 0 ? (
-          <Button variant="tertiary" label="Limpiar" onPress={onClear} style={styles.toggleButton} />
-        ) : null}
+          style={({ pressed }) => [
+            styles.filterButton,
+            filtersActive && styles.filterButtonActive,
+            pressed && styles.pressed,
+          ]}>
+          <MaterialCommunityIcons name="tune" size={24} color={filtersActive ? colors.onPrimary : colors.ink} />
+        </Pressable>
       </View>
-      {activeLabels.length > 0 ? (
+      {activeCount > 0 ? (
         <View style={styles.chips}>
           {activeLabels.map((label, index) => (
             <View key={`${label}-${index}`} style={styles.chip}>
               <Text style={styles.chipText}>{label}</Text>
             </View>
           ))}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Limpiar filtros"
+            onPress={onClear}
+            style={({ pressed }) => [styles.chip, styles.clearChip, pressed && styles.pressed]}>
+            <Text style={[styles.chipText, styles.clearChipText]}>Limpiar</Text>
+          </Pressable>
         </View>
       ) : null}
     </View>
@@ -65,12 +78,27 @@ const makeStyles = (colors: ThemeColors) =>
     container: {
       gap: spacing.md,
     },
-    row: {
+    searchRow: {
       flexDirection: 'row',
+      alignItems: 'center',
       gap: spacing.sm,
     },
-    toggleButton: {
+    searchField: {
       flex: 1,
+    },
+    filterButton: {
+      width: 48,
+      height: 48,
+      borderRadius: rounded.full,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.canvasSoft,
+    },
+    filterButtonActive: {
+      backgroundColor: colors.primary,
+    },
+    pressed: {
+      opacity: 0.7,
     },
     chips: {
       flexDirection: 'row',
@@ -83,8 +111,16 @@ const makeStyles = (colors: ThemeColors) =>
       paddingVertical: spacing.xs,
       paddingHorizontal: spacing.md,
     },
+    clearChip: {
+      backgroundColor: colors.canvasSoft,
+      borderWidth: 1,
+      borderColor: colors.mute,
+    },
     chipText: {
       ...typography.bodySmStrong,
       color: colors.inkDeep,
+    },
+    clearChipText: {
+      color: colors.body,
     },
   });

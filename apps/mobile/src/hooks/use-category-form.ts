@@ -22,6 +22,7 @@ import { toSqlExecutor } from '@/db/sqlite-adapter';
 export interface CategoryFormValues {
   name: string;
   kind: CategoryKind;
+  icon: string | null;
 }
 
 export interface CategoryFormErrors {
@@ -41,6 +42,7 @@ export interface UseCategoryFormResult {
   isEditing: boolean;
   setName: (value: string) => void;
   setKind: (value: CategoryKind) => void;
+  setIcon: (value: string | null) => void;
   save: () => Promise<boolean>;
   requestDelete: () => Promise<CategoryDeleteRequestResult>;
   performDelete: () => Promise<void>;
@@ -49,7 +51,7 @@ export interface UseCategoryFormResult {
 export function useCategoryForm(categoryId: number | null): UseCategoryFormResult {
   const sqlite = useSQLiteContext();
   const db = useMemo(() => toSqlExecutor(sqlite), [sqlite]);
-  const [values, setValues] = useState<CategoryFormValues>({ name: '', kind: 'expense' });
+  const [values, setValues] = useState<CategoryFormValues>({ name: '', kind: 'expense', icon: null });
   const [errors, setErrors] = useState<CategoryFormErrors>({});
   const [loading, setLoading] = useState(categoryId !== null);
   const [saving, setSaving] = useState(false);
@@ -64,7 +66,7 @@ export function useCategoryForm(categoryId: number | null): UseCategoryFormResul
       if (!active || !category) {
         return;
       }
-      setValues({ name: category.name, kind: category.kind });
+      setValues({ name: category.name, kind: category.kind, icon: category.icon });
       setLoading(false);
     });
     return () => {
@@ -84,7 +86,7 @@ export function useCategoryForm(categoryId: number | null): UseCategoryFormResul
     }
     setErrors({});
 
-    const input = { name: trimmedName, kind: values.kind };
+    const input = { name: trimmedName, kind: values.kind, icon: values.icon };
 
     setSaving(true);
     try {
@@ -134,6 +136,7 @@ export function useCategoryForm(categoryId: number | null): UseCategoryFormResul
     isEditing: categoryId !== null,
     setName: (name: string) => setValues((v) => ({ ...v, name })),
     setKind: (kind: CategoryKind) => setValues((v) => ({ ...v, kind })),
+    setIcon: (icon: string | null) => setValues((v) => ({ ...v, icon })),
     save,
     requestDelete,
     performDelete,

@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ComponentProps } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { rounded, spacing, typography } from '@/theme/tokens';
@@ -8,6 +8,8 @@ import { useTheme, type ThemeColors } from '@/theme/theme';
 export interface SelectOption<T extends string | number> {
   label: string;
   value: T;
+  /** Optional MaterialCommunityIcons name shown before the label. */
+  icon?: string | null;
 }
 
 export interface SelectFieldProps<T extends string | number> {
@@ -17,6 +19,18 @@ export interface SelectFieldProps<T extends string | number> {
   onChange: (value: T) => void;
   placeholder?: string;
   error?: string | null;
+}
+
+// Option icons arrive as plain strings; the glyph component expects its
+// generated name union, hence the single cast here.
+function SelectOptionIcon({ name, color }: { name: string; color: string }) {
+  return (
+    <MaterialCommunityIcons
+      name={name as ComponentProps<typeof MaterialCommunityIcons>['name']}
+      size={20}
+      color={color}
+    />
+  );
 }
 
 export function SelectField<T extends string | number>({
@@ -40,6 +54,9 @@ export function SelectField<T extends string | number>({
         accessibilityState={{ expanded: open }}
         onPress={() => setOpen((current) => !current)}
         style={[styles.field, error ? styles.fieldError : null]}>
+        {selected?.icon ? (
+          <SelectOptionIcon name={selected.icon} color={colors.ink} />
+        ) : null}
         <Text style={[styles.value, !selected ? styles.placeholder : null]} numberOfLines={1}>
           {selected ? selected.label : placeholder}
         </Text>
@@ -60,6 +77,7 @@ export function SelectField<T extends string | number>({
                   setOpen(false);
                 }}
                 style={[styles.option, isSelected ? styles.optionSelected : null]}>
+                {option.icon ? <SelectOptionIcon name={option.icon} color={colors.ink} /> : null}
                 <Text style={[styles.optionText, isSelected ? styles.optionTextSelected : null]} numberOfLines={1}>
                   {option.label}
                 </Text>
@@ -115,6 +133,9 @@ const makeStyles = (colors: ThemeColors) =>
       overflow: 'hidden',
     },
     option: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
       paddingVertical: spacing.md,
       paddingHorizontal: spacing.lg,
       backgroundColor: colors.canvas,

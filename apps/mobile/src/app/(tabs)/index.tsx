@@ -1,6 +1,7 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AccountCardScroller } from '@/components/AccountCardScroller';
@@ -12,7 +13,7 @@ import type { TransactionFormType } from '@/hooks/use-transaction-form';
 import { spacing, typography } from '@/theme/tokens';
 import { useTheme, type ThemeColors } from '@/theme/theme';
 import { getGreeting } from '@/utils/greeting';
-import { formatMoney } from '@/utils/money';
+import { formatMoney, MONEY_MASK } from '@/utils/money';
 
 export default function DashboardScreen() {
   const { colors } = useTheme();
@@ -21,6 +22,7 @@ export default function DashboardScreen() {
   const router = useRouter();
   const { accounts, netWorthEur, unpricedCount, hasMissingRates, recentTransactions, loading } = useDashboard();
   const greeting = useMemo(() => getGreeting(new Date().getHours()), []);
+  const [balancesHidden, setBalancesHidden] = useState(false);
 
   const openAccount = (id: number) => {
     router.push({ pathname: '/account-form', params: { id: String(id) } });
@@ -43,12 +45,26 @@ export default function DashboardScreen() {
         contentContainerStyle={styles.content}
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text style={styles.greeting}>{greeting}</Text>
+            <View style={styles.greetingRow}>
+              <Text style={styles.greeting}>{greeting}</Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={balancesHidden ? 'Mostrar importes' : 'Ocultar importes'}
+                hitSlop={spacing.sm}
+                onPress={() => setBalancesHidden((previous) => !previous)}
+                style={({ pressed }) => [styles.eyeButton, pressed && styles.eyeButtonPressed]}>
+                <MaterialCommunityIcons
+                  name={balancesHidden ? 'eye-off' : 'eye'}
+                  size={22}
+                  color={colors.body}
+                />
+              </Pressable>
+            </View>
             <Card>
               <View style={styles.netWorth}>
                 <Text style={styles.netWorthLabel}>Patrimonio neto</Text>
                 <Text style={styles.netWorthValue} numberOfLines={1} adjustsFontSizeToFit>
-                  {formatMoney(netWorthEur, 'EUR')}
+                  {balancesHidden ? MONEY_MASK : formatMoney(netWorthEur, 'EUR')}
                 </Text>
                 {unpricedCount > 0 ? (
                   <Text style={styles.netWorthNote}>
@@ -67,7 +83,7 @@ export default function DashboardScreen() {
             </Card>
             <Text style={styles.sectionTitle}>Cuentas</Text>
             {accounts.length > 0 ? (
-              <AccountCardScroller accounts={accounts} onPress={openAccount} />
+              <AccountCardScroller accounts={accounts} onPress={openAccount} hidden={balancesHidden} />
             ) : loading ? null : (
               <Card variant="sage">
                 <Text style={styles.emptyText}>
@@ -105,9 +121,22 @@ const makeStyles = (colors: ThemeColors) =>
     header: {
       gap: spacing.lg,
     },
+    greetingRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.md,
+    },
     greeting: {
       ...typography.displayXs,
       color: colors.ink,
+      flexShrink: 1,
+    },
+    eyeButton: {
+      padding: spacing.xs,
+    },
+    eyeButtonPressed: {
+      opacity: 0.6,
     },
     netWorth: {
       alignItems: 'center',

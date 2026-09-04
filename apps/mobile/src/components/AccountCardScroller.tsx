@@ -10,11 +10,13 @@ export const ACCOUNT_CARD_WIDTH = 176;
 export interface AccountCardScrollerProps {
   accounts: AccountListItem[];
   onPress: (accountId: number) => void;
+  /** Privacy mode forwarded to every card. */
+  hidden?: boolean;
   /** Highlights the matching card as selected; no highlight when null. */
   selectedId?: number | null;
 }
 
-export function AccountCardScroller({ accounts, onPress, selectedId = null }: AccountCardScrollerProps) {
+export function AccountCardScroller({ accounts, onPress, hidden = false, selectedId = null }: AccountCardScrollerProps) {
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.content}>
       {accounts.map((account) => (
@@ -22,6 +24,7 @@ export function AccountCardScroller({ accounts, onPress, selectedId = null }: Ac
           <AccountCard
             account={account}
             onPress={() => onPress(account.id)}
+            hidden={hidden}
             selected={account.id === selectedId}
           />
         </View>

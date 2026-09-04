@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { SectionList, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/Card';
@@ -9,7 +9,7 @@ import { TransactionFiltersPanel } from '@/components/TransactionFiltersPanel';
 import { TransactionRow } from '@/components/TransactionRow';
 import { useTransactionFilters } from '@/hooks/use-transaction-filters';
 import { useTransactions } from '@/hooks/use-transactions';
-import { spacing, typography } from '@/theme/tokens';
+import { rounded, spacing, typography } from '@/theme/tokens';
 import { useTheme, type ThemeColors } from '@/theme/theme';
 import { formatDateEs } from '@/utils/dates';
 import { formatMoney } from '@/utils/money';
@@ -37,6 +37,8 @@ export default function TransactionsScreen() {
   const openTransaction = (id: number) => {
     router.push({ pathname: '/transaction-form', params: { id: String(id) } });
   };
+
+  const closeFilters = () => setPanelOpen(false);
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
@@ -66,22 +68,6 @@ export default function TransactionsScreen() {
               onTogglePanel={() => setPanelOpen((open) => !open)}
               onClear={filters.reset}
             />
-            {panelOpen ? (
-              <TransactionFiltersPanel
-                type={filters.state.type}
-                onTypeChange={filters.setType}
-                accountId={filters.state.accountId}
-                accountOptions={filters.accountOptions}
-                onAccountChange={(value) => filters.setAccountId(value === 0 ? null : value)}
-                categoryId={filters.state.categoryId}
-                categoryOptions={filters.categoryOptions}
-                onCategoryChange={(value) => filters.setCategoryId(value === 0 ? null : value)}
-                fromDate={filters.state.fromDate}
-                toDate={filters.state.toDate}
-                onFromDateChange={filters.setFromDate}
-                onToDateChange={filters.setToDate}
-              />
-            ) : null}
             {!loading && summary.count > 0 ? (
               <Card variant="sage" style={styles.summaryCard}>
                 <Text style={styles.summaryText}>
@@ -104,6 +90,33 @@ export default function TransactionsScreen() {
           )
         }
       />
+      <Modal visible={panelOpen} transparent animationType="fade" statusBarTranslucent onRequestClose={closeFilters}>
+        <Pressable style={styles.modalBackdrop} onPress={closeFilters}>
+          <Pressable
+            accessibilityLabel="Filtros"
+            style={styles.modalCard}
+            onPress={() => {
+              // Swallow taps inside the card so the backdrop does not close the modal.
+            }}>
+            <ScrollView bounces={false}>
+              <TransactionFiltersPanel
+                type={filters.state.type}
+                onTypeChange={filters.setType}
+                accountId={filters.state.accountId}
+                accountOptions={filters.accountOptions}
+                onAccountChange={(value) => filters.setAccountId(value === 0 ? null : value)}
+                categoryId={filters.state.categoryId}
+                categoryOptions={filters.categoryOptions}
+                onCategoryChange={(value) => filters.setCategoryId(value === 0 ? null : value)}
+                fromDate={filters.state.fromDate}
+                toDate={filters.state.toDate}
+                onFromDateChange={filters.setFromDate}
+                onToDateChange={filters.setToDate}
+              />
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -151,5 +164,23 @@ const makeStyles = (colors: ThemeColors) =>
     emptyText: {
       ...typography.bodyMd,
       color: colors.body,
+    },
+    modalBackdrop: {
+      flex: 1,
+      justifyContent: 'flex-start',
+      padding: spacing.xl,
+      backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    },
+    modalCard: {
+      alignSelf: 'stretch',
+      maxWidth: 480,
+      marginTop: spacing['3xl'],
+      borderRadius: rounded.xl,
+      backgroundColor: colors.canvas,
+      shadowColor: colors.ink,
+      shadowOpacity: 0.18,
+      shadowOffset: { width: 0, height: 8 },
+      shadowRadius: 24,
+      elevation: 12,
     },
   });

@@ -178,7 +178,7 @@ export function useTransactionForm(
     () =>
       categories
         .filter((category) => category.kind === values.type)
-        .map((category) => ({ label: category.name, value: category.id })),
+        .map((category) => ({ label: category.name, value: category.id, icon: category.icon })),
     [categories, values.type],
   );
 

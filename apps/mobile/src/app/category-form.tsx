@@ -1,14 +1,15 @@
 import { useMemo } from 'react';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { Button } from '@/components/Button';
-import { Card } from '@/components/Card';
 import { TextField } from '@/components/TextField';
 import type { CategoryKind } from '@/db/repositories/categories-repo';
 import { useCategoryForm } from '@/hooks/use-category-form';
 import { rounded, spacing, typography } from '@/theme/tokens';
 import { useTheme, type ThemeColors } from '@/theme/theme';
+import { CATEGORY_ICONS } from '@/utils/category-icons';
 
 const KINDS: { value: CategoryKind; label: string }[] = [
   { value: 'expense', label: 'Gasto' },
@@ -60,45 +61,66 @@ export default function CategoryFormScreen() {
     <>
       <Stack.Screen options={{ title: form.isEditing ? 'Editar categoría' : 'Nueva categoría' }} />
       <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-        <Card>
-          <View style={styles.form}>
-            <TextField
-              label="Nombre"
-              value={form.values.name}
-              onChangeText={form.setName}
-              placeholder="Ej. Caprichos"
-              error={form.errors.name}
-            />
-            <View style={styles.field}>
-              <Text style={styles.label}>Tipo</Text>
-              <View style={styles.kindRow}>
-                {KINDS.map((kind) => {
-                  const selected = form.values.kind === kind.value;
-                  return (
-                    <Pressable
-                      key={kind.value}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected }}
-                      onPress={() => form.setKind(kind.value)}
-                      style={[styles.kindChip, selected && styles.kindChipSelected]}>
-                      <Text style={[styles.kindChipText, selected && styles.kindChipTextSelected]}>
-                        {kind.label}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
+        <View style={styles.form}>
+          <TextField
+            label="Nombre"
+            value={form.values.name}
+            onChangeText={form.setName}
+            placeholder="Ej. Caprichos"
+            error={form.errors.name}
+          />
+          <View style={styles.field}>
+            <Text style={styles.label}>Icono</Text>
+            <View style={styles.iconGrid}>
+              {CATEGORY_ICONS.map((name) => {
+                const selected = form.values.icon === name;
+                return (
+                  <Pressable
+                    key={name}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    onPress={() => form.setIcon(selected ? null : name)}
+                    style={[styles.iconChip, selected && styles.iconChipSelected]}>
+                    <MaterialCommunityIcons
+                      name={name}
+                      size={22}
+                      color={selected ? colors.onPrimary : colors.ink}
+                    />
+                  </Pressable>
+                );
+              })}
             </View>
-            <Button
-              label={form.isEditing ? 'Guardar cambios' : 'Crear categoría'}
-              loading={form.saving}
-              onPress={handleSave}
-            />
-            {form.isEditing ? (
-              <Button label="Eliminar categoría" variant="tertiary" loading={form.deleting} onPress={handleDelete} />
-            ) : null}
+            <Text style={styles.hint}>Toca un icono para elegirlo; tócalo de nuevo para quitarlo.</Text>
           </View>
-        </Card>
+          <View style={styles.field}>
+            <Text style={styles.label}>Tipo</Text>
+            <View style={styles.kindRow}>
+              {KINDS.map((kind) => {
+                const selected = form.values.kind === kind.value;
+                return (
+                  <Pressable
+                    key={kind.value}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    onPress={() => form.setKind(kind.value)}
+                    style={[styles.kindChip, selected && styles.kindChipSelected]}>
+                    <Text style={[styles.kindChipText, selected && styles.kindChipTextSelected]}>
+                      {kind.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+          <Button
+            label={form.isEditing ? 'Guardar cambios' : 'Crear categoría'}
+            loading={form.saving}
+            onPress={handleSave}
+          />
+          {form.isEditing ? (
+            <Button label="Eliminar categoría" variant="tertiary" loading={form.deleting} onPress={handleDelete} />
+          ) : null}
+        </View>
       </ScrollView>
     </>
   );
@@ -123,6 +145,29 @@ const makeStyles = (colors: ThemeColors) =>
     label: {
       ...typography.bodySmStrong,
       color: colors.ink,
+    },
+    hint: {
+      ...typography.caption,
+      color: colors.mute,
+    },
+    iconGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    iconChip: {
+      width: 44,
+      height: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: colors.ink,
+      borderRadius: rounded.full,
+      backgroundColor: colors.canvas,
+    },
+    iconChipSelected: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
     },
     kindRow: {
       flexDirection: 'row',

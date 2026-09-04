@@ -4,18 +4,18 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 
 import { AccountCardScroller } from '@/components/AccountCardScroller';
 import { Button } from '@/components/Button';
-import { Card } from '@/components/Card';
 import { DateField } from '@/components/DateField';
 import { SelectField } from '@/components/SelectField';
 import { TextField } from '@/components/TextField';
 import { useTransactionForm, type TransactionFormType } from '@/hooks/use-transaction-form';
 import { useTheme, type ThemeColors } from '@/theme/theme';
 import { rounded, spacing, typography } from '@/theme/tokens';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 const TYPE_OPTIONS = [
-  { value: 'expense', label: 'Gasto' },
-  { value: 'income', label: 'Ingreso' },
-  { value: 'transfer', label: 'Transferencia' },
+  { value: 'income', label: 'Ingreso', icon: 'arrow-top-right' },
+  { value: 'expense', label: 'Gasto', icon: 'arrow-bottom-left' },
+  { value: 'transfer', label: 'Transferencia', icon: 'swap-horizontal' },
 ] as const;
 
 function isTransactionFormType(value: string | undefined): value is TransactionFormType {
@@ -57,7 +57,6 @@ export default function TransactionFormScreen() {
     <>
       <Stack.Screen options={{ title: form.isEditing ? 'Editar movimiento' : 'Nuevo movimiento' }} />
       <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-        <Card>
           <View style={styles.form}>
             <View style={styles.field}>
               <Text style={styles.label}>Tipo</Text>
@@ -71,9 +70,7 @@ export default function TransactionFormScreen() {
                       accessibilityState={{ selected }}
                       onPress={() => form.setType(option.value)}
                       style={[styles.typeChip, selected && styles.typeChipSelected]}>
-                      <Text style={[styles.typeChipText, selected && styles.typeChipTextSelected]}>
-                        {option.label}
-                      </Text>
+                      <MaterialCommunityIcons name={option.icon} size={20} color={selected ? colors.onPrimary : colors.ink} />
                     </Pressable>
                   );
                 })}
@@ -172,7 +169,6 @@ export default function TransactionFormScreen() {
               <Button label="Eliminar movimiento" variant="tertiary" loading={form.deleting} onPress={handleDelete} />
             ) : null}
           </View>
-        </Card>
       </ScrollView>
     </>
   );

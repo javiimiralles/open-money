@@ -5,17 +5,19 @@ import type { AccountListItem } from '@/hooks/use-accounts';
 import { rounded, spacing, typography } from '@/theme/tokens';
 import { useTheme, type ThemeColors } from '@/theme/theme';
 import { pickReadableText, type ReadableTextColors } from '@/utils/color';
-import { formatMoney } from '@/utils/money';
+import { formatMoney, MONEY_MASK } from '@/utils/money';
 import MaterialCommunityIcons from '@expo/vector-icons/build/MaterialCommunityIcons';
 
 export interface AccountCardProps {
   account: AccountListItem;
   onPress: () => void;
+  /** Privacy mode: masks every monetary amount on the card. */
+  hidden?: boolean;
   /** Selection highlight used by form pickers; off by default. */
   selected?: boolean;
 }
 
-export function AccountCard({ account, onPress, selected = false }: AccountCardProps) {
+export function AccountCard({ account, onPress, hidden = false, selected = false }: AccountCardProps) {
   const { colors } = useTheme();
   const text = useMemo<ReadableTextColors>(
     () =>
@@ -46,7 +48,7 @@ export function AccountCard({ account, onPress, selected = false }: AccountCardP
           </Text>
           {account.isPrimary ? (
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>Principal</Text>
+              <MaterialCommunityIcons name='star' color={styles.badgeText.color} />
             </View>
           ) : null}
         </View>
@@ -58,12 +60,13 @@ export function AccountCard({ account, onPress, selected = false }: AccountCardP
       </View>
       <View style={styles.balances}>
         <Text style={styles.balance} numberOfLines={1} adjustsFontSizeToFit>
-          {formatMoney(account.balance, account.currency)}
+          {hidden ? MONEY_MASK : formatMoney(account.balance, account.currency)}
         </Text>
         {showEurEquivalent ? (
           <Text style={styles.eurEquivalent} numberOfLines={1}>
-            ≈ {formatMoney(account.eurEquivalent, 'EUR')}
-            {account.rateMissing ? ' · tasa no disponible' : ''}
+            {hidden
+              ? '≈ ' + MONEY_MASK
+              : `≈ ${formatMoney(account.eurEquivalent, 'EUR')}${account.rateMissing ? ' · tasa no disponible' : ''}`}
           </Text>
         ) : null}
       </View>
@@ -75,7 +78,7 @@ const makeStyles = (colors: ThemeColors, background: string | null, text: Readab
   StyleSheet.create({
     card: {
       flexGrow: 1,
-      minHeight: 152,
+      minHeight: 100,
       justifyContent: 'space-between',
       backgroundColor: background ?? colors.canvas,
       borderRadius: rounded.xl,
@@ -108,9 +111,9 @@ const makeStyles = (colors: ThemeColors, background: string | null, text: Readab
     },
     badge: {
       backgroundColor: text.primary,
-      borderRadius: rounded.pill,
+      borderRadius: rounded.full,
       paddingVertical: spacing.xxs,
-      paddingHorizontal: spacing.sm,
+      paddingHorizontal: spacing.xxs,
     },
     badgeText: {
       ...typography.caption,

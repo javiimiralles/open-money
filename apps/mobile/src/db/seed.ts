@@ -2,43 +2,49 @@
  * Base category catalog seeded on first launch (Spanish).
  * Runs inside migration v1 with explicit ids and INSERT OR IGNORE so it is
  * idempotent across re-installs and app updates.
+ *
+ * Each entry also carries the default identifying icon; migration v8
+ * backfills those icons by id (see seedCategoryIconsSql).
  */
+
+import type { CategoryIconName } from '@/utils/category-icons';
 
 export interface SeedCategory {
   id: number;
   name: string;
   kind: 'income' | 'expense';
+  icon: CategoryIconName;
 }
 
 export const BASE_CATEGORIES: SeedCategory[] = [
   // Income (~6)
-  { id: 1, name: 'Nómina', kind: 'income' },
-  { id: 2, name: 'Bonus', kind: 'income' },
-  { id: 3, name: 'Intereses', kind: 'income' },
-  { id: 4, name: 'Alquileres', kind: 'income' },
-  { id: 5, name: 'Ventas', kind: 'income' },
-  { id: 6, name: 'Otros ingresos', kind: 'income' },
+  { id: 1, name: 'Nómina', kind: 'income', icon: 'briefcase' },
+  { id: 2, name: 'Bonus', kind: 'income', icon: 'cash-plus' },
+  { id: 3, name: 'Intereses', kind: 'income', icon: 'percent' },
+  { id: 4, name: 'Alquileres', kind: 'income', icon: 'home-city' },
+  { id: 5, name: 'Ventas', kind: 'income', icon: 'storefront' },
+  { id: 6, name: 'Otros ingresos', kind: 'income', icon: 'cash-multiple' },
   // Expense (~20)
-  { id: 7, name: 'Vivienda', kind: 'expense' },
-  { id: 8, name: 'Alimentación', kind: 'expense' },
-  { id: 9, name: 'Transporte', kind: 'expense' },
-  { id: 10, name: 'Facturas', kind: 'expense' },
-  { id: 11, name: 'Ocio', kind: 'expense' },
-  { id: 12, name: 'Salud', kind: 'expense' },
-  { id: 13, name: 'Ropa', kind: 'expense' },
-  { id: 14, name: 'Educación', kind: 'expense' },
-  { id: 15, name: 'Mascotas', kind: 'expense' },
-  { id: 16, name: 'Regalos', kind: 'expense' },
-  { id: 17, name: 'Viajes', kind: 'expense' },
-  { id: 18, name: 'Restaurantes', kind: 'expense' },
-  { id: 19, name: 'Suscripciones', kind: 'expense' },
-  { id: 20, name: 'Impuestos', kind: 'expense' },
-  { id: 21, name: 'Seguro del coche', kind: 'expense' },
-  { id: 22, name: 'Deporte', kind: 'expense' },
-  { id: 23, name: 'Cultura', kind: 'expense' },
-  { id: 24, name: 'Telefonía', kind: 'expense' },
-  { id: 25, name: 'Hogar', kind: 'expense' },
-  { id: 26, name: 'Otros gastos', kind: 'expense' },
+  { id: 7, name: 'Vivienda', kind: 'expense', icon: 'home' },
+  { id: 8, name: 'Alimentación', kind: 'expense', icon: 'cart' },
+  { id: 9, name: 'Transporte', kind: 'expense', icon: 'bus' },
+  { id: 10, name: 'Facturas', kind: 'expense', icon: 'receipt-text' },
+  { id: 11, name: 'Ocio', kind: 'expense', icon: 'gamepad-variant' },
+  { id: 12, name: 'Salud', kind: 'expense', icon: 'heart-pulse' },
+  { id: 13, name: 'Ropa', kind: 'expense', icon: 'tshirt-crew' },
+  { id: 14, name: 'Educación', kind: 'expense', icon: 'school' },
+  { id: 15, name: 'Mascotas', kind: 'expense', icon: 'dog' },
+  { id: 16, name: 'Regalos', kind: 'expense', icon: 'gift' },
+  { id: 17, name: 'Viajes', kind: 'expense', icon: 'airplane' },
+  { id: 18, name: 'Restaurantes', kind: 'expense', icon: 'silverware-fork-knife' },
+  { id: 19, name: 'Suscripciones', kind: 'expense', icon: 'autorenew' },
+  { id: 20, name: 'Impuestos', kind: 'expense', icon: 'bank' },
+  { id: 21, name: 'Seguro del coche', kind: 'expense', icon: 'car' },
+  { id: 22, name: 'Deporte', kind: 'expense', icon: 'dumbbell' },
+  { id: 23, name: 'Cultura', kind: 'expense', icon: 'theater' },
+  { id: 24, name: 'Telefonía', kind: 'expense', icon: 'cellphone' },
+  { id: 25, name: 'Hogar', kind: 'expense', icon: 'lamp' },
+  { id: 26, name: 'Otros gastos', kind: 'expense', icon: 'dots-horizontal' },
 ];
 
 export function seedCategoriesSql(): string {
@@ -49,4 +55,10 @@ export function seedCategoriesSql(): string {
 INSERT OR IGNORE INTO categories (id, name, kind) VALUES
 ${values};
 `;
+}
+
+export function seedCategoryIconsSql(): string {
+  return BASE_CATEGORIES.map((c) => `UPDATE categories SET icon = '${c.icon}' WHERE id = ${c.id};`).join(
+    '\n',
+  );
 }

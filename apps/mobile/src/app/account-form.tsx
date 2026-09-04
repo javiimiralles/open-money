@@ -3,7 +3,6 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
-import { Card } from '@/components/Card';
 import { TextField } from '@/components/TextField';
 import { useAccountForm } from '@/hooks/use-account-form';
 import { ACCOUNT_COLORS } from '@/theme/account-colors';
@@ -64,101 +63,99 @@ export default function AccountFormScreen() {
     <>
       <Stack.Screen options={{ title: form.isEditing ? 'Editar cuenta' : 'Nueva cuenta' }} />
       <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-        <Card>
-          <View style={styles.form}>
-            <TextField
-              label="Nombre"
-              value={form.values.name}
-              onChangeText={form.setName}
-              placeholder="Ej. Banco Santander"
-              error={form.errors.name}
-            />
-            <TextField
-              label="Identificador (opcional)"
-              value={form.values.identifier}
-              onChangeText={form.setIdentifier}
-              placeholder="Ej. ES91 2100 0418 4502 0005 1332"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            <View style={styles.field}>
-              <Text style={styles.label}>Divisa</Text>
-              <View style={styles.currencyRow}>
-                {CURRENCIES.map((code) => {
-                  const selected = form.values.currency === code;
-                  return (
-                    <Pressable
-                      key={code}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected }}
-                      onPress={() => form.setCurrency(code)}
-                      style={[styles.currencyChip, selected && styles.currencyChipSelected]}>
-                      <Text style={[styles.currencyChipText, selected && styles.currencyChipTextSelected]}>{code}</Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
+        <View style={styles.form}>
+          <TextField
+            label="Nombre"
+            value={form.values.name}
+            onChangeText={form.setName}
+            placeholder="Ej. Banco Santander"
+            error={form.errors.name}
+          />
+          <TextField
+            label="Identificador (opcional)"
+            value={form.values.identifier}
+            onChangeText={form.setIdentifier}
+            placeholder="Ej. ES91 2100 0418 4502 0005 1332"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <View style={styles.field}>
+            <Text style={styles.label}>Divisa</Text>
+            <View style={styles.currencyRow}>
+              {CURRENCIES.map((code) => {
+                const selected = form.values.currency === code;
+                return (
+                  <Pressable
+                    key={code}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    onPress={() => form.setCurrency(code)}
+                    style={[styles.currencyChip, selected && styles.currencyChipSelected]}>
+                    <Text style={[styles.currencyChipText, selected && styles.currencyChipTextSelected]}>{code}</Text>
+                  </Pressable>
+                );
+              })}
             </View>
-            <TextField
-              label="Saldo inicial"
-              value={form.values.initialBalance}
-              onChangeText={form.setInitialBalance}
-              placeholder="0,00"
-              keyboardType="decimal-pad"
-              error={form.errors.initialBalance}
-            />
-            <View style={styles.field}>
-              <Text style={styles.label}>Color</Text>
-              <View style={styles.colorRow}>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Sin color"
-                  accessibilityState={{ selected: form.values.color === null }}
-                  onPress={() => form.setColor(null)}
-                  style={[styles.colorSwatchNone, form.values.color === null && styles.colorSwatchSelected]}
-                />
-                {ACCOUNT_COLORS.map((color) => {
-                  const selected = form.values.color === color;
-                  return (
-                    <Pressable
-                      key={color}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Color ${color}`}
-                      accessibilityState={{ selected }}
-                      onPress={() => form.setColor(color)}
-                      style={[
-                        styles.colorSwatch,
-                        { backgroundColor: color },
-                        selected && styles.colorSwatchSelected,
-                      ]}
-                    />
-                  );
-                })}
-              </View>
-            </View>
-            <View style={styles.primaryRow}>
-              <View style={styles.primaryText}>
-                <Text style={styles.label}>Cuenta principal</Text>
-                <Text style={styles.primaryHint}>Aparece la primera en el listado y preseleccionada en los movimientos.</Text>
-              </View>
-              <Switch
-                accessibilityLabel="Cuenta principal"
-                value={form.values.isPrimary}
-                onValueChange={form.setIsPrimary}
-                trackColor={{ false: colors.mute, true: colors.primary }}
-                thumbColor={colors.canvas}
-              />
-            </View>
-            <Button
-              label={form.isEditing ? 'Guardar cambios' : 'Crear cuenta'}
-              loading={form.saving}
-              onPress={handleSave}
-            />
-            {form.isEditing ? (
-              <Button label="Eliminar cuenta" variant="tertiary" loading={form.deleting} onPress={handleDelete} />
-            ) : null}
           </View>
-        </Card>
+          <TextField
+            label="Saldo inicial"
+            value={form.values.initialBalance}
+            onChangeText={form.setInitialBalance}
+            placeholder="0,00"
+            keyboardType="decimal-pad"
+            error={form.errors.initialBalance}
+          />
+          <View style={styles.field}>
+            <Text style={styles.label}>Color</Text>
+            <View style={styles.colorRow}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Sin color"
+                accessibilityState={{ selected: form.values.color === null }}
+                onPress={() => form.setColor(null)}
+                style={[styles.colorSwatchNone, form.values.color === null && styles.colorSwatchSelected]}
+              />
+              {ACCOUNT_COLORS.map((color) => {
+                const selected = form.values.color === color;
+                return (
+                  <Pressable
+                    key={color}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Color ${color}`}
+                    accessibilityState={{ selected }}
+                    onPress={() => form.setColor(color)}
+                    style={[
+                      styles.colorSwatch,
+                      { backgroundColor: color },
+                      selected && styles.colorSwatchSelected,
+                    ]}
+                  />
+                );
+              })}
+            </View>
+          </View>
+          <View style={styles.primaryRow}>
+            <View style={styles.primaryText}>
+              <Text style={styles.label}>Cuenta principal</Text>
+              <Text style={styles.primaryHint}>Aparece la primera en el listado y preseleccionada en los movimientos.</Text>
+            </View>
+            <Switch
+              accessibilityLabel="Cuenta principal"
+              value={form.values.isPrimary}
+              onValueChange={form.setIsPrimary}
+              trackColor={{ false: colors.mute, true: colors.primary }}
+              thumbColor={colors.ink}
+            />
+          </View>
+          <Button
+            label={form.isEditing ? 'Guardar cambios' : 'Crear cuenta'}
+            loading={form.saving}
+            onPress={handleSave}
+          />
+          {form.isEditing ? (
+            <Button label="Eliminar cuenta" variant="tertiary" loading={form.deleting} onPress={handleDelete} />
+          ) : null}
+        </View>
       </ScrollView>
     </>
   );

@@ -42,86 +42,84 @@ export default function TradeFormScreen() {
             <Text style={styles.empty}>Instrumento no encontrado.</Text>
           </Card>
         ) : (
-          <Card>
-            <View style={styles.form}>
-              {form.instrument ? (
-                <Text style={styles.instrument}>
-                  {form.instrument.name} · {form.instrument.symbol}
-                </Text>
-              ) : null}
-              <View style={styles.field}>
-                <Text style={styles.label}>Tipo</Text>
-                <View style={styles.typeRow}>
-                  {TYPE_OPTIONS.map((option) => {
-                    const selected = form.values.type === option.value;
-                    return (
-                      <Pressable
-                        key={option.value}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected }}
-                        onPress={() => form.setType(option.value)}
-                        style={[styles.typeChip, selected && styles.typeChipSelected]}>
-                        <Text style={[styles.typeChipText, selected && styles.typeChipTextSelected]}>
-                          {option.label}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
+          <View style={styles.form}>
+            {form.instrument ? (
+              <Text style={styles.instrument}>
+                {form.instrument.name} · {form.instrument.symbol}
+              </Text>
+            ) : null}
+            <View style={styles.field}>
+              <Text style={styles.label}>Tipo</Text>
+              <View style={styles.typeRow}>
+                {TYPE_OPTIONS.map((option) => {
+                  const selected = form.values.type === option.value;
+                  return (
+                    <Pressable
+                      key={option.value}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected }}
+                      onPress={() => form.setType(option.value)}
+                      style={[styles.typeChip, selected && styles.typeChipSelected]}>
+                      <Text style={[styles.typeChipText, selected && styles.typeChipTextSelected]}>
+                        {option.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
               </View>
-              <DateField
-                label="Fecha"
-                value={form.values.date}
-                onChange={(iso) => {
-                  if (iso !== null) {
-                    form.setDate(iso);
-                  }
-                }}
-                clearable={false}
-              />
-              <SelectField
-                label="Cuenta"
-                value={form.values.accountId}
-                options={form.accountOptions}
-                onChange={form.setAccountId}
-                placeholder="Selecciona una cuenta"
-                error={form.errors.accountId}
-              />
-              <TextField
-                label="Cantidad"
-                value={form.values.quantity}
-                onChangeText={form.setQuantity}
-                placeholder="0"
-                keyboardType="decimal-pad"
-                error={form.errors.quantity}
-              />
-              <TextField
-                label={`Precio (en ${form.accountCurrency ?? 'la divisa de la cuenta'})`}
-                value={form.values.price}
-                onChangeText={form.setPrice}
-                placeholder="0,00"
-                keyboardType="decimal-pad"
-                error={form.errors.price}
-              />
-              {form.holdings > 0 ? (
-                <Text style={styles.holdings}>En cartera: {form.holdings}</Text>
-              ) : null}
-              {form.total !== null && form.accountCurrency ? (
-                <Text style={styles.total}>Total: {formatMoney(form.total, form.accountCurrency)}</Text>
-              ) : null}
-              <TextField
-                label="Notas (opcional)"
-                value={form.values.notes}
-                onChangeText={form.setNotes}
-                placeholder="Ej. Compra mensual"
-              />
-              <Button
-                label={isSell ? 'Guardar venta' : 'Guardar compra'}
-                loading={form.saving}
-                onPress={handleSave}
-              />
             </View>
-          </Card>
+            <DateField
+              label="Fecha"
+              value={form.values.date}
+              onChange={(iso) => {
+                if (iso !== null) {
+                  form.setDate(iso);
+                }
+              }}
+              clearable={false}
+            />
+            <SelectField
+              label="Cuenta"
+              value={form.values.accountId}
+              options={form.accountOptions}
+              onChange={form.setAccountId}
+              placeholder="Selecciona una cuenta"
+              error={form.errors.accountId}
+            />
+            <TextField
+              label="Cantidad"
+              value={form.values.quantity}
+              onChangeText={form.setQuantity}
+              placeholder="0"
+              keyboardType="decimal-pad"
+              error={form.errors.quantity}
+            />
+            <TextField
+              label={`Precio (en ${form.accountCurrency ?? 'la divisa de la cuenta'})`}
+              value={form.values.price}
+              onChangeText={form.setPrice}
+              placeholder="0,00"
+              keyboardType="decimal-pad"
+              error={form.errors.price}
+            />
+            {form.holdings > 0 ? (
+              <Text style={styles.holdings}>En cartera: {form.holdings}</Text>
+            ) : null}
+            {form.total !== null && form.accountCurrency ? (
+              <Text style={styles.total}>Total: {formatMoney(form.total, form.accountCurrency)}</Text>
+            ) : null}
+            <TextField
+              label="Notas (opcional)"
+              value={form.values.notes}
+              onChangeText={form.setNotes}
+              placeholder="Ej. Compra mensual"
+            />
+            <Button
+              label={isSell ? 'Guardar venta' : 'Guardar compra'}
+              loading={form.saving}
+              onPress={handleSave}
+            />
+          </View>
         )}
       </ScrollView>
     </>

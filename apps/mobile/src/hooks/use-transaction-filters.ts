@@ -153,7 +153,7 @@ export function useTransactionFilters(): UseTransactionFiltersResult {
   const categoryOptions = useMemo(
     () => [
       { label: 'Todas las categorías', value: 0 },
-      ...categories.map((category) => ({ label: category.name, value: category.id })),
+      ...categories.map((category) => ({ label: category.name, value: category.id, icon: category.icon })),
     ],
     [categories],
   );

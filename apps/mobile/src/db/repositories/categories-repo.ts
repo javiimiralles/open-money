@@ -10,30 +10,45 @@ export interface Category {
   id: number;
   name: string;
   kind: CategoryKind;
+  /** MaterialCommunityIcons name, NULL = default. See utils/category-icons. */
+  icon: string | null;
 }
 
 export interface CategoryInput {
   name: string;
   kind: CategoryKind;
+  icon?: string | null;
 }
 
 export async function getAllCategories(db: SqlExecutor): Promise<Category[]> {
-  return db.getAllAsync<Category>('SELECT id, name, kind FROM categories ORDER BY kind, name');
+  return db.getAllAsync<Category>('SELECT id, name, kind, icon FROM categories ORDER BY kind, name');
 }
 
 export async function getCategoryById(db: SqlExecutor, id: number): Promise<Category | null> {
-  const row = await db.getFirstAsync<Category>('SELECT id, name, kind FROM categories WHERE id = ?', [id]);
+  const row = await db.getFirstAsync<Category>(
+    'SELECT id, name, kind, icon FROM categories WHERE id = ?',
+    [id],
+  );
   return row ?? null;
 }
 
 export async function insertCategory(db: SqlExecutor, input: CategoryInput): Promise<number> {
-  await db.runAsync('INSERT INTO categories (name, kind) VALUES (?, ?)', [input.name, input.kind]);
+  await db.runAsync('INSERT INTO categories (name, kind, icon) VALUES (?, ?, ?)', [
+    input.name,
+    input.kind,
+    input.icon ?? null,
+  ]);
   const row = await db.getFirstAsync<{ id: number }>('SELECT last_insert_rowid() AS id');
   return row?.id ?? 0;
 }
 
 export async function updateCategory(db: SqlExecutor, id: number, input: CategoryInput): Promise<void> {
-  await db.runAsync('UPDATE categories SET name = ?, kind = ? WHERE id = ?', [input.name, input.kind, id]);
+  await db.runAsync('UPDATE categories SET name = ?, kind = ?, icon = ? WHERE id = ?', [
+    input.name,
+    input.kind,
+    input.icon ?? null,
+    id,
+  ]);
 }
 
 /**

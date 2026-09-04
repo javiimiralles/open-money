@@ -3,7 +3,6 @@ import { useMemo } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { Button } from '@/components/Button';
-import { Card } from '@/components/Card';
 import { DateField } from '@/components/DateField';
 import { SelectField } from '@/components/SelectField';
 import { TextField } from '@/components/TextField';
@@ -59,143 +58,141 @@ export default function RecurringFormScreen() {
     <>
       <Stack.Screen options={{ title: form.isEditing ? 'Editar regla' : 'Nueva regla' }} />
       <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-        <Card>
-          <View style={styles.form}>
-            <View style={styles.field}>
-              <Text style={styles.label}>Tipo</Text>
-              <View style={styles.typeRow}>
-                {TYPE_OPTIONS.map((option) => {
-                  const selected = form.values.type === option.value;
-                  return (
-                    <Pressable
-                      key={option.value}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected }}
-                      onPress={() => form.setType(option.value)}
-                      style={[styles.typeChip, selected && styles.typeChipSelected]}>
-                      <Text style={[styles.typeChipText, selected && styles.typeChipTextSelected]}>{option.label}</Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
+        <View style={styles.form}>
+          <View style={styles.field}>
+            <Text style={styles.label}>Tipo</Text>
+            <View style={styles.typeRow}>
+              {TYPE_OPTIONS.map((option) => {
+                const selected = form.values.type === option.value;
+                return (
+                  <Pressable
+                    key={option.value}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    onPress={() => form.setType(option.value)}
+                    style={[styles.typeChip, selected && styles.typeChipSelected]}>
+                    <Text style={[styles.typeChipText, selected && styles.typeChipTextSelected]}>{option.label}</Text>
+                  </Pressable>
+                );
+              })}
             </View>
-
-            <TextField
-              label="Importe"
-              value={form.values.amount}
-              onChangeText={form.setAmount}
-              placeholder="0,00"
-              keyboardType="decimal-pad"
-              error={form.errors.amount}
-            />
-
-            <SelectField
-              label={form.values.type === 'transfer' ? 'Cuenta de origen' : 'Cuenta'}
-              value={form.values.accountId}
-              options={form.accountOptions}
-              onChange={form.setAccountId}
-              placeholder="Selecciona una cuenta"
-              error={form.errors.accountId}
-            />
-
-            {form.values.type === 'transfer' ? (
-              <>
-                <SelectField
-                  label="Cuenta de destino"
-                  value={form.values.destinationAccountId}
-                  options={form.accountOptions}
-                  onChange={form.setDestinationAccountId}
-                  placeholder="Selecciona la cuenta de destino"
-                  error={form.errors.destinationAccountId}
-                />
-                {form.isCrossCurrency ? (
-                  <>
-                    <TextField
-                      label="Tasa de cambio"
-                      value={form.values.fxRate}
-                      onChangeText={form.setFxRate}
-                      placeholder="1,00"
-                      keyboardType="decimal-pad"
-                      error={form.errors.fxRate}
-                    />
-                    <TextField
-                      label="Importe de destino"
-                      value={form.values.destinationAmount}
-                      onChangeText={form.setDestinationAmount}
-                      placeholder="0,00"
-                      keyboardType="decimal-pad"
-                      error={form.errors.destinationAmount}
-                    />
-                  </>
-                ) : null}
-              </>
-            ) : (
-              <SelectField
-                label="Categoría (opcional)"
-                value={form.values.categoryId}
-                options={[{ label: 'Sin categoría', value: 0 }, ...form.categoryOptions]}
-                onChange={form.setCategoryId}
-              />
-            )}
-
-            <View style={styles.field}>
-              <Text style={styles.label}>Frecuencia</Text>
-              <View style={styles.typeRow}>
-                {FREQUENCY_OPTIONS.map((option) => {
-                  const selected = form.values.frequency === option.value;
-                  return (
-                    <Pressable
-                      key={option.value}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected }}
-                      onPress={() => form.setFrequency(option.value)}
-                      style={[styles.freqChip, selected && styles.typeChipSelected]}>
-                      <Text style={[styles.freqChipText, selected && styles.typeChipTextSelected]}>{option.label}</Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-              {form.errors.frequency ? <Text style={styles.error}>{form.errors.frequency}</Text> : null}
-            </View>
-
-            {form.values.frequency === 'every_n_days' ? (
-              <TextField
-                label="Cada cuántos días"
-                value={form.values.intervalDays}
-                onChangeText={form.setIntervalDays}
-                placeholder="Ej. 14"
-                keyboardType="number-pad"
-                error={form.errors.intervalDays}
-              />
-            ) : null}
-
-            <DateField
-              label="Próxima ejecución"
-              value={form.values.nextExecution}
-              onChange={(iso) => {
-                if (iso !== null) form.setNextExecution(iso);
-              }}
-              clearable={false}
-            />
-            {form.errors.nextExecution ? <Text style={styles.error}>{form.errors.nextExecution}</Text> : null}
-
-            <View style={styles.switchRow}>
-              <Text style={styles.label}>Activa</Text>
-              <Switch value={form.values.active} onValueChange={form.setActive} trackColor={{ true: colors.primary, false: colors.canvasSoft }} thumbColor={colors.ink} />
-            </View>
-
-            <TextField label="Notas (opcional)" value={form.values.notes} onChangeText={form.setNotes} placeholder="Ej. Alquiler, suscripción…" />
-
-            <Button label={form.isEditing ? 'Guardar cambios' : 'Crear regla'} loading={form.saving} onPress={handleSave} />
-
-            {form.isEditing ? (
-              <>
-                <Button label={form.values.active ? 'Pausar regla' : 'Reanudar regla'} variant="secondary" loading={form.toggling} onPress={handleToggle} />
-                <Button label="Eliminar regla" variant="tertiary" loading={form.deleting} onPress={handleDelete} />
-              </>
-            ) : null}
           </View>
-        </Card>
+
+          <TextField
+            label="Importe"
+            value={form.values.amount}
+            onChangeText={form.setAmount}
+            placeholder="0,00"
+            keyboardType="decimal-pad"
+            error={form.errors.amount}
+          />
+
+          <SelectField
+            label={form.values.type === 'transfer' ? 'Cuenta de origen' : 'Cuenta'}
+            value={form.values.accountId}
+            options={form.accountOptions}
+            onChange={form.setAccountId}
+            placeholder="Selecciona una cuenta"
+            error={form.errors.accountId}
+          />
+
+          {form.values.type === 'transfer' ? (
+            <>
+              <SelectField
+                label="Cuenta de destino"
+                value={form.values.destinationAccountId}
+                options={form.accountOptions}
+                onChange={form.setDestinationAccountId}
+                placeholder="Selecciona la cuenta de destino"
+                error={form.errors.destinationAccountId}
+              />
+              {form.isCrossCurrency ? (
+                <>
+                  <TextField
+                    label="Tasa de cambio"
+                    value={form.values.fxRate}
+                    onChangeText={form.setFxRate}
+                    placeholder="1,00"
+                    keyboardType="decimal-pad"
+                    error={form.errors.fxRate}
+                  />
+                  <TextField
+                    label="Importe de destino"
+                    value={form.values.destinationAmount}
+                    onChangeText={form.setDestinationAmount}
+                    placeholder="0,00"
+                    keyboardType="decimal-pad"
+                    error={form.errors.destinationAmount}
+                  />
+                </>
+              ) : null}
+            </>
+          ) : (
+            <SelectField
+              label="Categoría (opcional)"
+              value={form.values.categoryId}
+              options={[{ label: 'Sin categoría', value: 0 }, ...form.categoryOptions]}
+              onChange={form.setCategoryId}
+            />
+          )}
+
+          <View style={styles.field}>
+            <Text style={styles.label}>Frecuencia</Text>
+            <View style={styles.typeRow}>
+              {FREQUENCY_OPTIONS.map((option) => {
+                const selected = form.values.frequency === option.value;
+                return (
+                  <Pressable
+                    key={option.value}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    onPress={() => form.setFrequency(option.value)}
+                    style={[styles.freqChip, selected && styles.typeChipSelected]}>
+                    <Text style={[styles.freqChipText, selected && styles.typeChipTextSelected]}>{option.label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            {form.errors.frequency ? <Text style={styles.error}>{form.errors.frequency}</Text> : null}
+          </View>
+
+          {form.values.frequency === 'every_n_days' ? (
+            <TextField
+              label="Cada cuántos días"
+              value={form.values.intervalDays}
+              onChangeText={form.setIntervalDays}
+              placeholder="Ej. 14"
+              keyboardType="number-pad"
+              error={form.errors.intervalDays}
+            />
+          ) : null}
+
+          <DateField
+            label="Próxima ejecución"
+            value={form.values.nextExecution}
+            onChange={(iso) => {
+              if (iso !== null) form.setNextExecution(iso);
+            }}
+            clearable={false}
+          />
+          {form.errors.nextExecution ? <Text style={styles.error}>{form.errors.nextExecution}</Text> : null}
+
+          <View style={styles.switchRow}>
+            <Text style={styles.label}>Activa</Text>
+            <Switch value={form.values.active} onValueChange={form.setActive} trackColor={{ true: colors.primary, false: colors.canvasSoft }} thumbColor={colors.ink} />
+          </View>
+
+          <TextField label="Notas (opcional)" value={form.values.notes} onChangeText={form.setNotes} placeholder="Ej. Alquiler, suscripción…" />
+
+          <Button label={form.isEditing ? 'Guardar cambios' : 'Crear regla'} loading={form.saving} onPress={handleSave} />
+
+          {form.isEditing ? (
+            <>
+              <Button label={form.values.active ? 'Pausar regla' : 'Reanudar regla'} variant="secondary" loading={form.toggling} onPress={handleToggle} />
+              <Button label="Eliminar regla" variant="tertiary" loading={form.deleting} onPress={handleDelete} />
+            </>
+          ) : null}
+        </View>
       </ScrollView>
     </>
   );

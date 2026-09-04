@@ -192,7 +192,7 @@ export function useRecurringForm(ruleId: number | null): UseRecurringFormResult 
     () =>
       categories
         .filter((c) => c.kind === values.type)
-        .map((c) => ({ label: c.name, value: c.id })),
+        .map((c) => ({ label: c.name, value: c.id, icon: c.icon })),
     [categories, values.type],
   );
 

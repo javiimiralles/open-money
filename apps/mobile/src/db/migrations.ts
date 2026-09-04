@@ -5,7 +5,7 @@
  * is bumped afterwards. Never edit an applied migration: append a new entry.
  */
 
-import { seedCategoriesSql } from './seed';
+import { seedCategoriesSql, seedCategoryIconsSql } from './seed';
 
 export interface Migration {
   version: number;
@@ -163,6 +163,17 @@ ALTER TABLE accounts ADD COLUMN color TEXT;
 -- Single primary account (1 = primary, 0 = not). Exclusivity is enforced
 -- by the repository, not by a constraint.
 ALTER TABLE accounts ADD COLUMN is_primary INTEGER NOT NULL DEFAULT 0;
+`,
+  },
+  {
+    version: 8,
+    up: `
+-- Optional user-chosen icon identifying a category
+-- (MaterialCommunityIcons name, NULL = default). Base categories are
+-- backfilled by id; categories renamed by the user keep their new names.
+ALTER TABLE categories ADD COLUMN icon TEXT;
+
+${seedCategoryIconsSql()}
 `,
   },
 ];

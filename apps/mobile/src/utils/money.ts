@@ -29,6 +29,9 @@ export function parseAmount(input: string): number | null {
   return Number.isFinite(value) ? value : null;
 }
 
+/** Shown in place of any amount when the user hides balances (privacy mode). */
+export const MONEY_MASK = '••••••';
+
 export function formatMoney(amount: number, currency: string): string {
   const negative = amount < 0;
   const abs = Math.abs(amount);

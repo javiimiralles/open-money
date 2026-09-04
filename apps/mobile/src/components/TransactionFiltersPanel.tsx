@@ -110,22 +110,22 @@ const makeStyles = (colors: ThemeColors) =>
     },
     typeRow: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: spacing.sm,
     },
     typeChip: {
-      flex: 1,
       borderWidth: 1,
       borderColor: colors.ink,
       borderRadius: rounded.pill,
-      paddingVertical: spacing.md,
-      alignItems: 'center',
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.md,
     },
     typeChipSelected: {
       backgroundColor: colors.primary,
       borderColor: colors.primary,
     },
     typeChipText: {
-      ...typography.bodyMdStrong,
+      ...typography.bodySmStrong,
       color: colors.ink,
     },
     typeChipTextSelected: {

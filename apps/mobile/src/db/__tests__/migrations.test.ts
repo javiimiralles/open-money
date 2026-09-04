@@ -9,7 +9,7 @@ describe('migrations', () => {
     await migrate(db);
 
     const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    expect(version?.user_version).toBe(7);
+    expect(version?.user_version).toBe(8);
 
     const tables = await db.getAllAsync<{ name: string }>(
       "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
@@ -110,6 +110,26 @@ describe('migrations', () => {
     db.close();
   });
 
+  it('applies migration v8 with the nullable category icon column and base icon backfill', async () => {
+    const db = new BetterSqliteExecutor();
+    await migrate(db);
+
+    const columns = await db.getAllAsync<{ name: string }>('PRAGMA table_info(categories)');
+    expect(columns.map((column) => column.name)).toContain('icon');
+
+    const missing = await db.getFirstAsync<{ count: number }>(
+      'SELECT COUNT(*) AS count FROM categories WHERE icon IS NULL',
+    );
+    expect(missing?.count).toBe(0);
+
+    const row = await db.getFirstAsync<{ icon: string | null }>(
+      "SELECT icon FROM categories WHERE name = 'Nómina'",
+    );
+    expect(row?.icon).toBe('briefcase');
+
+    db.close();
+  });
+
   it('is idempotent: running migrate twice does not duplicate seed data', async () => {
     const db = new BetterSqliteExecutor();
     await migrate(db);
@@ -143,7 +163,7 @@ describe('migrations', () => {
     await db.execAsync('PRAGMA user_version = 999');
     await migrate(db);
     const versionAfter = (await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version'))?.user_version;
-    expect(versionBefore).toBe(7);
+    expect(versionBefore).toBe(8);
     expect(versionAfter).toBe(999);
 
     db.close();
