@@ -54,10 +54,15 @@ export function getStatsPeriodRange(period: StatsPeriod, today: string): StatsPe
   };
 }
 
-/** Ordered `YYYY-MM` keys covering the inclusive range, e.g. for chart buckets. */
-export function getMonthKeys(fromDate: string, toDate: string): string[] {
+/**
+ * Ordered `YYYY-MM` keys covering the inclusive range, e.g. for chart buckets.
+ * `maxMonthKey` optionally caps the keys (inclusive) so future months stay
+ * hidden on the monthly comparison chart.
+ */
+export function getMonthKeys(fromDate: string, toDate: string, maxMonthKey?: string): string[] {
   const [startYear, startMonth1] = fromDate.slice(0, 7).split('-').map(Number);
-  const endKey = toDate.slice(0, 7);
+  const rangeEndKey = toDate.slice(0, 7);
+  const endKey = maxMonthKey !== undefined && maxMonthKey < rangeEndKey ? maxMonthKey : rangeEndKey;
   const keys: string[] = [];
   let year = startYear;
   let month1 = startMonth1;

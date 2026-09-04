@@ -85,6 +85,24 @@ describe('stats', () => {
     it('returns a single key for a one-month range', () => {
       expect(getMonthKeys('2026-09-01', '2026-09-30')).toEqual(['2026-09']);
     });
+
+    it('caps keys at the given max month', () => {
+      expect(getMonthKeys('2026-01-01', '2026-12-31', '2026-09')).toEqual([
+        '2026-01',
+        '2026-02',
+        '2026-03',
+        '2026-04',
+        '2026-05',
+        '2026-06',
+        '2026-07',
+        '2026-08',
+        '2026-09',
+      ]);
+    });
+
+    it('ignores a max month beyond the range', () => {
+      expect(getMonthKeys('2026-09-01', '2026-09-30', '2026-12')).toEqual(['2026-09']);
+    });
   });
 
   describe('formatMonthLabelEs', () => {

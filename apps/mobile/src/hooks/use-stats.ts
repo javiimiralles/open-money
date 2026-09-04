@@ -65,7 +65,7 @@ export function useStats(): UseStatsResult {
       sumMonthlyTotalsByTypeAndCurrency(db, monthlyRange.fromDate, monthlyRange.toDate),
       sumExpenseTotalsByCategory(db, categoryRange.fromDate, categoryRange.toDate),
     ]);
-    const monthKeys = getMonthKeys(monthlyRange.fromDate, monthlyRange.toDate);
+    const monthKeys = getMonthKeys(monthlyRange.fromDate, monthlyRange.toDate, today.slice(0, 7));
     return {
       net: sumIncomeExpenseEur(netRows, rates),
       monthlySeries: buildMonthlySeries(monthlyRows, rates, monthKeys),
