@@ -1,4 +1,5 @@
-import { migrate, MIGRATIONS } from '@/db/client';
+import { migrate } from '@/db/client';
+import { MIGRATIONS } from '@/db/migrations';
 import { BASE_CATEGORIES, seedCategoriesSql } from '@/db/seed';
 import { countCategoriesByKind } from '@/db/repositories/categories-repo';
 import { BetterSqliteExecutor } from '@/test/better-sqlite-executor';

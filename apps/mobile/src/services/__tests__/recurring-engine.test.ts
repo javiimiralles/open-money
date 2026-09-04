@@ -117,7 +117,6 @@ describe('recurring-engine', () => {
       accountId: origin,
       destinationAccountId: dest,
       categoryId: null,
-      instrumentId: null,
       notes: null,
       frequency: 'weekly',
       intervalDays: null,
