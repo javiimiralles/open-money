@@ -26,16 +26,16 @@ export function CategoryDonutChart({ segments, currency }: CategoryDonutChartPro
   const circumference = 2 * Math.PI * radius;
   const total = segments.reduce((sum, segment) => sum + segment.total, 0);
 
-  let drawn = 0;
   const arcs = segments.map((segment, index) => {
     const color = segment.others ? colors.mute : chartColorAt(index);
     const length = Math.max(
       segment.share * circumference - (segments.length > 1 ? SEGMENT_GAP : 0),
       0,
     );
-    const arc = { ...segment, color, length, offset: drawn };
-    drawn += segment.share * circumference;
-    return arc;
+    const offset = segments
+      .slice(0, index)
+      .reduce((sum, previous) => sum + previous.share * circumference, 0);
+    return { ...segment, color, length, offset };
   });
 
   if (segments.length === 0) {

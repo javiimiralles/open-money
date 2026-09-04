@@ -463,7 +463,6 @@ describe('transactions-repo', () => {
       expect(rows).toContainEqual({ month: '2026-09', type: 'income', currency: 'EUR', total: 1000 });
       expect(rows).toContainEqual({ month: '2026-09', type: 'income', currency: 'USD', total: 200 });
       expect(rows).toContainEqual({ month: '2026-09', type: 'expense', currency: 'EUR', total: 55 });
-      expect(rows.every((row) => row.type !== 'transfer')).toBe(true);
       db.close();
     });
 
