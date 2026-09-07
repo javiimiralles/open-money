@@ -8,7 +8,7 @@
  */
 
 export const ACCOUNT_COLORS = [
-  '#9fe870',
+  '#81b760',
   '#38c8ff',
   '#4f9cf9',
   '#b691ff',
