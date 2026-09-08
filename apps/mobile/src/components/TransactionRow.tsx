@@ -17,6 +17,7 @@ export function TransactionRow({ transaction, onPress }: TransactionRowProps) {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const isTransfer = transaction.type === 'transfer';
   const isIncome = transaction.type === 'income';
+  const isInvestment = transaction.type === 'investment';
   const signedAmount = isIncome ? transaction.amount : -transaction.amount;
 
   let detail: string;
@@ -51,7 +52,7 @@ export function TransactionRow({ transaction, onPress }: TransactionRowProps) {
       <Text
         style={[
           styles.amount,
-          isTransfer ? styles.transfer : isIncome ? styles.income : styles.expense,
+          isTransfer ? styles.transfer : isIncome ? styles.income : isInvestment ? styles.investment : styles.expense,
         ]}>
         {isTransfer ? formatMoney(transaction.amount, transaction.currency) : formatMoney(signedAmount, transaction.currency)}
       </Text>
@@ -97,6 +98,9 @@ const makeStyles = (colors: ThemeColors) =>
     },
     expense: {
       color: colors.negativeDeep,
+    },
+    investment: {
+      color: colors.accentCyan,
     },
     transfer: {
       color: colors.ink,

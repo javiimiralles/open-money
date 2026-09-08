@@ -15,11 +15,12 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 const TYPE_OPTIONS = [
   { value: 'income', label: 'Ingreso', icon: 'arrow-top-right' },
   { value: 'expense', label: 'Gasto', icon: 'arrow-bottom-left' },
+  { value: 'investment', label: 'Inversión', icon: 'trending-up' },
   { value: 'transfer', label: 'Transferencia', icon: 'swap-horizontal' },
 ] as const;
 
 function isTransactionFormType(value: string | undefined): value is TransactionFormType {
-  return value === 'income' || value === 'expense' || value === 'transfer';
+  return value === 'income' || value === 'expense' || value === 'investment' || value === 'transfer';
 }
 
 export default function TransactionFormScreen() {

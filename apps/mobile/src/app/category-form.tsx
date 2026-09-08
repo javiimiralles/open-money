@@ -14,6 +14,7 @@ import { CATEGORY_ICONS } from '@/utils/category-icons';
 const KINDS: { value: CategoryKind; label: string }[] = [
   { value: 'expense', label: 'Gasto' },
   { value: 'income', label: 'Ingreso' },
+  { value: 'investment', label: 'Inversión' },
 ];
 
 export default function CategoryFormScreen() {

@@ -29,8 +29,8 @@ export function MonthlyBarsChart({ data }: MonthlyBarsChartProps) {
   const width = Math.max(windowWidth - spacing.xl * 4, 200);
   const plotWidth = width - Y_GUTTER - RIGHT_PAD;
   const groupWidth = plotWidth / data.length;
-  const barWidth = Math.min(Math.max(groupWidth * 0.26, 3), 15);
-  const maxValue = Math.max(1, ...data.flatMap((datum) => [datum.income, datum.expense]));
+  const barWidth = Math.min(Math.max(groupWidth * 0.18, 3), 12);
+  const maxValue = Math.max(1, ...data.flatMap((datum) => [datum.income, datum.expense, datum.investment]));
   const height = PLOT_HEIGHT + LABEL_ROW_HEIGHT;
 
   const barHeight = (value: number): number => (value / maxValue) * (PLOT_HEIGHT - 8);
@@ -39,7 +39,7 @@ export function MonthlyBarsChart({ data }: MonthlyBarsChartProps) {
   return (
     <View
       accessibilityRole="image"
-      accessibilityLabel={`Comparativa mensual de ingresos y gastos de ${data.length} meses`}>
+      accessibilityLabel={`Comparativa mensual de ingresos, gastos e inversiones de ${data.length} meses`}>
       <View style={styles.legend}>
         <View style={styles.legendItem}>
           <View style={[styles.dot, { backgroundColor: colors.positive }]} />
@@ -48,6 +48,10 @@ export function MonthlyBarsChart({ data }: MonthlyBarsChartProps) {
         <View style={styles.legendItem}>
           <View style={[styles.dot, { backgroundColor: colors.negative }]} />
           <Text style={styles.legendText}>Gastos</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.dot, { backgroundColor: colors.accentCyan }]} />
+          <Text style={styles.legendText}>Inversiones</Text>
         </View>
       </View>
       <Svg width={width} height={height}>
@@ -81,6 +85,7 @@ export function MonthlyBarsChart({ data }: MonthlyBarsChartProps) {
           const center = Y_GUTTER + groupWidth * (index + 0.5);
           const incomeHeight = barHeight(datum.income);
           const expenseHeight = barHeight(datum.expense);
+          const investmentHeight = barHeight(datum.investment);
           return (
             <G key={datum.month}>
               <SvgText
@@ -93,7 +98,7 @@ export function MonthlyBarsChart({ data }: MonthlyBarsChartProps) {
                 {datum.label}
               </SvgText>
               <Rect
-                x={center - barWidth - BAR_GAP / 2}
+                x={center - barWidth * 1.5 - BAR_GAP}
                 y={PLOT_HEIGHT - incomeHeight}
                 width={barWidth}
                 height={incomeHeight}
@@ -101,12 +106,20 @@ export function MonthlyBarsChart({ data }: MonthlyBarsChartProps) {
                 fill={colors.positive}
               />
               <Rect
-                x={center + BAR_GAP / 2}
+                x={center - barWidth / 2}
                 y={PLOT_HEIGHT - expenseHeight}
                 width={barWidth}
                 height={expenseHeight}
                 rx={3}
                 fill={colors.negative}
+              />
+              <Rect
+                x={center + barWidth / 2 + BAR_GAP}
+                y={PLOT_HEIGHT - investmentHeight}
+                width={barWidth}
+                height={investmentHeight}
+                rx={3}
+                fill={colors.accentCyan}
               />
             </G>
           );

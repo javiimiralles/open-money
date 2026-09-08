@@ -17,6 +17,7 @@ interface QuickAction {
 const ACTIONS: QuickAction[] = [
   { type: 'income', icon: 'arrow-top-right', accessibilityLabel: 'Nuevo ingreso' },
   { type: 'expense', icon: 'arrow-bottom-left', accessibilityLabel: 'Nuevo gasto' },
+  { type: 'investment', icon: 'trending-up', accessibilityLabel: 'Nueva inversión' },
   { type: 'transfer', icon: 'swap-horizontal', accessibilityLabel: 'Nueva transferencia' },
 ];
 

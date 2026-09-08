@@ -12,6 +12,7 @@ const TYPE_OPTIONS: { value: FilterType; label: string }[] = [
   { value: 'all', label: 'Todos' },
   { value: 'expense', label: 'Gasto' },
   { value: 'income', label: 'Ingreso' },
+  { value: 'investment', label: 'Inversión' },
   { value: 'transfer', label: 'Transferencia' },
 ];
 

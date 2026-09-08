@@ -49,9 +49,11 @@ export default function StatsScreen() {
     loading,
   } = useStats();
 
-  const netTotal = net.income - net.expense;
-  const hasNetData = net.income > 0 || net.expense > 0;
-  const hasMonthlyData = monthlySeries.some((datum) => datum.income > 0 || datum.expense > 0);
+  const netTotal = net.income - net.expense - net.investment;
+  const hasNetData = net.income > 0 || net.expense > 0 || net.investment > 0;
+  const hasMonthlyData = monthlySeries.some(
+    (datum) => datum.income > 0 || datum.expense > 0 || datum.investment > 0,
+  );
   const netColor = netTotal >= 0 ? colors.positive : colors.negative;
 
   return (
@@ -80,6 +82,12 @@ export default function StatsScreen() {
                   <Text style={styles.netLabel}>Gastos</Text>
                   <Text style={[styles.netValue, { color: colors.negative }]}>
                     {formatMoney(net.expense, REPORT_CURRENCY)}
+                  </Text>
+                </View>
+                <View style={styles.netRow}>
+                  <Text style={styles.netLabel}>Inversiones</Text>
+                  <Text style={[styles.netValue, { color: colors.accentCyan }]}>
+                    {formatMoney(net.investment, REPORT_CURRENCY)}
                   </Text>
                 </View>
                 <View style={styles.divider} />
