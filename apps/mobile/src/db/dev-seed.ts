@@ -40,7 +40,7 @@ async function clearUserData(db: SqlExecutor): Promise<void> {
   await db.execAsync('DELETE FROM accounts');
   await db.execAsync('DELETE FROM exchange_rates');
   await db.execAsync(
-    `DELETE FROM sqlite_sequence WHERE name IN ('accounts', 'transactions', 'recurring_rules', 'exchange_rates')`,
+    `DELETE FROM sqlite_sequence WHERE name IN ('accounts', 'categories', 'transactions', 'recurring_rules', 'exchange_rates')`,
   );
   await db.execAsync(seedCategoriesSql());
   await db.execAsync(seedCategoryIconsSql());

@@ -67,6 +67,12 @@ export function seedCategoryIconsSql(): string {
   );
 }
 
+/**
+ * Investment base categories. Ids are the documented references on fresh
+ * installs (v1 seeds 1-26, so these land on 27-32) and dev datasets rely on
+ * them; on upgraded databases with colliding user-created categories the
+ * seed below assigns free ids instead of silently dropping rows.
+ */
 export const INVESTMENT_CATEGORIES: SeedCategory[] = [
   { id: 27, name: 'Fondos indexados', kind: 'investment', icon: 'chart-line' },
   { id: 28, name: 'Acciones', kind: 'investment', icon: 'trending-up' },
@@ -76,18 +82,31 @@ export const INVESTMENT_CATEGORIES: SeedCategory[] = [
   { id: 32, name: 'Otras inversiones', kind: 'investment', icon: 'dots-horizontal' },
 ];
 
+/**
+ * Seeds the investment catalog matched by (kind, name) instead of explicit
+ * ids: INSERT OR IGNORE would silently skip rows whose id is already taken
+ * by a user-created category. On fresh installs the rows still land on
+ * 27-32 via AUTOINCREMENT.
+ */
 export function seedInvestmentCategoriesSql(): string {
-  const values = INVESTMENT_CATEGORIES.map(
-    (c) => `(${c.id}, '${c.name.replace(/'/g, "''")}', '${c.kind}')`,
-  ).join(',\n');
+  const union = INVESTMENT_CATEGORIES.map(
+    (c) => `SELECT '${c.name.replace(/'/g, "''")}' AS name, '${c.kind}' AS kind`,
+  ).join('\nUNION ALL\n');
   return `
-INSERT OR IGNORE INTO categories (id, name, kind) VALUES
-${values};
+INSERT INTO categories (name, kind)
+SELECT seed.name, seed.kind FROM (
+${union}
+) AS seed
+WHERE NOT EXISTS (
+  SELECT 1 FROM categories AS existing
+  WHERE existing.kind = seed.kind AND existing.name = seed.name
+);
 `;
 }
 
 export function seedInvestmentCategoryIconsSql(): string {
-  return INVESTMENT_CATEGORIES.map((c) => `UPDATE categories SET icon = '${c.icon}' WHERE id = ${c.id};`).join(
-    '\n',
-  );
+  return INVESTMENT_CATEGORIES.map(
+    (c) =>
+      `UPDATE categories SET icon = '${c.icon}' WHERE kind = 'investment' AND name = '${c.name.replace(/'/g, "''")}';`,
+  ).join('\n');
 }
