@@ -22,14 +22,14 @@ export interface TransactionSummary {
 }
 
 /**
- * Signed contribution of a transaction to income/expense totals.
+ * Signed contribution of a transaction to income/expense/investment totals.
  * Transfers are neutral (they move balance between own accounts).
  */
 export function signedAmount(transaction: TransactionWithDetails): number {
   if (transaction.type === 'income') {
     return transaction.amount;
   }
-  if (transaction.type === 'expense') {
+  if (transaction.type === 'expense' || transaction.type === 'investment') {
     return -transaction.amount;
   }
   return 0;

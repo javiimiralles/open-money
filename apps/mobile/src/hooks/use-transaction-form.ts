@@ -23,7 +23,7 @@ import { todayIso } from '@/utils/dates';
 import { parseAmount } from '@/utils/money';
 import { crossRate, destinationAmountFromRate, rateFromAmounts } from '@/utils/transfer';
 
-export type TransactionFormType = 'income' | 'expense' | 'transfer';
+export type TransactionFormType = 'income' | 'expense' | 'transfer' | 'investment';
 
 export interface TransactionFormValues {
   type: TransactionFormType;

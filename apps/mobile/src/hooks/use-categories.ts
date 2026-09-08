@@ -50,6 +50,7 @@ export function useCategories(): UseCategoriesResult {
     () => [
       { title: 'Gastos', data: items.filter((item) => item.kind === 'expense') },
       { title: 'Ingresos', data: items.filter((item) => item.kind === 'income') },
+      { title: 'Inversiones', data: items.filter((item) => item.kind === 'investment') },
     ],
     [items],
   );

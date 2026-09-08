@@ -47,6 +47,7 @@ const TYPE_LABELS: Record<FilterType, string> = {
   all: 'Todos',
   expense: 'Gasto',
   income: 'Ingreso',
+  investment: 'Inversión',
   transfer: 'Transferencia',
 };
 

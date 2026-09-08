@@ -21,7 +21,7 @@ import {
   detectMissingRates,
   getMonthKeys,
   getStatsPeriodRange,
-  sumIncomeExpenseEur,
+  sumNetTotalsEur,
   type CategorySegment,
   type MonthlyDatum,
   type NetSummary,
@@ -48,7 +48,7 @@ export function useStats(): UseStatsResult {
   const [netPeriod, setNetPeriod] = useState<StatsPeriod>('month');
   const [monthlyPeriod, setMonthlyPeriod] = useState<StatsPeriod>('sixMonths');
   const [categoryPeriod, setCategoryPeriod] = useState<StatsPeriod>('month');
-  const [net, setNet] = useState<NetSummary>({ income: 0, expense: 0 });
+  const [net, setNet] = useState<NetSummary>({ income: 0, expense: 0, investment: 0 });
   const [monthlySeries, setMonthlySeries] = useState<MonthlyDatum[]>([]);
   const [breakdown, setBreakdown] = useState<CategorySegment[]>([]);
   const [hasMissingRates, setHasMissingRates] = useState(false);
@@ -67,7 +67,7 @@ export function useStats(): UseStatsResult {
     ]);
     const monthKeys = getMonthKeys(monthlyRange.fromDate, monthlyRange.toDate, today.slice(0, 7));
     return {
-      net: sumIncomeExpenseEur(netRows, rates),
+      net: sumNetTotalsEur(netRows, rates),
       monthlySeries: buildMonthlySeries(monthlyRows, rates, monthKeys),
       breakdown: buildCategoryBreakdown(categoryRows, rates),
       hasMissingRates: detectMissingRates([...netRows, ...monthlyRows, ...categoryRows], rates),

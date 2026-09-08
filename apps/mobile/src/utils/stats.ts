@@ -100,24 +100,25 @@ export function formatMonthLabelEs(monthKey: string): string {
 export interface NetSummary {
   income: number;
   expense: number;
+  investment: number;
 }
 
 /** Consolidates grouped type/currency totals to EUR. Amounts stay raw (unrounded). */
-export function sumIncomeExpenseEur(
-  rows: readonly TypeCurrencyTotal[],
-  rates: Record<string, number>,
-): NetSummary {
+export function sumNetTotalsEur(rows: readonly TypeCurrencyTotal[], rates: Record<string, number>): NetSummary {
   let income = 0;
   let expense = 0;
+  let investment = 0;
   for (const row of rows) {
     const eur = convertToEur(row.total, row.currency, rates).amountEur;
     if (row.type === 'income') {
       income += eur;
-    } else {
+    } else if (row.type === 'expense') {
       expense += eur;
+    } else {
+      investment += eur;
     }
   }
-  return { income, expense };
+  return { income, expense, investment };
 }
 
 /** True when any row uses a non-EUR currency without a stored rate. */
@@ -133,6 +134,7 @@ export interface MonthlyDatum {
   label: string;
   income: number;
   expense: number;
+  investment: number;
 }
 
 /** Builds one datum per month key in EUR; months without rows read zero. */
@@ -141,9 +143,9 @@ export function buildMonthlySeries(
   rates: Record<string, number>,
   monthKeys: string[],
 ): MonthlyDatum[] {
-  const buckets = new Map<string, { income: number; expense: number }>();
+  const buckets = new Map<string, { income: number; expense: number; investment: number }>();
   for (const key of monthKeys) {
-    buckets.set(key, { income: 0, expense: 0 });
+    buckets.set(key, { income: 0, expense: 0, investment: 0 });
   }
   for (const row of rows) {
     const bucket = buckets.get(row.month);
@@ -153,13 +155,21 @@ export function buildMonthlySeries(
     const eur = convertToEur(row.total, row.currency, rates).amountEur;
     if (row.type === 'income') {
       bucket.income += eur;
-    } else {
+    } else if (row.type === 'expense') {
       bucket.expense += eur;
+    } else {
+      bucket.investment += eur;
     }
   }
   return monthKeys.map((month) => {
-    const bucket = buckets.get(month) ?? { income: 0, expense: 0 };
-    return { month, label: formatMonthLabelEs(month), income: bucket.income, expense: bucket.expense };
+    const bucket = buckets.get(month) ?? { income: 0, expense: 0, investment: 0 };
+    return {
+      month,
+      label: formatMonthLabelEs(month),
+      income: bucket.income,
+      expense: bucket.expense,
+      investment: bucket.investment,
+    };
   });
 }
 
