@@ -244,8 +244,9 @@ DROP TABLE _tx_rule_links;
 -- Investment categories: allow the 'investment' kind. Rebuild follows the
 -- v9 swap pattern: the DROP fires ON DELETE SET NULL on the category links,
 -- so transactions and recurring rules links are preserved in temp tables and
--- restored afterwards. Investment base categories are seeded with explicit
--- ids continuing the base catalog.
+-- restored afterwards. Investment base categories are seeded matched by
+-- (kind, name): colliding user categories take free ids instead of dropping
+-- rows (see seed.ts).
 CREATE TEMP TABLE _tx_cat_links AS
   SELECT id, category_id FROM transactions WHERE category_id IS NOT NULL;
 

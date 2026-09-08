@@ -6,8 +6,7 @@
  * so the statements below mirror their column lists instead.
  *
  * Clearing keeps `settings` (theme, etc.) and restores the base category
- * catalog (including investments) with explicit ids via the migration
- * seed helpers.
+ * catalog (including investments) via the migration seed helpers.
  */
 
 import type { SqlExecutor } from './client';

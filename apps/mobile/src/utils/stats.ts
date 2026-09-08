@@ -114,7 +114,7 @@ export function sumNetTotalsEur(rows: readonly TypeCurrencyTotal[], rates: Recor
       income += eur;
     } else if (row.type === 'expense') {
       expense += eur;
-    } else {
+    } else if (row.type === 'investment') {
       investment += eur;
     }
   }
@@ -157,7 +157,7 @@ export function buildMonthlySeries(
       bucket.income += eur;
     } else if (row.type === 'expense') {
       bucket.expense += eur;
-    } else {
+    } else if (row.type === 'investment') {
       bucket.investment += eur;
     }
   }
