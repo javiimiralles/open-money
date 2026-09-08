@@ -86,10 +86,10 @@ export function TransactionFiltersPanel({
         />
         <View style={styles.datesRow}>
           <View style={styles.datesColumn}>
-            <DateField label="Desde" value={fromDate} onChange={onFromDateChange} placeholder="Cualquier fecha" />
+            <DateField label="Desde" value={fromDate} onChange={onFromDateChange} />
           </View>
           <View style={styles.datesColumn}>
-            <DateField label="Hasta" value={toDate} onChange={onToDateChange} placeholder="Cualquier fecha" />
+            <DateField label="Hasta" value={toDate} onChange={onToDateChange} />
           </View>
         </View>
       </View>
