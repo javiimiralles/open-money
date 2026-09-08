@@ -39,7 +39,7 @@ export interface DevAccountSpec {
 }
 
 export interface DevTransactionDraft {
-  type: 'income' | 'expense' | 'transfer';
+  type: 'income' | 'expense' | 'transfer' | 'investment';
   date: string;
   amount: number;
   currency: string;
@@ -298,6 +298,11 @@ function pushMonthlyFixed(context: MonthContext): void {
     context,
     { type: 'transfer', amount: 200, currency: 'EUR', accountKey: 'primary', destinationAccountKey: 'savings', destinationAmount: 200, fxRate: null, categoryId: null, notes: 'Ahorro mensual' },
     2,
+  );
+  pushTransaction(
+    context,
+    { type: 'investment', amount: 200, currency: 'EUR', accountKey: 'primary', destinationAccountKey: null, destinationAmount: null, fxRate: null, categoryId: 27, notes: 'Aporte fondos indexados' },
+    3,
   );
   pushTransaction(
     context,

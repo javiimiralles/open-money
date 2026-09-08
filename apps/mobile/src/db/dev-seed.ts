@@ -6,7 +6,8 @@
  * so the statements below mirror their column lists instead.
  *
  * Clearing keeps `settings` (theme, etc.) and restores the base category
- * catalog with explicit ids via the migration seed helpers.
+ * catalog (including investments) with explicit ids via the migration
+ * seed helpers.
  */
 
 import type { SqlExecutor } from './client';
@@ -17,7 +18,12 @@ import {
   type DevDataset,
   type DevSeedOptions,
 } from './dev-data-generator';
-import { seedCategoriesSql, seedCategoryIconsSql } from './seed';
+import {
+  seedCategoriesSql,
+  seedCategoryIconsSql,
+  seedInvestmentCategoriesSql,
+  seedInvestmentCategoryIconsSql,
+} from './seed';
 import type { RecurringRuleInput } from './repositories/recurring-rules-repo';
 import type { TransactionInput } from './repositories/transactions-repo';
 
@@ -38,6 +44,8 @@ async function clearUserData(db: SqlExecutor): Promise<void> {
   );
   await db.execAsync(seedCategoriesSql());
   await db.execAsync(seedCategoryIconsSql());
+  await db.execAsync(seedInvestmentCategoriesSql());
+  await db.execAsync(seedInvestmentCategoryIconsSql());
 }
 
 async function insertSeedAccounts(db: SqlExecutor, dataset: DevDataset): Promise<Map<string, number>> {
