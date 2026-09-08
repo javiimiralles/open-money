@@ -5,6 +5,10 @@
  *
  * Each entry also carries the default identifying icon; migration v8
  * backfills those icons by id (see seedCategoryIconsSql).
+ *
+ * Investment categories live in a separate catalog: they are seeded by
+ * migration v10, once the categories CHECK allows the 'investment' kind.
+ * Keeping them out of BASE_CATEGORIES preserves the v1 seed SQL verbatim.
  */
 
 import type { CategoryIconName } from '@/utils/category-icons';
@@ -12,7 +16,7 @@ import type { CategoryIconName } from '@/utils/category-icons';
 export interface SeedCategory {
   id: number;
   name: string;
-  kind: 'income' | 'expense';
+  kind: 'income' | 'expense' | 'investment';
   icon: CategoryIconName;
 }
 
@@ -59,6 +63,31 @@ ${values};
 
 export function seedCategoryIconsSql(): string {
   return BASE_CATEGORIES.map((c) => `UPDATE categories SET icon = '${c.icon}' WHERE id = ${c.id};`).join(
+    '\n',
+  );
+}
+
+export const INVESTMENT_CATEGORIES: SeedCategory[] = [
+  { id: 27, name: 'Fondos indexados', kind: 'investment', icon: 'chart-line' },
+  { id: 28, name: 'Acciones', kind: 'investment', icon: 'trending-up' },
+  { id: 29, name: 'Criptomonedas', kind: 'investment', icon: 'chart-pie' },
+  { id: 30, name: 'Inmobiliario', kind: 'investment', icon: 'key-variant' },
+  { id: 31, name: 'Plan de pensiones', kind: 'investment', icon: 'piggy-bank' },
+  { id: 32, name: 'Otras inversiones', kind: 'investment', icon: 'dots-horizontal' },
+];
+
+export function seedInvestmentCategoriesSql(): string {
+  const values = INVESTMENT_CATEGORIES.map(
+    (c) => `(${c.id}, '${c.name.replace(/'/g, "''")}', '${c.kind}')`,
+  ).join(',\n');
+  return `
+INSERT OR IGNORE INTO categories (id, name, kind) VALUES
+${values};
+`;
+}
+
+export function seedInvestmentCategoryIconsSql(): string {
+  return INVESTMENT_CATEGORIES.map((c) => `UPDATE categories SET icon = '${c.icon}' WHERE id = ${c.id};`).join(
     '\n',
   );
 }

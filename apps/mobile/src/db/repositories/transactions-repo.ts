@@ -1,5 +1,5 @@
 /**
- * Transactions repository: CRUD for income/expense movements.
+ * Transactions repository: CRUD for income/expense/investment movements.
  *
  * Balances are derived on read by `listAccountsWithBalances`, so inserting,
  * updating, or deleting a transaction automatically updates account balances.
@@ -7,7 +7,7 @@
 
 import type { SqlExecutor } from '../client';
 
-export type TransactionType = 'income' | 'expense' | 'transfer';
+export type TransactionType = 'income' | 'expense' | 'transfer' | 'investment';
 
 export interface Transaction {
   id: number;
@@ -36,7 +36,7 @@ export interface TransactionWithDetails extends Transaction {
 }
 
 export interface IncomeExpenseInput {
-  type: 'income' | 'expense';
+  type: 'income' | 'expense' | 'investment';
   date: string;
   amount: number;
   currency: string;
@@ -409,7 +409,7 @@ export async function summarizeTransactionsFiltered(
     currencies.add(row.currency);
     if (row.type === 'income') {
       net += row.total;
-    } else if (row.type === 'expense') {
+    } else if (row.type === 'expense' || row.type === 'investment') {
       net -= row.total;
     }
   }
@@ -454,12 +454,12 @@ export async function listTransactions(
 }
 
 /**
- * Income/expense totals grouped by type and currency for a date range.
+ * Income/expense/investment totals grouped by type and currency for a date range.
  * Transfers are excluded: they move balance between own accounts.
  * EUR conversion happens in JS (utils/stats) using the stored rates.
  */
 export interface TypeCurrencyTotal {
-  type: 'income' | 'expense';
+  type: 'income' | 'expense' | 'investment';
   currency: string;
   total: number;
 }
@@ -498,7 +498,7 @@ export async function sumTotalsByTypeAndCurrency(
   const rows = await db.getAllAsync<TypeCurrencyTotal>(
     `SELECT t.type AS type, t.currency AS currency, SUM(t.amount) AS total
      FROM transactions t
-     WHERE t.type IN ('income', 'expense') AND t.date >= ? AND t.date <= ?
+     WHERE t.type IN ('income', 'expense', 'investment') AND t.date >= ? AND t.date <= ?
      GROUP BY t.type, t.currency`,
     [fromDate, toDate],
   );
@@ -513,7 +513,7 @@ export async function sumMonthlyTotalsByTypeAndCurrency(
   const rows = await db.getAllAsync<MonthTypeCurrencyTotal>(
     `SELECT substr(t.date, 1, 7) AS month, t.type AS type, t.currency AS currency, SUM(t.amount) AS total
      FROM transactions t
-     WHERE t.type IN ('income', 'expense') AND t.date >= ? AND t.date <= ?
+     WHERE t.type IN ('income', 'expense', 'investment') AND t.date >= ? AND t.date <= ?
      GROUP BY substr(t.date, 1, 7), t.type, t.currency
      ORDER BY month`,
     [fromDate, toDate],

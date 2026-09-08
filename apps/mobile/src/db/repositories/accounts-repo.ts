@@ -3,8 +3,8 @@
  *
  * At most one account is the primary one; setting a new primary demotes
  * the previous. Balances are derived from the initial balance plus the
- * signed transaction legs (income adds, expenses and sent transfers
- * subtract, received transfers add).
+ * signed transaction legs (income adds, expenses, investments and sent
+ * transfers subtract, received transfers add).
  */
 
 import type { SqlExecutor } from '../client';
@@ -88,6 +88,10 @@ export async function listAccountsWithBalances(db: SqlExecutor): Promise<Account
          - COALESCE((
              SELECT SUM(t.amount) FROM transactions t
              WHERE t.account_id = a.id AND t.type = 'expense'
+           ), 0)
+         - COALESCE((
+             SELECT SUM(t.amount) FROM transactions t
+             WHERE t.account_id = a.id AND t.type = 'investment'
            ), 0)
          - COALESCE((
              SELECT SUM(t.amount) FROM transactions t

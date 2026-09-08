@@ -5,7 +5,12 @@
  * is bumped afterwards. Never edit an applied migration: append a new entry.
  */
 
-import { seedCategoriesSql, seedCategoryIconsSql } from './seed';
+import {
+  seedCategoriesSql,
+  seedCategoryIconsSql,
+  seedInvestmentCategoriesSql,
+  seedInvestmentCategoryIconsSql,
+} from './seed';
 
 export interface Migration {
   version: number;
@@ -231,6 +236,96 @@ SET recurring_rule_id = (
 WHERE id IN (SELECT id FROM _tx_rule_links);
 
 DROP TABLE _tx_rule_links;
+`,
+  },
+  {
+    version: 10,
+    up: `
+-- Investment categories: allow the 'investment' kind. Rebuild follows the
+-- v9 swap pattern: the DROP fires ON DELETE SET NULL on the category links,
+-- so transactions and recurring rules links are preserved in temp tables and
+-- restored afterwards. Investment base categories are seeded with explicit
+-- ids continuing the base catalog.
+CREATE TEMP TABLE _tx_cat_links AS
+  SELECT id, category_id FROM transactions WHERE category_id IS NOT NULL;
+
+CREATE TEMP TABLE _rule_cat_links AS
+  SELECT id, category_id FROM recurring_rules WHERE category_id IS NOT NULL;
+
+CREATE TABLE categories_new (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  kind TEXT NOT NULL CHECK (kind IN ('income', 'expense', 'investment')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  icon TEXT
+);
+
+INSERT INTO categories_new (id, name, kind, created_at, icon)
+  SELECT id, name, kind, created_at, icon FROM categories;
+
+DROP TABLE categories;
+ALTER TABLE categories_new RENAME TO categories;
+
+UPDATE transactions
+SET category_id = (
+  SELECT l.category_id FROM _tx_cat_links l WHERE l.id = transactions.id
+)
+WHERE id IN (SELECT id FROM _tx_cat_links);
+
+UPDATE recurring_rules
+SET category_id = (
+  SELECT l.category_id FROM _rule_cat_links l WHERE l.id = recurring_rules.id
+)
+WHERE id IN (SELECT id FROM _rule_cat_links);
+
+DROP TABLE _tx_cat_links;
+DROP TABLE _rule_cat_links;
+
+${seedInvestmentCategoriesSql()}
+
+${seedInvestmentCategoryIconsSql()}
+`,
+  },
+  {
+    version: 11,
+    up: `
+-- Investment transactions: allow the 'investment' type. No other table
+-- references transactions, so the swap needs no link preservation. All
+-- existing indexes are recreated after the rename.
+CREATE TABLE transactions_new (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  type TEXT NOT NULL CHECK (type IN ('income', 'expense', 'transfer', 'investment')),
+  date TEXT NOT NULL,
+  amount REAL NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'EUR',
+  account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+  category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
+  notes TEXT,
+  destination_account_id INTEGER REFERENCES accounts(id) ON DELETE CASCADE,
+  destination_amount REAL,
+  fx_rate REAL,
+  source TEXT NOT NULL DEFAULT 'manual' CHECK (source IN ('manual', 'recurring')),
+  recurring_rule_id INTEGER REFERENCES recurring_rules(id) ON DELETE SET NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  recurring_batch_id TEXT
+);
+
+INSERT INTO transactions_new
+  (id, type, date, amount, currency, account_id, category_id, notes, destination_account_id, destination_amount, fx_rate, source, recurring_rule_id, created_at, updated_at, recurring_batch_id)
+  SELECT id, type, date, amount, currency, account_id, category_id, notes, destination_account_id, destination_amount, fx_rate, source, recurring_rule_id, created_at, updated_at, recurring_batch_id
+  FROM transactions;
+
+DROP TABLE transactions;
+ALTER TABLE transactions_new RENAME TO transactions;
+
+CREATE INDEX idx_transactions_date ON transactions(date);
+CREATE INDEX idx_transactions_account ON transactions(account_id);
+CREATE INDEX idx_transactions_category ON transactions(category_id);
+CREATE INDEX idx_transactions_account_date ON transactions(account_id, date);
+CREATE INDEX idx_transactions_destination_account ON transactions(destination_account_id);
+CREATE INDEX idx_transactions_recurring_batch ON transactions(recurring_batch_id);
+CREATE UNIQUE INDEX idx_transactions_recurring_dedup ON transactions(recurring_rule_id, date) WHERE recurring_rule_id IS NOT NULL;
 `,
   },
 ];

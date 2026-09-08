@@ -4,7 +4,7 @@
 
 import type { SqlExecutor } from '../client';
 
-export type CategoryKind = 'income' | 'expense';
+export type CategoryKind = 'income' | 'expense' | 'investment';
 
 export interface Category {
   id: number;
