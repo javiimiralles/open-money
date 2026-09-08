@@ -5,20 +5,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
-import { SelectField, type SelectOption } from '@/components/SelectField';
 import { useBackup } from '@/hooks/use-backup';
 import { isDevBuild, useDevData } from '@/hooks/use-dev-data';
 import { spacing, typography } from '@/theme/tokens';
-import { useTheme, type ThemeColors, type ThemeMode } from '@/theme/theme';
-
-const THEME_OPTIONS: SelectOption<ThemeMode>[] = [
-  { value: 'system', label: 'Sistema' },
-  { value: 'light', label: 'Claro' },
-  { value: 'dark', label: 'Oscuro' },
-];
+import { useTheme, type ThemeColors } from '@/theme/theme';
 
 export default function SettingsScreen() {
-  const { colors, mode, setMode } = useTheme();
+  const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -27,16 +20,6 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={[styles.screen, { paddingTop: insets.top }]} contentContainerStyle={styles.content}>
-      <Text style={styles.sectionTitle}>Apariencia</Text>
-      <Card>
-        <View style={styles.form}>
-          <Text style={styles.description}>
-            Elige cómo se ve la app. Con «Sistema» sigue el tema de tu móvil.
-          </Text>
-          <SelectField label="Tema" value={mode} options={THEME_OPTIONS} onChange={(value) => void setMode(value)} />
-        </View>
-      </Card>
-
       <Text style={styles.sectionTitle}>Pagos recurrentes</Text>
       <Card>
         <View style={styles.form}>
@@ -127,7 +110,7 @@ const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     screen: {
       flex: 1,
-      backgroundColor: colors.canvasSoft,
+      backgroundColor: colors.paper,
     },
     content: {
       padding: spacing.xl,
@@ -139,7 +122,7 @@ const makeStyles = (colors: ThemeColors) =>
     },
     description: {
       ...typography.bodyMd,
-      color: colors.body,
+      color: colors.graphite,
     },
     form: {
       gap: spacing.lg,

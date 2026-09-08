@@ -39,7 +39,7 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: spacing.md,
-      shadowColor: '#0e0f0c',
+      shadowColor: colors.ink,
       shadowOpacity: 0.2,
       shadowRadius: 8,
       shadowOffset: { width: 0, height: 4 },
@@ -47,7 +47,7 @@ const makeStyles = (colors: ThemeColors) =>
     },
     text: {
       ...typography.bodySmStrong,
-      color: colors.canvas,
+      color: colors.white,
       flex: 1,
     },
     actions: {
@@ -56,7 +56,7 @@ const makeStyles = (colors: ThemeColors) =>
       gap: spacing.sm,
     },
     button: {
-      backgroundColor: colors.primary,
+      backgroundColor: colors.white,
       borderRadius: rounded.pill,
       paddingVertical: spacing.xs,
       paddingHorizontal: spacing.md,
@@ -66,13 +66,13 @@ const makeStyles = (colors: ThemeColors) =>
     },
     buttonText: {
       ...typography.bodySmStrong,
-      color: colors.onPrimary,
+      color: colors.ink,
     },
     close: {
       padding: spacing.xs,
     },
     closeText: {
       ...typography.bodyMdStrong,
-      color: colors.canvas,
+      color: colors.white,
     },
   });

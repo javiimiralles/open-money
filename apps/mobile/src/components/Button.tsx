@@ -16,9 +16,9 @@ export interface ButtonProps extends Omit<PressableProps, 'style'> {
 const getVariantStyles = (
   colors: ThemeColors,
 ): Record<ButtonVariant, { backgroundColor: string; textColor: string; borderColor?: string }> => ({
-  primary: { backgroundColor: colors.primary, textColor: colors.onPrimary },
-  secondary: { backgroundColor: colors.canvasSoft, textColor: colors.ink },
-  tertiary: { backgroundColor: colors.canvas, textColor: colors.ink, borderColor: colors.ink },
+  primary: { backgroundColor: colors.ink, textColor: colors.white },
+  secondary: { backgroundColor: colors.paper, textColor: colors.ink, borderColor: colors.silver },
+  tertiary: { backgroundColor: colors.white, textColor: colors.ink, borderColor: colors.silver },
 });
 
 export function Button({ variant = 'primary', label, loading = false, disabled, style, ...props }: ButtonProps) {
@@ -50,12 +50,12 @@ const styles = StyleSheet.create({
   base: {
     borderRadius: rounded.xl,
     paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
+    paddingHorizontal: spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: 'transparent',
-    minHeight: 48,
+    minHeight: 36,
   },
   label: {
     ...typography.buttonMd,

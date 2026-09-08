@@ -50,7 +50,7 @@ export function MonthlyBarsChart({ data }: MonthlyBarsChartProps) {
           <Text style={styles.legendText}>Gastos</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.dot, { backgroundColor: colors.accentCyan }]} />
+          <View style={[styles.dot, { backgroundColor: colors.actionBlue }]} />
           <Text style={styles.legendText}>Inversiones</Text>
         </View>
       </View>
@@ -65,7 +65,7 @@ export function MonthlyBarsChart({ data }: MonthlyBarsChartProps) {
                 x2={width - RIGHT_PAD}
                 y1={y}
                 y2={y}
-                stroke={baseline ? colors.mute : colors.canvasSoft}
+                stroke={baseline ? colors.slate : colors.paper}
                 strokeWidth={1}
                 strokeDasharray={baseline ? undefined : '4 4'}
               />
@@ -75,7 +75,7 @@ export function MonthlyBarsChart({ data }: MonthlyBarsChartProps) {
                 textAnchor="end"
                 fontSize={10}
                 fontFamily="Inter_400Regular"
-                fill={colors.mute}>
+                fill={colors.slate}>
                 {formatCompactAmount(tick)}
               </SvgText>
             </G>
@@ -94,7 +94,7 @@ export function MonthlyBarsChart({ data }: MonthlyBarsChartProps) {
                 textAnchor="middle"
                 fontSize={10}
                 fontFamily="Inter_400Regular"
-                fill={colors.mute}>
+                fill={colors.slate}>
                 {datum.label}
               </SvgText>
               <Rect
@@ -119,7 +119,7 @@ export function MonthlyBarsChart({ data }: MonthlyBarsChartProps) {
                 width={barWidth}
                 height={investmentHeight}
                 rx={3}
-                fill={colors.accentCyan}
+                fill={colors.actionBlue}
               />
             </G>
           );
@@ -148,6 +148,6 @@ const makeStyles = (colors: ThemeColors) =>
     },
     legendText: {
       ...typography.bodySm,
-      color: colors.body,
+      color: colors.graphite,
     },
   });

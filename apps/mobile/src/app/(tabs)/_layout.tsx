@@ -14,10 +14,10 @@ export default function TabsLayout() {
         screenOptions={{
           headerShown: false,
           tabBarActiveTintColor: colors.ink,
-          tabBarInactiveTintColor: colors.mute,
+          tabBarInactiveTintColor: colors.slate,
           tabBarStyle: {
-            backgroundColor: colors.canvas,
-            borderTopColor: colors.canvasSoft,
+            backgroundColor: colors.white,
+            borderTopColor: colors.paper,
           },
           tabBarLabelStyle: typography.caption,
         }}>

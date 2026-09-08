@@ -61,7 +61,7 @@ export default function DashboardScreen() {
                 <MaterialCommunityIcons
                   name={balancesHidden ? 'eye-off' : 'eye'}
                   size={22}
-                  color={colors.body}
+                  color={colors.graphite}
                 />
               </Pressable>
             </View>
@@ -118,7 +118,7 @@ const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     screen: {
       flex: 1,
-      backgroundColor: colors.canvasSoft,
+      backgroundColor: colors.paper,
     },
     content: {
       padding: spacing.xl,
@@ -150,7 +150,7 @@ const makeStyles = (colors: ThemeColors) =>
     },
     netWorthLabel: {
       ...typography.bodySm,
-      color: colors.body,
+      color: colors.graphite,
     },
     netWorthValue: {
       ...typography.displayMd,
@@ -166,6 +166,6 @@ const makeStyles = (colors: ThemeColors) =>
     },
     emptyText: {
       ...typography.bodyMd,
-      color: colors.body,
+      color: colors.graphite,
     },
   });

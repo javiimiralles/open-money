@@ -71,7 +71,7 @@ export default function TransactionFormScreen() {
                       accessibilityState={{ selected }}
                       onPress={() => form.setType(option.value)}
                       style={[styles.typeChip, selected && styles.typeChipSelected]}>
-                      <MaterialCommunityIcons name={option.icon} size={20} color={selected ? colors.onPrimary : colors.ink} />
+                      <MaterialCommunityIcons name={option.icon} size={20} color={selected ? colors.white : colors.ink} />
                     </Pressable>
                   );
                 })}
@@ -178,7 +178,7 @@ export default function TransactionFormScreen() {
 const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.canvasSoft,
+    backgroundColor: colors.paper,
   },
   content: {
     padding: spacing.xl,
@@ -200,7 +200,7 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   emptyText: {
     ...typography.bodyMd,
-    color: colors.body,
+    color: colors.graphite,
   },
   typeRow: {
     flexDirection: 'row',
@@ -215,14 +215,14 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
   },
   typeChipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: colors.ink,
+    borderColor: colors.ink,
   },
   typeChipText: {
     ...typography.bodyMdStrong,
     color: colors.ink,
   },
   typeChipTextSelected: {
-    color: colors.onPrimary,
+    color: colors.white,
   },
 });

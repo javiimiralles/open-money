@@ -50,7 +50,7 @@ export function FilterBar({
             filtersActive && styles.filterButtonActive,
             pressed && styles.pressed,
           ]}>
-          <MaterialCommunityIcons name="tune" size={24} color={filtersActive ? colors.onPrimary : colors.ink} />
+          <MaterialCommunityIcons name="tune" size={24} color={filtersActive ? colors.white : colors.ink} />
         </Pressable>
       </View>
       {activeCount > 0 ? (
@@ -92,10 +92,10 @@ const makeStyles = (colors: ThemeColors) =>
       borderRadius: rounded.full,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.canvasSoft,
+      backgroundColor: colors.paper,
     },
     filterButtonActive: {
-      backgroundColor: colors.primary,
+      backgroundColor: colors.ink,
     },
     pressed: {
       opacity: 0.7,
@@ -106,21 +106,21 @@ const makeStyles = (colors: ThemeColors) =>
       gap: spacing.sm,
     },
     chip: {
-      backgroundColor: colors.primaryPale,
+      backgroundColor: colors.infoBannerBg,
       borderRadius: rounded.pill,
       paddingVertical: spacing.xs,
       paddingHorizontal: spacing.md,
     },
     clearChip: {
-      backgroundColor: colors.canvasSoft,
+      backgroundColor: colors.paper,
       borderWidth: 1,
-      borderColor: colors.mute,
+      borderColor: colors.slate,
     },
     chipText: {
       ...typography.bodySmStrong,
-      color: colors.inkDeep,
+      color: colors.graphite,
     },
     clearChipText: {
-      color: colors.body,
+      color: colors.graphite,
     },
   });

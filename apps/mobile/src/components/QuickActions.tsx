@@ -56,7 +56,7 @@ const makeStyles = (colors: ThemeColors) =>
       width: 56,
       height: 56,
       borderRadius: rounded.full,
-      backgroundColor: colors.canvasSoft,
+      backgroundColor: colors.paper,
       alignItems: 'center',
       justifyContent: 'center',
     },

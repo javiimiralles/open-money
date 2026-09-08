@@ -16,7 +16,7 @@ export function TextField({ label, error, style, ...props }: TextFieldProps) {
     <View style={styles.container}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
       <TextInput
-        placeholderTextColor={colors.mute}
+        placeholderTextColor={colors.slate}
         style={[styles.input, error ? styles.inputError : null, style]}
         {...props}
       />
@@ -37,9 +37,9 @@ const makeStyles = (colors: ThemeColors) =>
     input: {
       ...typography.bodyMd,
       color: colors.ink,
-      backgroundColor: colors.canvas,
+      backgroundColor: colors.white,
       borderWidth: 1,
-      borderColor: colors.mute,
+      borderColor: colors.slate,
       borderRadius: rounded.xl,
       paddingVertical: spacing.md,
       paddingHorizontal: spacing.lg,

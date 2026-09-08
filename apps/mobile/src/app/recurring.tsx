@@ -79,7 +79,7 @@ const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     screen: {
       flex: 1,
-      backgroundColor: colors.canvasSoft,
+      backgroundColor: colors.paper,
     },
     content: {
       padding: spacing.xl,
@@ -90,10 +90,10 @@ const makeStyles = (colors: ThemeColors) =>
     },
     description: {
       ...typography.bodyMd,
-      color: colors.body,
+      color: colors.graphite,
     },
     emptyText: {
       ...typography.bodyMd,
-      color: colors.body,
+      color: colors.graphite,
     },
   });

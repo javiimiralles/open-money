@@ -86,7 +86,7 @@ export default function StatsScreen() {
                 </View>
                 <View style={styles.netRow}>
                   <Text style={styles.netLabel}>Inversiones</Text>
-                  <Text style={[styles.netValue, { color: colors.accentCyan }]}>
+                  <Text style={[styles.netValue, { color: colors.actionBlue }]}>
                     {formatMoney(net.investment, REPORT_CURRENCY)}
                   </Text>
                 </View>
@@ -151,7 +151,7 @@ const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     screen: {
       flex: 1,
-      backgroundColor: colors.canvasSoft,
+      backgroundColor: colors.paper,
     },
     content: {
       padding: spacing.xl,
@@ -179,14 +179,14 @@ const makeStyles = (colors: ThemeColors) =>
     },
     netLabel: {
       ...typography.bodyMd,
-      color: colors.body,
+      color: colors.graphite,
     },
     netValue: {
       ...typography.bodyMdStrong,
     },
     divider: {
       height: 1,
-      backgroundColor: colors.canvasSoft,
+      backgroundColor: colors.paper,
     },
     netTotalLabel: {
       ...typography.bodyMdStrong,
@@ -201,6 +201,6 @@ const makeStyles = (colors: ThemeColors) =>
     },
     emptyText: {
       ...typography.bodyMd,
-      color: colors.body,
+      color: colors.graphite,
     },
   });

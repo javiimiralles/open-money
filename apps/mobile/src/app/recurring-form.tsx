@@ -179,7 +179,7 @@ export default function RecurringFormScreen() {
 
           <View style={styles.switchRow}>
             <Text style={styles.label}>Activa</Text>
-            <Switch value={form.values.active} onValueChange={form.setActive} trackColor={{ true: colors.primary, false: colors.canvasSoft }} thumbColor={colors.ink} />
+            <Switch value={form.values.active} onValueChange={form.setActive} trackColor={{ true: colors.ink, false: colors.paper }} thumbColor={colors.ink} />
           </View>
 
           <TextField label="Notas (opcional)" value={form.values.notes} onChangeText={form.setNotes} placeholder="Ej. Alquiler, suscripción…" />
@@ -201,7 +201,7 @@ export default function RecurringFormScreen() {
 const makeStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.canvasSoft,
+    backgroundColor: colors.paper,
   },
   content: {
     padding: spacing.xl,
@@ -232,15 +232,15 @@ const makeStyles = (colors: ThemeColors) => StyleSheet.create({
     alignItems: 'center',
   },
   typeChipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: colors.ink,
+    borderColor: colors.ink,
   },
   typeChipText: {
     ...typography.bodyMdStrong,
     color: colors.ink,
   },
   typeChipTextSelected: {
-    color: colors.onPrimary,
+    color: colors.white,
   },
   freqChip: {
     borderWidth: 1,

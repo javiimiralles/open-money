@@ -130,7 +130,7 @@ const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     screen: {
       flex: 1,
-      backgroundColor: colors.canvasSoft,
+      backgroundColor: colors.paper,
     },
     content: {
       padding: spacing.xl,
@@ -160,7 +160,7 @@ const makeStyles = (colors: ThemeColors) =>
     },
     sectionTitle: {
       ...typography.bodySmStrong,
-      color: colors.body,
+      color: colors.graphite,
     },
     sectionTotal: {
       ...typography.bodySmStrong,
@@ -168,7 +168,7 @@ const makeStyles = (colors: ThemeColors) =>
     },
     emptyText: {
       ...typography.bodyMd,
-      color: colors.body,
+      color: colors.graphite,
     },
     modalBackdrop: {
       flex: 1,
@@ -181,7 +181,7 @@ const makeStyles = (colors: ThemeColors) =>
       maxWidth: 480,
       marginTop: spacing['3xl'],
       borderRadius: rounded.xl,
-      backgroundColor: colors.canvas,
+      backgroundColor: colors.white,
       shadowColor: colors.ink,
       shadowOpacity: 0.18,
       shadowOffset: { width: 0, height: 8 },

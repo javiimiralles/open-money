@@ -27,7 +27,7 @@ export function CategoryDonutChart({ segments, currency }: CategoryDonutChartPro
   const total = segments.reduce((sum, segment) => sum + segment.total, 0);
 
   const arcs = segments.map((segment, index) => {
-    const color = segment.others ? colors.mute : chartColorAt(index);
+    const color = segment.others ? colors.slate : chartColorAt(index);
     const length = Math.max(
       segment.share * circumference - (segments.length > 1 ? SEGMENT_GAP : 0),
       0,
@@ -104,7 +104,7 @@ const makeStyles = (colors: ThemeColors) =>
     },
     totalCaption: {
       ...typography.caption,
-      color: colors.mute,
+      color: colors.slate,
     },
     totalValue: {
       ...typography.displayXs,
@@ -127,7 +127,7 @@ const makeStyles = (colors: ThemeColors) =>
     },
     legendName: {
       ...typography.bodySm,
-      color: colors.body,
+      color: colors.graphite,
       flex: 1,
     },
     legendShare: {

@@ -67,7 +67,7 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: spacing.md,
-      backgroundColor: colors.canvas,
+      backgroundColor: colors.white,
       borderRadius: rounded.xl,
       padding: spacing.xl,
     },
@@ -80,7 +80,7 @@ const makeStyles = (colors: ThemeColors) =>
     },
     date: {
       ...typography.caption,
-      color: colors.mute,
+      color: colors.slate,
     },
     detail: {
       ...typography.bodyMdStrong,
@@ -88,7 +88,7 @@ const makeStyles = (colors: ThemeColors) =>
     },
     notes: {
       ...typography.caption,
-      color: colors.mute,
+      color: colors.slate,
     },
     amount: {
       ...typography.bodyMdStrong,
@@ -100,14 +100,14 @@ const makeStyles = (colors: ThemeColors) =>
       color: colors.negativeDeep,
     },
     investment: {
-      color: colors.accentCyan,
+      color: colors.actionBlue,
     },
     transfer: {
       color: colors.ink,
     },
     recurringTag: {
       ...typography.caption,
-      color: colors.mute,
+      color: colors.slate,
       fontStyle: 'italic',
     },
   });

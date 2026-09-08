@@ -21,7 +21,7 @@ export function AccountCard({ account, onPress, hidden = false, selected = false
   const { colors } = useTheme();
   const text = useMemo<ReadableTextColors>(
     () =>
-      account.color ? pickReadableText(account.color) : { primary: colors.ink, secondary: colors.mute },
+      account.color ? pickReadableText(account.color) : { primary: colors.ink, secondary: colors.slate },
     [account.color, colors],
   );
   const styles = useMemo(
@@ -38,7 +38,7 @@ export function AccountCard({ account, onPress, hidden = false, selected = false
       style={({ pressed }) => [styles.card, selected && styles.cardSelected, pressed && styles.cardPressed]}>
       {selected ? (
         <View style={styles.selectedBadge}>
-          <MaterialCommunityIcons name="check" size={16} color={colors.onPrimary} />
+          <MaterialCommunityIcons name="check" size={16} color={colors.white} />
         </View>
       ) : null}
       <View style={styles.header}>
@@ -80,7 +80,7 @@ const makeStyles = (colors: ThemeColors, background: string | null, text: Readab
       flexGrow: 1,
       minHeight: 100,
       justifyContent: 'space-between',
-      backgroundColor: background ?? colors.canvas,
+      backgroundColor: background ?? colors.white,
       borderRadius: rounded.xl,
       borderWidth: 2,
       borderColor: 'transparent',
@@ -88,7 +88,7 @@ const makeStyles = (colors: ThemeColors, background: string | null, text: Readab
       gap: spacing.md,
     },
     cardSelected: {
-      borderColor: colors.primary,
+      borderColor: colors.ink,
     },
     cardPressed: {
       opacity: 0.85,
@@ -97,7 +97,7 @@ const makeStyles = (colors: ThemeColors, background: string | null, text: Readab
       position: 'absolute',
       top: spacing.sm,
       right: spacing.sm,
-      backgroundColor: colors.primary,
+      backgroundColor: colors.ink,
       borderRadius: rounded.full,
       padding: spacing.xxs,
     },
@@ -117,7 +117,7 @@ const makeStyles = (colors: ThemeColors, background: string | null, text: Readab
     },
     badgeText: {
       ...typography.caption,
-      color: background ?? colors.canvas,
+      color: background ?? colors.white,
     },
     name: {
       ...typography.bodyMdStrong,

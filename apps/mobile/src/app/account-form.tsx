@@ -140,7 +140,7 @@ export default function AccountFormScreen() {
               accessibilityLabel="Cuenta principal"
               value={form.values.isPrimary}
               onValueChange={form.setIsPrimary}
-              trackColor={{ false: colors.mute, true: colors.primary }}
+              trackColor={{ false: colors.slate, true: colors.ink }}
               thumbColor={colors.ink}
             />
           </View>
@@ -162,7 +162,7 @@ const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     screen: {
       flex: 1,
-      backgroundColor: colors.canvasSoft,
+      backgroundColor: colors.paper,
     },
     content: {
       padding: spacing.xl,
@@ -191,15 +191,15 @@ const makeStyles = (colors: ThemeColors) =>
       paddingHorizontal: spacing.lg,
     },
     currencyChipSelected: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
+      backgroundColor: colors.ink,
+      borderColor: colors.ink,
     },
     currencyChipText: {
       ...typography.bodySmStrong,
       color: colors.ink,
     },
     currencyChipTextSelected: {
-      color: colors.onPrimary,
+      color: colors.white,
     },
     colorRow: {
       flexDirection: 'row',
@@ -218,8 +218,8 @@ const makeStyles = (colors: ThemeColors) =>
       height: 40,
       borderRadius: rounded.full,
       borderWidth: 3,
-      borderColor: colors.mute,
-      backgroundColor: colors.canvas,
+      borderColor: colors.slate,
+      backgroundColor: colors.white,
     },
     colorSwatchSelected: {
       borderColor: colors.ink,
@@ -236,6 +236,6 @@ const makeStyles = (colors: ThemeColors) =>
     },
     primaryHint: {
       ...typography.caption,
-      color: colors.body,
+      color: colors.graphite,
     },
   });

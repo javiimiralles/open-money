@@ -77,7 +77,7 @@ const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     screen: {
       flex: 1,
-      backgroundColor: colors.canvasSoft,
+      backgroundColor: colors.paper,
     },
     content: {
       padding: spacing.xl,
@@ -88,13 +88,13 @@ const makeStyles = (colors: ThemeColors) =>
     },
     sectionTitle: {
       ...typography.bodySmStrong,
-      color: colors.body,
+      color: colors.graphite,
     },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.md,
-      backgroundColor: colors.canvas,
+      backgroundColor: colors.white,
       borderRadius: rounded.xl,
       padding: spacing.xl,
     },
@@ -107,7 +107,7 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: rounded.full,
-      backgroundColor: colors.canvasSoft,
+      backgroundColor: colors.paper,
     },
     name: {
       ...typography.bodyMdStrong,
@@ -116,6 +116,6 @@ const makeStyles = (colors: ThemeColors) =>
     },
     emptyText: {
       ...typography.bodyMd,
-      color: colors.body,
+      color: colors.graphite,
     },
   });

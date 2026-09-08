@@ -59,19 +59,19 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: rounded.pill,
-      backgroundColor: colors.canvasSoft,
+      backgroundColor: colors.paper,
       paddingVertical: spacing.md,
       paddingHorizontal: spacing.lg,
     },
     optionSelected: {
-      backgroundColor: colors.primary,
+      backgroundColor: colors.ink,
     },
     optionText: {
       ...typography.bodySmStrong,
-      color: colors.body,
+      color: colors.graphite,
     },
     optionTextSelected: {
-      color: colors.onPrimary,
+      color: colors.white,
     },
     pressed: {
       opacity: 0.7,

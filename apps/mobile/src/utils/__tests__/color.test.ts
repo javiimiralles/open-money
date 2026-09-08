@@ -2,7 +2,7 @@ import { parseHexColor, pickReadableText, relativeLuminance } from '@/utils/colo
 
 describe('color', () => {
   it('parses 6-digit hex colors', () => {
-    expect(parseHexColor('#9fe870')).toEqual({ r: 159, g: 232, b: 112 });
+    expect(parseHexColor('#101010')).toEqual({ r: 16, g: 16, b: 16 });
   });
 
   it('parses 3-digit hex colors', () => {
@@ -22,9 +22,9 @@ describe('color', () => {
   });
 
   it('picks dark text over light backgrounds', () => {
-    expect(pickReadableText('#ffffff').primary).toBe('#0e0f0c');
-    expect(pickReadableText('#9fe870').primary).toBe('#0e0f0c');
-    expect(pickReadableText('#ffd11a').primary).toBe('#0e0f0c');
+    expect(pickReadableText('#ffffff').primary).toBe('#101010');
+    expect(pickReadableText('#f4f4f4').primary).toBe('#101010');
+    expect(pickReadableText('#ffd11a').primary).toBe('#101010');
   });
 
   it('picks light text over dark backgrounds', () => {
@@ -33,10 +33,10 @@ describe('color', () => {
   });
 
   it('picks the pair with the highest contrast ratio', () => {
-    expect(pickReadableText('#2ead4b').primary).toBe('#0e0f0c');
+    expect(pickReadableText('#2ead4b').primary).toBe('#101010');
   });
 
   it('falls back to dark text on invalid input', () => {
-    expect(pickReadableText('invalid').primary).toBe('#0e0f0c');
+    expect(pickReadableText('invalid').primary).toBe('#101010');
   });
 });

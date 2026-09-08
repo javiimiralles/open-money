@@ -18,8 +18,8 @@ export interface ReadableTextColors {
 }
 
 const DARK_TEXT: ReadableTextColors = {
-  primary: '#0e0f0c',
-  secondary: 'rgba(14, 15, 12, 0.65)',
+  primary: '#101010',
+  secondary: 'rgba(16, 16, 16, 0.65)',
 };
 
 const LIGHT_TEXT: ReadableTextColors = {
@@ -76,7 +76,7 @@ export function pickReadableText(background: string): ReadableTextColors {
     return DARK_TEXT;
   }
   const backgroundLuminance = relativeLuminance(parsed);
-  const darkLuminance = relativeLuminance({ r: 0x0e, g: 0x0f, b: 0x0c });
+  const darkLuminance = relativeLuminance({ r: 0x10, g: 0x10, b: 0x10 });
   return contrastRatio(backgroundLuminance, darkLuminance) >= contrastRatio(backgroundLuminance, 1)
     ? DARK_TEXT
     : LIGHT_TEXT;

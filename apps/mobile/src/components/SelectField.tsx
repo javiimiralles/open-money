@@ -104,9 +104,9 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: spacing.sm,
-      backgroundColor: colors.canvas,
+      backgroundColor: colors.white,
       borderWidth: 1,
-      borderColor: colors.mute,
+      borderColor: colors.slate,
       borderRadius: rounded.xl,
       paddingVertical: spacing.md,
       paddingHorizontal: spacing.lg,
@@ -120,7 +120,7 @@ const makeStyles = (colors: ThemeColors) =>
       flexShrink: 1,
     },
     placeholder: {
-      color: colors.mute,
+      color: colors.slate,
     },
     error: {
       ...typography.caption,
@@ -128,7 +128,7 @@ const makeStyles = (colors: ThemeColors) =>
     },
     options: {
       borderWidth: 1,
-      borderColor: colors.mute,
+      borderColor: colors.slate,
       borderRadius: rounded.xl,
       overflow: 'hidden',
     },
@@ -138,10 +138,10 @@ const makeStyles = (colors: ThemeColors) =>
       gap: spacing.sm,
       paddingVertical: spacing.md,
       paddingHorizontal: spacing.lg,
-      backgroundColor: colors.canvas,
+      backgroundColor: colors.white,
     },
     optionSelected: {
-      backgroundColor: colors.primaryPale,
+      backgroundColor: colors.infoBannerBg,
     },
     optionText: {
       ...typography.bodyMd,

@@ -84,7 +84,7 @@ export function RecurringRuleRow({ rule, onPress, onToggleActive }: RecurringRul
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     row: {
-      backgroundColor: colors.canvas,
+      backgroundColor: colors.white,
       borderRadius: rounded.xl,
       padding: spacing.xl,
       gap: spacing.sm,
@@ -107,7 +107,7 @@ const makeStyles = (colors: ThemeColors) =>
     },
     typeLabel: {
       ...typography.bodySmStrong,
-      color: colors.body,
+      color: colors.graphite,
     },
     amount: {
       ...typography.bodyMdStrong,
@@ -115,11 +115,11 @@ const makeStyles = (colors: ThemeColors) =>
     },
     meta: {
       ...typography.bodySm,
-      color: colors.body,
+      color: colors.graphite,
     },
     notes: {
       ...typography.caption,
-      color: colors.mute,
+      color: colors.slate,
       fontStyle: 'italic',
     },
     badge: {
@@ -128,12 +128,12 @@ const makeStyles = (colors: ThemeColors) =>
       paddingHorizontal: spacing.md,
     },
     badgeActive: {
-      backgroundColor: colors.primaryPale,
+      backgroundColor: colors.infoBannerBg,
     },
     badgePaused: {
-      backgroundColor: colors.canvasSoft,
+      backgroundColor: colors.paper,
       borderWidth: 1,
-      borderColor: colors.mute,
+      borderColor: colors.slate,
     },
     badgeText: {
       ...typography.caption,
@@ -143,7 +143,7 @@ const makeStyles = (colors: ThemeColors) =>
       color: colors.positiveDeep,
     },
     badgeTextPaused: {
-      color: colors.body,
+      color: colors.graphite,
     },
     toggle: {
       borderWidth: 1,

@@ -122,15 +122,15 @@ const makeStyles = (colors: ThemeColors) =>
       paddingHorizontal: spacing.md,
     },
     typeChipSelected: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
+      backgroundColor: colors.ink,
+      borderColor: colors.ink,
     },
     typeChipText: {
       ...typography.bodySmStrong,
       color: colors.ink,
     },
     typeChipTextSelected: {
-      color: colors.onPrimary,
+      color: colors.white,
     },
     datesRow: {
       flexDirection: 'row',

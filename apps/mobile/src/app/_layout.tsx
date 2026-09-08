@@ -1,7 +1,7 @@
-import { Manrope_400Regular, Manrope_800ExtraBold } from '@expo-google-fonts/manrope';
-import { Inter_400Regular, Inter_600SemiBold } from '@expo-google-fonts/inter';
+import { Inter_300Light, Inter_400Regular, Inter_600SemiBold } from '@expo-google-fonts/inter';
+import { Poppins_600SemiBold } from '@expo-google-fonts/poppins';
 import { useFonts } from 'expo-font';
-import { Stack, ThemeProvider as NavigationThemeProvider, DefaultTheme, DarkTheme } from 'expo-router';
+import { Stack, ThemeProvider as NavigationThemeProvider, DefaultTheme } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { SQLiteProvider, type SQLiteDatabase } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
@@ -41,7 +41,7 @@ function RecurringHost() {
             presentation: 'modal',
             headerShown: true,
             title: 'Nueva cuenta',
-            headerStyle: { backgroundColor: colors.canvas },
+            headerStyle: { backgroundColor: colors.white },
             headerTitleStyle: typography.bodyMdStrong,
             headerShadowVisible: false,
           }}
@@ -52,7 +52,7 @@ function RecurringHost() {
             presentation: 'modal',
             headerShown: true,
             title: 'Nuevo movimiento',
-            headerStyle: { backgroundColor: colors.canvas },
+            headerStyle: { backgroundColor: colors.white },
             headerTitleStyle: typography.bodyMdStrong,
             headerShadowVisible: false,
           }}
@@ -62,7 +62,7 @@ function RecurringHost() {
           options={{
             headerShown: true,
             title: 'Categorías',
-            headerStyle: { backgroundColor: colors.canvas },
+            headerStyle: { backgroundColor: colors.white },
             headerTitleStyle: typography.bodyMdStrong,
             headerShadowVisible: false,
           }}
@@ -73,7 +73,7 @@ function RecurringHost() {
             presentation: 'modal',
             headerShown: true,
             title: 'Nueva categoría',
-            headerStyle: { backgroundColor: colors.canvas },
+            headerStyle: { backgroundColor: colors.white },
             headerTitleStyle: typography.bodyMdStrong,
             headerShadowVisible: false,
           }}
@@ -83,7 +83,7 @@ function RecurringHost() {
           options={{
             headerShown: true,
             title: 'Pagos recurrentes',
-            headerStyle: { backgroundColor: colors.canvas },
+            headerStyle: { backgroundColor: colors.white },
             headerTitleStyle: typography.bodyMdStrong,
             headerShadowVisible: false,
           }}
@@ -94,7 +94,7 @@ function RecurringHost() {
             presentation: 'modal',
             headerShown: true,
             title: 'Nueva regla',
-            headerStyle: { backgroundColor: colors.canvas },
+            headerStyle: { backgroundColor: colors.white },
             headerTitleStyle: typography.bodyMdStrong,
             headerShadowVisible: false,
           }}
@@ -123,22 +123,22 @@ const onDatabaseError = (error: Error) => {
 };
 
 function ThemedApp() {
-  const { colors, isDark, isReady } = useTheme();
+  const { colors, isReady } = useTheme();
 
-  const navigationTheme = useMemo(() => {
-    const base = isDark ? DarkTheme : DefaultTheme;
-    return {
-      ...base,
+  const navigationTheme = useMemo(
+    () => ({
+      ...DefaultTheme,
       colors: {
-        ...base.colors,
-        primary: colors.primary,
-        background: colors.canvasSoft,
-        card: colors.canvas,
+        ...DefaultTheme.colors,
+        primary: colors.ink,
+        background: colors.paper,
+        card: colors.white,
         text: colors.ink,
-        border: colors.canvasSoft,
+        border: colors.paper,
       },
-    };
-  }, [colors, isDark]);
+    }),
+    [colors],
+  );
 
   useEffect(() => {
     if (isReady) {
@@ -152,7 +152,7 @@ function ThemedApp() {
 
   return (
     <NavigationThemeProvider value={navigationTheme}>
-      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <StatusBar style="dark" />
       <RecurringHost />
     </NavigationThemeProvider>
   );
@@ -160,8 +160,8 @@ function ThemedApp() {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    Manrope_400Regular,
-    Manrope_800ExtraBold,
+    Poppins_600SemiBold,
+    Inter_300Light,
     Inter_400Regular,
     Inter_600SemiBold,
   });

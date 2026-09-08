@@ -85,7 +85,7 @@ export default function CategoryFormScreen() {
                     <MaterialCommunityIcons
                       name={name}
                       size={22}
-                      color={selected ? colors.onPrimary : colors.ink}
+                      color={selected ? colors.white : colors.ink}
                     />
                   </Pressable>
                 );
@@ -131,7 +131,7 @@ const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     screen: {
       flex: 1,
-      backgroundColor: colors.canvasSoft,
+      backgroundColor: colors.paper,
     },
     content: {
       padding: spacing.xl,
@@ -149,7 +149,7 @@ const makeStyles = (colors: ThemeColors) =>
     },
     hint: {
       ...typography.caption,
-      color: colors.mute,
+      color: colors.slate,
     },
     iconGrid: {
       flexDirection: 'row',
@@ -164,11 +164,11 @@ const makeStyles = (colors: ThemeColors) =>
       borderWidth: 1,
       borderColor: colors.ink,
       borderRadius: rounded.full,
-      backgroundColor: colors.canvas,
+      backgroundColor: colors.white,
     },
     iconChipSelected: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
+      backgroundColor: colors.ink,
+      borderColor: colors.ink,
     },
     kindRow: {
       flexDirection: 'row',
@@ -183,14 +183,14 @@ const makeStyles = (colors: ThemeColors) =>
       paddingHorizontal: spacing.lg,
     },
     kindChipSelected: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
+      backgroundColor: colors.ink,
+      borderColor: colors.ink,
     },
     kindChipText: {
       ...typography.bodySmStrong,
       color: colors.ink,
     },
     kindChipTextSelected: {
-      color: colors.onPrimary,
+      color: colors.white,
     },
   });

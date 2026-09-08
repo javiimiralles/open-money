@@ -27,7 +27,7 @@ const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.canvasSoft,
+      backgroundColor: colors.paper,
       padding: spacing.xl,
       gap: spacing.lg,
     },
@@ -37,6 +37,6 @@ const makeStyles = (colors: ThemeColors) =>
     },
     description: {
       ...typography.bodyMd,
-      color: colors.body,
+      color: colors.graphite,
     },
   });
