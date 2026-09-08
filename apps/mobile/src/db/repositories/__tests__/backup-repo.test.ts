@@ -34,7 +34,7 @@ describe('backup-repo', () => {
     const file = await dumpAllTables(db);
 
     expect(file.app).toBe('open-money');
-    expect(file.schemaVersion).toBe(9);
+    expect(file.schemaVersion).toBe(11);
     expect(file.data.accounts).toHaveLength(1);
     expect(file.data.transactions).toHaveLength(1);
     expect(file.data.categories.length).toBeGreaterThan(1);

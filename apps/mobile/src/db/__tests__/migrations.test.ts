@@ -1,6 +1,6 @@
 import { migrate } from '@/db/client';
 import { MIGRATIONS } from '@/db/migrations';
-import { BASE_CATEGORIES, seedCategoriesSql } from '@/db/seed';
+import { BASE_CATEGORIES, INVESTMENT_CATEGORIES, seedCategoriesSql } from '@/db/seed';
 import { countCategoriesByKind } from '@/db/repositories/categories-repo';
 import { BetterSqliteExecutor } from '@/test/better-sqlite-executor';
 
@@ -19,7 +19,7 @@ describe('migrations', () => {
     await migrate(db);
 
     const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    expect(version?.user_version).toBe(9);
+    expect(version?.user_version).toBe(11);
 
     const tables = await db.getAllAsync<{ name: string }>(
       "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
@@ -36,8 +36,10 @@ describe('migrations', () => {
 
     const total = await countCategoriesByKind(db, 'expense');
     const income = await countCategoriesByKind(db, 'income');
+    const investment = await countCategoriesByKind(db, 'investment');
     expect(income).toBe(BASE_CATEGORIES.filter((c) => c.kind === 'income').length);
     expect(total).toBe(BASE_CATEGORIES.filter((c) => c.kind === 'expense').length);
+    expect(investment).toBe(INVESTMENT_CATEGORIES.length);
 
     db.close();
   });
@@ -95,7 +97,7 @@ describe('migrations', () => {
     await migrate(db);
 
     const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    expect(version?.user_version).toBe(9);
+    expect(version?.user_version).toBe(11);
 
     const tables = await db.getAllAsync<{ name: string }>(
       "SELECT name FROM sqlite_master WHERE type IN ('table', 'index') AND name IN ('instruments', 'trades', 'idx_instruments_symbol', 'idx_trades_instrument')",
@@ -131,6 +133,103 @@ describe('migrations', () => {
     )) as { lastInsertRowid: number };
     const newId = insertResult.lastInsertRowid ?? (await db.getFirstAsync<{ id: number }>('SELECT id FROM recurring_rules ORDER BY id DESC LIMIT 1'))?.id;
     expect(newId).toBe(maxId + 1);
+
+    db.close();
+  });
+
+  it('applies migration v10 with the investment category kind, preserving links and seeding investments', async () => {
+    const db = new BetterSqliteExecutor();
+    await migrateToVersion(db, 9);
+
+    await db.runAsync("INSERT INTO accounts (name, currency, initial_balance) VALUES ('Banco', 'EUR', 1000)");
+    await db.runAsync("INSERT INTO categories (name, kind) VALUES ('Comida', 'expense')");
+    const comida = (await db.getFirstAsync<{ id: number }>("SELECT id FROM categories WHERE name = 'Comida'"))?.id ?? 0;
+    await db.runAsync(
+      `INSERT INTO transactions (type, date, amount, currency, account_id, category_id)
+       VALUES ('expense', '2026-09-01', 25, 'EUR', 1, ?)`,
+      [comida],
+    );
+    await db.runAsync(
+      `INSERT INTO recurring_rules (type, amount, currency, account_id, category_id, frequency, next_execution, active)
+       VALUES ('expense', 50, 'EUR', 1, ?, 'monthly', '2026-10-01', 1)`,
+      [comida],
+    );
+
+    await migrate(db);
+
+    const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
+    expect(version?.user_version).toBe(11);
+
+    const transactionLink = await db.getFirstAsync<{ category_id: number | null }>(
+      'SELECT category_id FROM transactions',
+    );
+    expect(transactionLink?.category_id).toBe(comida);
+    const ruleLink = await db.getFirstAsync<{ category_id: number | null }>(
+      'SELECT category_id FROM recurring_rules',
+    );
+    expect(ruleLink?.category_id).toBe(comida);
+
+    const investments = await db.getAllAsync<{ name: string; icon: string | null }>(
+      "SELECT name, icon FROM categories WHERE kind = 'investment' ORDER BY id",
+    );
+    expect(investments.map((category) => category.name)).toEqual(
+      INVESTMENT_CATEGORIES.map((category) => category.name),
+    );
+    expect(investments.every((category) => category.icon !== null)).toBe(true);
+
+    await db.runAsync("INSERT INTO categories (name, kind) VALUES ('Fondos', 'investment')");
+    await expect(db.runAsync("INSERT INTO categories (name, kind) VALUES ('X', 'bogus')")).rejects.toThrow();
+
+    db.close();
+  });
+
+  it('applies migration v11 with the investment transaction type, preserving rows and recreating indexes', async () => {
+    const db = new BetterSqliteExecutor();
+    await migrateToVersion(db, 10);
+
+    await db.runAsync("INSERT INTO accounts (name, currency, initial_balance) VALUES ('Banco', 'EUR', 1000)");
+    await db.runAsync(
+      `INSERT INTO transactions (type, date, amount, currency, account_id)
+       VALUES ('expense', '2026-09-01', 25, 'EUR', 1)`,
+    );
+    await db.runAsync(
+      `INSERT INTO transactions (type, date, amount, currency, account_id)
+       VALUES ('income', '2026-09-02', 100, 'EUR', 1)`,
+    );
+
+    await migrate(db);
+
+    const rows = await db.getAllAsync<{ type: string; amount: number }>(
+      'SELECT type, amount FROM transactions ORDER BY date',
+    );
+    expect(rows).toEqual([
+      { type: 'expense', amount: 25 },
+      { type: 'income', amount: 100 },
+    ]);
+
+    const indexes = await db.getAllAsync<{ name: string }>(
+      "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'transactions' ORDER BY name",
+    );
+    expect(indexes.map((index) => index.name)).toEqual([
+      'idx_transactions_account',
+      'idx_transactions_account_date',
+      'idx_transactions_category',
+      'idx_transactions_date',
+      'idx_transactions_destination_account',
+      'idx_transactions_recurring_batch',
+      'idx_transactions_recurring_dedup',
+    ]);
+
+    await db.runAsync(
+      `INSERT INTO transactions (type, date, amount, currency, account_id)
+       VALUES ('investment', '2026-09-03', 50, 'EUR', 1)`,
+    );
+    await expect(
+      db.runAsync(
+        `INSERT INTO transactions (type, date, amount, currency, account_id)
+         VALUES ('bogus', '2026-09-03', 50, 'EUR', 1)`,
+      ),
+    ).rejects.toThrow();
 
     db.close();
   });
@@ -198,7 +297,7 @@ describe('migrations', () => {
     await migrate(db);
 
     const count = await db.getFirstAsync<{ count: number }>('SELECT COUNT(*) AS count FROM categories');
-    expect(count?.count).toBe(BASE_CATEGORIES.length);
+    expect(count?.count).toBe(BASE_CATEGORIES.length + INVESTMENT_CATEGORIES.length);
 
     db.close();
   });
@@ -211,7 +310,7 @@ describe('migrations', () => {
     await db.execAsync(seedCategoriesSql());
 
     const count = await db.getFirstAsync<{ count: number }>('SELECT COUNT(*) AS count FROM categories');
-    expect(count?.count).toBe(BASE_CATEGORIES.length);
+    expect(count?.count).toBe(BASE_CATEGORIES.length + INVESTMENT_CATEGORIES.length);
 
     db.close();
   });
@@ -225,7 +324,7 @@ describe('migrations', () => {
     await db.execAsync('PRAGMA user_version = 999');
     await migrate(db);
     const versionAfter = (await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version'))?.user_version;
-    expect(versionBefore).toBe(9);
+    expect(versionBefore).toBe(11);
     expect(versionAfter).toBe(999);
 
     db.close();

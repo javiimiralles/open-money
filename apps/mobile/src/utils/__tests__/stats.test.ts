@@ -11,7 +11,7 @@ import {
   formatMonthLabelEs,
   getMonthKeys,
   getStatsPeriodRange,
-  sumIncomeExpenseEur,
+  sumNetTotalsEur,
   OTHERS_LABEL,
   UNCATEGORIZED_LABEL,
 } from '@/utils/stats';
@@ -124,24 +124,26 @@ describe('stats', () => {
     });
   });
 
-  describe('sumIncomeExpenseEur', () => {
+  describe('sumNetTotalsEur', () => {
     const rows: TypeCurrencyTotal[] = [
       { type: 'income', currency: 'EUR', total: 1000 },
       { type: 'income', currency: 'USD', total: 200 },
       { type: 'expense', currency: 'EUR', total: 55 },
       { type: 'expense', currency: 'USD', total: 100 },
+      { type: 'investment', currency: 'EUR', total: 200 },
+      { type: 'investment', currency: 'USD', total: 50 },
     ];
 
     it('converts every currency with the stored rates', () => {
-      expect(sumIncomeExpenseEur(rows, { USD: 0.9 })).toEqual({ income: 1180, expense: 145 });
+      expect(sumNetTotalsEur(rows, { USD: 0.9 })).toEqual({ income: 1180, expense: 145, investment: 245 });
     });
 
     it('falls back to 1:1 for currencies without a rate', () => {
-      expect(sumIncomeExpenseEur(rows, {})).toEqual({ income: 1200, expense: 155 });
+      expect(sumNetTotalsEur(rows, {})).toEqual({ income: 1200, expense: 155, investment: 250 });
     });
 
     it('returns zeros for empty input', () => {
-      expect(sumIncomeExpenseEur([], {})).toEqual({ income: 0, expense: 0 });
+      expect(sumNetTotalsEur([], {})).toEqual({ income: 0, expense: 0, investment: 0 });
     });
   });
 
@@ -169,21 +171,22 @@ describe('stats', () => {
       { month: '2026-09', type: 'income', currency: 'EUR', total: 1000 },
       { month: '2026-09', type: 'income', currency: 'USD', total: 200 },
       { month: '2026-09', type: 'expense', currency: 'EUR', total: 55 },
+      { month: '2026-09', type: 'investment', currency: 'EUR', total: 200 },
     ];
 
     it('fills months without rows with zeros', () => {
       const series = buildMonthlySeries(rows, { USD: 0.9 }, ['2026-07', '2026-08', '2026-09']);
       expect(series).toEqual([
-        { month: '2026-07', label: 'jul', income: 0, expense: 0 },
-        { month: '2026-08', label: 'ago', income: 0, expense: 30 },
-        { month: '2026-09', label: 'sep', income: 1180, expense: 55 },
+        { month: '2026-07', label: 'jul', income: 0, expense: 0, investment: 0 },
+        { month: '2026-08', label: 'ago', income: 0, expense: 30, investment: 0 },
+        { month: '2026-09', label: 'sep', income: 1180, expense: 55, investment: 200 },
       ]);
     });
 
     it('ignores rows outside the requested keys', () => {
       const series = buildMonthlySeries(rows, {}, ['2026-09']);
       expect(series).toHaveLength(1);
-      expect(series[0]).toMatchObject({ month: '2026-09', income: 1200, expense: 55 });
+      expect(series[0]).toMatchObject({ month: '2026-09', income: 1200, expense: 55, investment: 200 });
     });
   });
 

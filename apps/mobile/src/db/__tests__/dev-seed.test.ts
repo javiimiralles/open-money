@@ -1,6 +1,7 @@
 import { migrate } from '@/db/client';
 import { clearAllDevData, seedDevData } from '@/db/dev-seed';
 import { DEV_SEED_DEFAULT, generateDevDataset } from '@/db/dev-data-generator';
+import { BASE_CATEGORIES, INVESTMENT_CATEGORIES } from '@/db/seed';
 import { listAccountsWithBalances, insertAccount } from '@/db/repositories/accounts-repo';
 import { getAllCategories } from '@/db/repositories/categories-repo';
 import { listRecurringRules } from '@/db/repositories/recurring-rules-repo';
@@ -33,8 +34,12 @@ describe('dev-seed', () => {
     );
 
     const categories = await getAllCategories(db);
-    expect(categories).toHaveLength(26);
+    expect(categories).toHaveLength(BASE_CATEGORIES.length + INVESTMENT_CATEGORIES.length);
     expect(categories.find((category) => category.name === 'Nómina')).toMatchObject({ icon: 'briefcase' });
+    expect(categories.find((category) => category.name === 'Fondos indexados')).toMatchObject({
+      kind: 'investment',
+      icon: 'chart-line',
+    });
 
     expect(await listRecurringRules(db)).toHaveLength(8);
     expect(await getLatestRatesToEur(db)).toEqual({ USD: 0.92, GBP: 1.17 });
@@ -48,7 +53,7 @@ describe('dev-seed', () => {
 
     expect(await listAccountsWithBalances(db)).toHaveLength(6);
     expect(await listRecurringRules(db)).toHaveLength(8);
-    expect(await getAllCategories(db)).toHaveLength(26);
+    expect(await getAllCategories(db)).toHaveLength(BASE_CATEGORIES.length + INVESTMENT_CATEGORIES.length);
     db.close();
   });
 
@@ -89,7 +94,7 @@ describe('dev-seed', () => {
     expect(await listTransactions(db)).toHaveLength(0);
     expect(await listRecurringRules(db)).toHaveLength(0);
     expect(await getLatestRatesToEur(db)).toEqual({});
-    expect(await getAllCategories(db)).toHaveLength(26);
+    expect(await getAllCategories(db)).toHaveLength(BASE_CATEGORIES.length + INVESTMENT_CATEGORIES.length);
     expect(await getThemeMode(db)).toBe('dark');
     db.close();
   });

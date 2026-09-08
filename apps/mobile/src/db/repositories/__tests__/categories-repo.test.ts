@@ -27,6 +27,16 @@ describe('categories-repo', () => {
     db.close();
   });
 
+  it('creates an investment category and scopes name checks by kind', async () => {
+    const db = await createDb();
+    const id = await insertCategory(db, { name: 'Fondos', kind: 'investment' });
+
+    expect(await getCategoryById(db, id)).toMatchObject({ id, name: 'Fondos', kind: 'investment' });
+    expect(await categoryNameExists(db, 'fondos', 'investment')).toBe(true);
+    expect(await categoryNameExists(db, 'Fondos', 'expense')).toBe(false);
+    db.close();
+  });
+
   it('persists the optional category icon', async () => {
     const db = await createDb();
     const id = await insertCategory(db, { name: 'Caprichos', kind: 'expense', icon: 'star' });

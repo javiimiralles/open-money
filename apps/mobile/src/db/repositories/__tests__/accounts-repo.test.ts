@@ -198,6 +198,20 @@ describe('accounts-repo', () => {
     db.close();
   });
 
+  it('subtracts investments from the balance', async () => {
+    const db = await createDb();
+    const id = await insertAccount(db, { name: 'Banco', identifier: null, currency: 'EUR', initialBalance: 1000 });
+
+    await db.runAsync(
+      "INSERT INTO transactions (type, date, amount, currency, account_id) VALUES ('investment', '2026-09-01', 250, 'EUR', ?)",
+      [id],
+    );
+
+    const accounts = await listAccountsWithBalances(db);
+    expect(accounts[0].balance).toBe(750);
+    db.close();
+  });
+
   it('calculates transfer legs: origin subtracts, destination adds', async () => {
     const db = await createDb();
     const origin = await insertAccount(db, { name: 'Banco', identifier: null, currency: 'EUR', initialBalance: 100 });

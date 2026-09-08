@@ -10,6 +10,7 @@ import {
   sumExpenseTotalsByCategory,
   sumMonthlyTotalsByTypeAndCurrency,
   sumTotalsByTypeAndCurrency,
+  summarizeTransactionsFiltered,
   updateTransaction,
   type IncomeExpenseInput,
   type TransactionInput,
@@ -76,6 +77,20 @@ describe('transactions-repo', () => {
 
     const accounts = await listAccountsWithBalances(db);
     expect(accounts[0].balance).toBe(70);
+    db.close();
+  });
+
+  it('inserts an investment transaction and decreases the account balance', async () => {
+    const db = await createDb();
+    const accountId = await createAccount(db, 'Banco', 'EUR', 100);
+
+    const id = await insertTransaction(db, input({ type: 'investment', amount: 40, accountId }));
+
+    expect(id).toBeGreaterThan(0);
+    const transaction = await getTransactionById(db, id);
+    expect(transaction).toMatchObject({ id, type: 'investment', amount: 40 });
+    const accounts = await listAccountsWithBalances(db);
+    expect(accounts[0].balance).toBe(60);
     db.close();
   });
 
@@ -334,6 +349,18 @@ describe('transactions-repo', () => {
     db.close();
   });
 
+  it('filters by investment type', async () => {
+    const { db, accountA } = await seed();
+    await insertTransaction(db, input({ type: 'investment', amount: 75, accountId: accountA }));
+    await insertTransaction(db, input({ type: 'expense', amount: 30, accountId: accountA }));
+
+    const rows = await listTransactionsFiltered(db, { ...EMPTY_TRANSACTION_FILTERS, type: 'investment' });
+    expect(rows).toHaveLength(1);
+    expect(rows[0].type).toBe('investment');
+    expect(rows[0].amount).toBe(75);
+    db.close();
+  });
+
   it('filters by category', async () => {
     const { db, accountA, comida, salario } = await seed();
     await insertTransaction(db, input({ amount: 10, accountId: accountA, categoryId: comida }));
@@ -426,6 +453,7 @@ describe('transactions-repo', () => {
       await insertTransaction(db, input({ date: '2026-09-06', amount: 40, accountId: accountEur, categoryId: comida }));
       await insertTransaction(db, input({ date: '2026-09-07', amount: 15, accountId: accountEur, categoryId: null }));
       await insertTransaction(db, input({ date: '2026-08-01', amount: 30, accountId: accountEur, categoryId: comida }));
+      await insertTransaction(db, input({ type: 'investment', date: '2026-09-08', amount: 200, accountId: accountEur, categoryId: null }));
       await insertTransaction(
         db,
         transferInput({ date: '2026-09-12', accountId: accountEur, destinationAccountId: accountUsd, amount: 50, destinationAmount: 55 }),
@@ -433,15 +461,16 @@ describe('transactions-repo', () => {
       return { db, accountEur, accountUsd, comida, salario };
     }
 
-    it('sums income and expense totals by type and currency, excluding transfers', async () => {
+    it('sums income, expense and investment totals by type and currency, excluding transfers', async () => {
       const { db } = await seed();
 
       const rows = await sumTotalsByTypeAndCurrency(db, '2026-09-01', '2026-09-30');
 
-      expect(rows).toHaveLength(3);
+      expect(rows).toHaveLength(4);
       expect(rows).toContainEqual({ type: 'income', currency: 'EUR', total: 1000 });
       expect(rows).toContainEqual({ type: 'income', currency: 'USD', total: 200 });
       expect(rows).toContainEqual({ type: 'expense', currency: 'EUR', total: 55 });
+      expect(rows).toContainEqual({ type: 'investment', currency: 'EUR', total: 200 });
       db.close();
     });
 
@@ -463,6 +492,7 @@ describe('transactions-repo', () => {
       expect(rows).toContainEqual({ month: '2026-09', type: 'income', currency: 'EUR', total: 1000 });
       expect(rows).toContainEqual({ month: '2026-09', type: 'income', currency: 'USD', total: 200 });
       expect(rows).toContainEqual({ month: '2026-09', type: 'expense', currency: 'EUR', total: 55 });
+      expect(rows).toContainEqual({ month: '2026-09', type: 'investment', currency: 'EUR', total: 200 });
       db.close();
     });
 
@@ -474,6 +504,35 @@ describe('transactions-repo', () => {
       expect(rows).toHaveLength(2);
       expect(rows).toContainEqual({ categoryId: comida, categoryName: 'Comida', currency: 'EUR', total: 40 });
       expect(rows).toContainEqual({ categoryId: null, categoryName: null, currency: 'EUR', total: 15 });
+      db.close();
+    });
+
+    it('excludes investments from the expense category breakdown', async () => {
+      const { db, accountEur } = await seed();
+      const funds = await db.getFirstAsync<{ id: number }>(
+        "SELECT id FROM categories WHERE name = 'Fondos indexados'",
+      );
+      await insertTransaction(
+        db,
+        input({ type: 'investment', date: '2026-09-09', amount: 500, accountId: accountEur, categoryId: funds?.id ?? null }),
+      );
+
+      const rows = await sumExpenseTotalsByCategory(db, '2026-09-01', '2026-09-30');
+
+      expect(rows).toHaveLength(2);
+      expect(rows.some((row) => row.categoryId === funds?.id)).toBe(false);
+      db.close();
+    });
+
+    it('subtracts investments from the filtered summary net', async () => {
+      const { db } = await seed();
+
+      const summary = await summarizeTransactionsFiltered(db, EMPTY_TRANSACTION_FILTERS);
+
+      expect(summary.count).toBe(7);
+      // Naive multi-currency totals: income 1200, expenses 85, investment 200.
+      expect(summary.net).toBe(915);
+      expect(summary.currency).toBeNull();
       db.close();
     });
   });

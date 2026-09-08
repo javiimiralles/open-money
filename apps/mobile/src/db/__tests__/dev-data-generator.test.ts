@@ -1,4 +1,4 @@
-import { BASE_CATEGORIES } from '@/db/seed';
+import { BASE_CATEGORIES, INVESTMENT_CATEGORIES } from '@/db/seed';
 import {
   DEV_RATES_TO_EUR,
   generateDevDataset,
@@ -13,7 +13,9 @@ const SEED = 1234;
 const ISO_DATE = /^\d{4}-\d{2}-(0[1-9]|[12]\d|3[01])$/;
 const FIRST_DAY = '2025-10-01';
 
-const kindByCategoryId = new Map(BASE_CATEGORIES.map((category) => [category.id, category.kind]));
+const kindByCategoryId = new Map(
+  [...BASE_CATEGORIES, ...INVESTMENT_CATEGORIES].map((category) => [category.id, category.kind]),
+);
 
 function currencyByAccountKey(dataset: DevDataset): Map<string, string> {
   return new Map(dataset.accounts.map((account) => [account.key, account.input.currency]));
@@ -72,6 +74,17 @@ describe('dev-data-generator', () => {
         expect(transaction.destinationAmount).toBeNull();
         expect(transaction.fxRate).toBeNull();
       }
+    }
+  });
+
+  it('generates a monthly investment with an investment category', () => {
+    const dataset = generateDevDataset({ seed: SEED, today: TODAY });
+    const investments = dataset.transactions.filter((transaction) => transaction.type === 'investment');
+
+    expect(investments.length).toBeGreaterThan(0);
+    for (const investment of investments) {
+      expect(kindByCategoryId.get(investment.categoryId ?? 0)).toBe('investment');
+      expect(investment.destinationAccountKey).toBeNull();
     }
   });
 
