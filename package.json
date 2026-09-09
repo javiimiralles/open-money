@@ -4,6 +4,8 @@
   "private": true,
   "packageManager": "pnpm@11.9.0",
   "scripts": {
-    "mobile": "pnpm --filter mobile"
+    "mobile": "pnpm --filter mobile",
+    "android": "pnpm --filter mobile android",
+    "start": "pnpm --filter mobile start"
   }
 }
