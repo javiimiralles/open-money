@@ -1,5 +1,5 @@
 packages:
-  - apps/*
+  - app
 
 allowBuilds:
   better-sqlite3: true
