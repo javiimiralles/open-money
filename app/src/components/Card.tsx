@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { rounded, spacing } from '@/theme/tokens';
+import { rounded, shadows, spacing } from '@/theme/tokens';
 import { useTheme, type ThemeColors } from '@/theme/theme';
 
 export type CardVariant = 'content' | 'sage' | 'green';
@@ -22,7 +22,9 @@ export function Card({ variant = 'content', style, children }: CardProps) {
   const { colors } = useTheme();
   const variantStyle = useMemo(() => getVariantStyles(colors)[variant], [colors, variant]);
   return (
-    <View style={[styles.base, { backgroundColor: variantStyle.backgroundColor }, style]}>
+    <View
+      style={[styles.base, variant !== 'sage' && shadows.card, { backgroundColor: variantStyle.backgroundColor }, style]}
+    >
       {children}
     </View>
   );

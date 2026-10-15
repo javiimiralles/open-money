@@ -11,6 +11,7 @@ import {
   formatMonthLabelEs,
   getMonthKeys,
   getStatsPeriodRange,
+  resolveStatsRange,
   sumNetTotalsEur,
   OTHERS_LABEL,
   UNCATEGORIZED_LABEL,
@@ -58,6 +59,22 @@ describe('stats', () => {
         fromDate: '2026-01-01',
         toDate: '2026-12-31',
       });
+    });
+  });
+
+  describe('resolveStatsRange', () => {
+    const custom = { fromDate: '2025-03-10', toDate: '2025-05-20' };
+
+    it('uses the preset range for non-custom periods', () => {
+      expect(resolveStatsRange('month', custom, '2026-09-04')).toEqual(getStatsPeriodRange('month', '2026-09-04'));
+    });
+
+    it('returns the custom range as is', () => {
+      expect(resolveStatsRange('custom', custom, '2026-09-04')).toEqual(custom);
+    });
+
+    it('swaps inverted custom dates', () => {
+      expect(resolveStatsRange('custom', { fromDate: '2025-05-20', toDate: '2025-03-10' }, '2026-09-04')).toEqual(custom);
     });
   });
 

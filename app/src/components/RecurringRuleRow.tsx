@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { RecurringRuleWithDetails } from '@/db/repositories/recurring-rules-repo';
-import { rounded, spacing, typography } from '@/theme/tokens';
+import { rounded, shadows, spacing, typography } from '@/theme/tokens';
 import { useTheme, type ThemeColors } from '@/theme/theme';
 import { formatDateEs } from '@/utils/dates';
 import { formatMoney } from '@/utils/money';
@@ -86,6 +86,7 @@ const makeStyles = (colors: ThemeColors) =>
     row: {
       backgroundColor: colors.white,
       borderRadius: rounded.xl,
+      ...shadows.card,
       padding: spacing.xl,
       gap: spacing.sm,
     },

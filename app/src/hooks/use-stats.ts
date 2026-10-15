@@ -21,20 +21,35 @@ import {
   detectMissingRates,
   getMonthKeys,
   getStatsPeriodRange,
+  resolveStatsRange,
   sumNetTotalsEur,
   type CategorySegment,
   type MonthlyDatum,
   type NetSummary,
   type StatsPeriod,
+  type StatsPeriodRange,
 } from '@/utils/stats';
 
+export interface StatsPeriodControl {
+  period: StatsPeriod;
+  onPeriodChange: (period: StatsPeriod) => void;
+  customRange: StatsPeriodRange;
+  onCustomRangeChange: (range: StatsPeriodRange) => void;
+}
+
+function useStatsPeriodControl(initialPeriod: StatsPeriod): StatsPeriodControl {
+  const [period, setPeriod] = useState(initialPeriod);
+  const [customRange, setCustomRange] = useState(() => getStatsPeriodRange('month', todayIso()));
+  return useMemo(
+    () => ({ period, onPeriodChange: setPeriod, customRange, onCustomRangeChange: setCustomRange }),
+    [period, customRange],
+  );
+}
+
 export interface UseStatsResult {
-  netPeriod: StatsPeriod;
-  setNetPeriod: (period: StatsPeriod) => void;
-  monthlyPeriod: StatsPeriod;
-  setMonthlyPeriod: (period: StatsPeriod) => void;
-  categoryPeriod: StatsPeriod;
-  setCategoryPeriod: (period: StatsPeriod) => void;
+  netPeriod: StatsPeriodControl;
+  monthlyPeriod: StatsPeriodControl;
+  categoryPeriod: StatsPeriodControl;
   net: NetSummary;
   monthlySeries: MonthlyDatum[];
   breakdown: CategorySegment[];
@@ -45,9 +60,9 @@ export interface UseStatsResult {
 export function useStats(): UseStatsResult {
   const sqlite = useSQLiteContext();
   const db = useMemo(() => toSqlExecutor(sqlite), [sqlite]);
-  const [netPeriod, setNetPeriod] = useState<StatsPeriod>('month');
-  const [monthlyPeriod, setMonthlyPeriod] = useState<StatsPeriod>('sixMonths');
-  const [categoryPeriod, setCategoryPeriod] = useState<StatsPeriod>('month');
+  const netPeriod = useStatsPeriodControl('month');
+  const monthlyPeriod = useStatsPeriodControl('sixMonths');
+  const categoryPeriod = useStatsPeriodControl('month');
   const [net, setNet] = useState<NetSummary>({ income: 0, expense: 0, investment: 0 });
   const [monthlySeries, setMonthlySeries] = useState<MonthlyDatum[]>([]);
   const [breakdown, setBreakdown] = useState<CategorySegment[]>([]);
@@ -56,9 +71,9 @@ export function useStats(): UseStatsResult {
 
   const load = useCallback(async () => {
     const today = todayIso();
-    const netRange = getStatsPeriodRange(netPeriod, today);
-    const monthlyRange = getStatsPeriodRange(monthlyPeriod, today);
-    const categoryRange = getStatsPeriodRange(categoryPeriod, today);
+    const netRange = resolveStatsRange(netPeriod.period, netPeriod.customRange, today);
+    const monthlyRange = resolveStatsRange(monthlyPeriod.period, monthlyPeriod.customRange, today);
+    const categoryRange = resolveStatsRange(categoryPeriod.period, categoryPeriod.customRange, today);
     const rates = await getLatestRatesToEur(db);
     const [netRows, monthlyRows, categoryRows] = await Promise.all([
       sumTotalsByTypeAndCurrency(db, netRange.fromDate, netRange.toDate),
@@ -102,11 +117,8 @@ export function useStats(): UseStatsResult {
 
   return {
     netPeriod,
-    setNetPeriod,
     monthlyPeriod,
-    setMonthlyPeriod,
     categoryPeriod,
-    setCategoryPeriod,
     net,
     monthlySeries,
     breakdown,

@@ -40,7 +40,7 @@ export function SegmentedControl<T extends string>({
               selected && styles.optionSelected,
               pressed && styles.pressed,
             ]}>
-            <Text style={[styles.optionText, selected && styles.optionTextSelected]}>{option.label}</Text>
+            <Text numberOfLines={1} style={[styles.optionText, selected && styles.optionTextSelected]}>{option.label}</Text>
           </Pressable>
         );
       })}
@@ -52,7 +52,7 @@ const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     container: {
       flexDirection: 'row',
-      gap: spacing.sm,
+      gap: spacing.xs,
     },
     option: {
       flex: 1,
@@ -60,14 +60,16 @@ const makeStyles = (colors: ThemeColors) =>
       justifyContent: 'center',
       borderRadius: rounded.pill,
       backgroundColor: colors.paper,
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.xs,
     },
     optionSelected: {
       backgroundColor: colors.ink,
     },
     optionText: {
       ...typography.bodySmStrong,
+      fontSize: 12,
+      lineHeight: 16,
       color: colors.graphite,
     },
     optionTextSelected: {

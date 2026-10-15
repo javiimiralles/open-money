@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { TransactionWithDetails } from '@/db/repositories/transactions-repo';
-import { rounded, spacing, typography } from '@/theme/tokens';
+import { rounded, shadows, spacing, typography } from '@/theme/tokens';
 import { useTheme, type ThemeColors } from '@/theme/theme';
 import { formatDateEs } from '@/utils/dates';
 import { formatMoney } from '@/utils/money';
@@ -69,6 +69,7 @@ const makeStyles = (colors: ThemeColors) =>
       gap: spacing.md,
       backgroundColor: colors.white,
       borderRadius: rounded.xl,
+      ...shadows.card,
       padding: spacing.xl,
     },
     cardPressed: {

@@ -11,12 +11,13 @@ import type {
 } from '@/db/repositories/transactions-repo';
 import { convertToEur } from './currency';
 
-export type StatsPeriod = 'month' | 'sixMonths' | 'year';
+export type StatsPeriod = 'month' | 'sixMonths' | 'year' | 'custom';
 
 export const STATS_PERIOD_LABELS: Record<StatsPeriod, string> = {
   month: 'Este mes',
   sixMonths: '6 meses',
   year: 'Este año',
+  custom: 'Rango',
 };
 
 export interface StatsPeriodRange {
@@ -36,7 +37,7 @@ function toMonthKey(year: number, month1: number): string {
  * Inclusive ISO date range for a stats period ending in the current month.
  * `today` is an ISO `YYYY-MM-DD` string (see utils/dates).
  */
-export function getStatsPeriodRange(period: StatsPeriod, today: string): StatsPeriodRange {
+export function getStatsPeriodRange(period: Exclude<StatsPeriod, 'custom'>, today: string): StatsPeriodRange {
   const [year, month1] = today.split('-').map(Number);
   if (period === 'year') {
     return { fromDate: `${year}-01-01`, toDate: `${year}-12-31` };
@@ -52,6 +53,19 @@ export function getStatsPeriodRange(period: StatsPeriod, today: string): StatsPe
     fromDate: `${toMonthKey(startYear, startMonth1)}-01`,
     toDate: `${toMonthKey(year, month1)}-${daysInMonth(year, month1)}`,
   };
+}
+
+/** Preset range for the period, or the custom range with its ends ordered. */
+export function resolveStatsRange(
+  period: StatsPeriod,
+  customRange: StatsPeriodRange,
+  today: string,
+): StatsPeriodRange {
+  if (period !== 'custom') {
+    return getStatsPeriodRange(period, today);
+  }
+  const { fromDate, toDate } = customRange;
+  return fromDate <= toDate ? { fromDate, toDate } : { fromDate: toDate, toDate: fromDate };
 }
 
 /**

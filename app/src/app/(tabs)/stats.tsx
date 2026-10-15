@@ -5,7 +5,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Card } from '@/components/Card';
 import { CategoryDonutChart } from '@/components/CategoryDonutChart';
 import { MonthlyBarsChart } from '@/components/MonthlyBarsChart';
-import { SegmentedControl, type SegmentedOption } from '@/components/SegmentedControl';
+import { type SegmentedOption } from '@/components/SegmentedControl';
+import { StatsPeriodPicker } from '@/components/StatsPeriodPicker';
 import { useStats } from '@/hooks/use-stats';
 import { spacing, typography } from '@/theme/tokens';
 import { useTheme, type ThemeColors } from '@/theme/theme';
@@ -18,17 +19,20 @@ const NET_PERIOD_OPTIONS: readonly SegmentedOption<StatsPeriod>[] = [
   { label: STATS_PERIOD_LABELS.month, value: 'month' },
   { label: STATS_PERIOD_LABELS.sixMonths, value: 'sixMonths' },
   { label: STATS_PERIOD_LABELS.year, value: 'year' },
+  { label: STATS_PERIOD_LABELS.custom, value: 'custom' },
 ];
 
 const MONTHLY_PERIOD_OPTIONS: readonly SegmentedOption<StatsPeriod>[] = [
   { label: STATS_PERIOD_LABELS.sixMonths, value: 'sixMonths' },
   { label: STATS_PERIOD_LABELS.year, value: 'year' },
+  { label: STATS_PERIOD_LABELS.custom, value: 'custom' },
 ];
 
 const CATEGORY_PERIOD_OPTIONS: readonly SegmentedOption<StatsPeriod>[] = [
   { label: STATS_PERIOD_LABELS.month, value: 'month' },
   { label: STATS_PERIOD_LABELS.sixMonths, value: 'sixMonths' },
   { label: STATS_PERIOD_LABELS.year, value: 'year' },
+  { label: STATS_PERIOD_LABELS.custom, value: 'custom' },
 ];
 
 export default function StatsScreen() {
@@ -37,11 +41,8 @@ export default function StatsScreen() {
   const insets = useSafeAreaInsets();
   const {
     netPeriod,
-    setNetPeriod,
     monthlyPeriod,
-    setMonthlyPeriod,
     categoryPeriod,
-    setCategoryPeriod,
     net,
     monthlySeries,
     breakdown,
@@ -63,10 +64,9 @@ export default function StatsScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Balance neto</Text>
-          <SegmentedControl
+          <StatsPeriodPicker
+            {...netPeriod}
             options={NET_PERIOD_OPTIONS}
-            value={netPeriod}
-            onChange={setNetPeriod}
             accessibilityLabel="Período del balance neto"
           />
           <Card>
@@ -111,10 +111,9 @@ export default function StatsScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Comparativa mensual</Text>
-          <SegmentedControl
+          <StatsPeriodPicker
+            {...monthlyPeriod}
             options={MONTHLY_PERIOD_OPTIONS}
-            value={monthlyPeriod}
-            onChange={setMonthlyPeriod}
             accessibilityLabel="Período de la comparativa mensual"
           />
           <Card>
@@ -128,10 +127,9 @@ export default function StatsScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Gastos por categoría</Text>
-          <SegmentedControl
+          <StatsPeriodPicker
+            {...categoryPeriod}
             options={CATEGORY_PERIOD_OPTIONS}
-            value={categoryPeriod}
-            onChange={setCategoryPeriod}
             accessibilityLabel="Período del desglose por categoría"
           />
           <Card>

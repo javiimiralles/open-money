@@ -108,14 +108,16 @@ const makeStyles = (colors: ThemeColors) =>
       borderWidth: 1,
       borderColor: colors.slate,
       borderRadius: rounded.xl,
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
     },
     fieldError: {
       borderColor: colors.negative,
     },
     value: {
       ...typography.bodyMd,
+      fontSize: 14,
+      lineHeight: 20,
       color: colors.ink,
       flexShrink: 1,
     },
@@ -136,8 +138,8 @@ const makeStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
       backgroundColor: colors.white,
     },
     optionSelected: {
@@ -145,10 +147,14 @@ const makeStyles = (colors: ThemeColors) =>
     },
     optionText: {
       ...typography.bodyMd,
+      fontSize: 14,
+      lineHeight: 20,
       color: colors.ink,
     },
     optionTextSelected: {
       ...typography.bodyMdStrong,
+      fontSize: 14,
+      lineHeight: 20,
       color: colors.ink,
     },
   });

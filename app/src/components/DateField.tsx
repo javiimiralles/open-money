@@ -82,11 +82,13 @@ const makeStyles = (colors: ThemeColors) =>
       borderWidth: 1,
       borderColor: colors.slate,
       borderRadius: rounded.xl,
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
     },
     dateValue: {
       ...typography.bodyMd,
+      fontSize: 14,
+      lineHeight: 20,
       color: colors.ink,
     },
     placeholder: {

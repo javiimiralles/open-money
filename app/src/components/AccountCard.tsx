@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { AccountListItem } from '@/hooks/use-accounts';
-import { rounded, spacing, typography } from '@/theme/tokens';
+import { rounded, shadows, spacing, typography } from '@/theme/tokens';
 import { useTheme, type ThemeColors } from '@/theme/theme';
 import { pickReadableText, type ReadableTextColors } from '@/utils/color';
 import { formatMoney, MONEY_MASK } from '@/utils/money';
@@ -82,6 +82,7 @@ const makeStyles = (colors: ThemeColors, background: string | null, text: Readab
       justifyContent: 'space-between',
       backgroundColor: background ?? colors.white,
       borderRadius: rounded.xl,
+      ...shadows.card,
       borderWidth: 2,
       borderColor: 'transparent',
       padding: spacing.xl,
