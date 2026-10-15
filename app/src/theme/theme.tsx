@@ -1,4 +1,3 @@
-import { useSQLiteContext } from 'expo-sqlite';
 import * as SystemUI from 'expo-system-ui';
 import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react';
 
@@ -8,20 +7,17 @@ export type { ThemeColors } from '@/theme/palettes';
 
 export interface ThemeContextValue {
   colors: ThemeColors;
-  isReady: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const _sqlite = useSQLiteContext();
-
   useEffect(() => {
     void SystemUI.setBackgroundColorAsync(lightColors.paper);
   }, []);
 
   const value = useMemo(
-    (): ThemeContextValue => ({ colors: lightColors, isReady: true }),
+    (): ThemeContextValue => ({ colors: lightColors }),
     [],
   );
 

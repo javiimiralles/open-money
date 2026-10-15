@@ -8,7 +8,7 @@ import { Alert } from 'react-native';
 
 import { toSqlExecutor } from '@/db/sqlite-adapter';
 import { dumpAllTables, getSchemaVersion, replaceAllTables } from '@/db/repositories/backup-repo';
-import { listTransactions } from '@/db/repositories/transactions-repo';
+import { EMPTY_TRANSACTION_FILTERS, listTransactionsFiltered } from '@/db/repositories/transactions-repo';
 import { pickTextFile, shareTextFile, SharingUnavailableError } from '@/services/file-io';
 import { BackupValidationError, parseBackup, serializeBackup } from '@/utils/backup';
 import { buildTransactionsCsv } from '@/utils/csv';
@@ -105,7 +105,7 @@ export function useBackup(onImported?: () => void): UseBackupResult {
     setMessage(null);
     setError(null);
     try {
-      const transactions = await listTransactions(db);
+      const transactions = await listTransactionsFiltered(db, EMPTY_TRANSACTION_FILTERS);
       await shareTextFile(
         `open-money-transactions-${filenameTimestamp(new Date())}.csv`,
         buildTransactionsCsv(transactions),

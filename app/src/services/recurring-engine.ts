@@ -1,10 +1,10 @@
 /**
  * Recurring processing engine (US-008).
  * Pure catch-up logic: find overdue rules, generate transactions, advance schedules
- * atomically. Batch undo restores the snapshot stored in settings.
+ * atomically. Batch undo only removes the batch's transactions; schedules stay advanced.
  */
 
-import { listDueRecurringRules, updateRecurringRuleSchedule } from '@/db/repositories/recurring-rules-repo';
+import { dayOfIso, listDueRecurringRules, updateRecurringRuleSchedule } from '@/db/repositories/recurring-rules-repo';
 import {
   countTransactionsByBatch,
   deleteTransactionsByBatch,
@@ -20,7 +20,6 @@ export interface RecurringLastBatch {
   batchId: string;
   appliedAt: string;
   count: number;
-  rules: { ruleId: number; prevNextExecution: string; prevLastRunDate: string | null }[];
 }
 
 export interface RecurringProcessResult {
@@ -47,7 +46,6 @@ export async function processRecurringOnOpen(
   }
 
   const batchId = generateBatchId();
-  const snapshot: RecurringLastBatch['rules'] = [];
   let appliedCount = 0;
 
   await db.withTransactionAsync(async () => {
@@ -55,11 +53,11 @@ export async function processRecurringOnOpen(
       if (rule.type === 'transfer' && rule.destinationAccountId === null) {
         continue;
       }
-      const dates = computeCatchUpDates(rule.nextExecution, asOfDate, rule.frequency, rule.intervalDays);
+      const anchorDay = rule.anchorDay ?? dayOfIso(rule.nextExecution);
+      const dates = computeCatchUpDates(rule.nextExecution, asOfDate, rule.frequency, rule.intervalDays, anchorDay);
       if (dates.length === 0) {
         continue;
       }
-      let perRuleApplied = 0;
       for (const date of dates) {
         const existing = await db.getFirstAsync<{ id: number }>(
           'SELECT id FROM transactions WHERE recurring_rule_id = ? AND date = ?',
@@ -68,73 +66,49 @@ export async function processRecurringOnOpen(
         if (existing) {
           continue;
         }
-        try {
-          if (rule.type === 'transfer') {
-            const destinationAmount =
-              rule.fxRate !== null && rule.fxRate > 0
-                ? destinationAmountFromRate(rule.amount, rule.fxRate)
-                : rule.amount;
-            const fxRate = rule.fxRate ?? (rule.amount > 0 ? destinationAmount / rule.amount : null);
-            // Normalize: same-currency transfers should not store a rate
-            const storedFxRate = rule.fxRate !== null ? fxRate : null;
-            await insertTransaction(db, {
-              type: 'transfer',
-              date,
-              amount: rule.amount,
-              currency: rule.currency,
-              accountId: rule.accountId,
-              destinationAccountId: rule.destinationAccountId as number,
-              destinationAmount,
-              fxRate: storedFxRate,
-              notes: rule.notes,
-              source: 'recurring',
-              recurringRuleId: rule.id,
-              recurringBatchId: batchId,
-            });
-          } else {
-            await insertTransaction(db, {
-              type: rule.type as 'income' | 'expense',
-              date,
-              amount: rule.amount,
-              currency: rule.currency,
-              accountId: rule.accountId,
-              categoryId: rule.categoryId,
-              notes: rule.notes,
-              source: 'recurring',
-              recurringRuleId: rule.id,
-              recurringBatchId: batchId,
-            });
-          }
-          appliedCount += 1;
-          perRuleApplied += 1;
-        } catch (error) {
-          const message = error instanceof Error ? error.message : String(error);
-          if (
-            message.includes('UNIQUE') ||
-            message.includes('unique') ||
-            message.toLowerCase().includes('constraint')
-          ) {
-            continue;
-          }
-          throw error;
+        if (rule.type === 'transfer') {
+          const destinationAmount =
+            rule.fxRate !== null && rule.fxRate > 0
+              ? destinationAmountFromRate(rule.amount, rule.fxRate)
+              : rule.amount;
+          await insertTransaction(db, {
+            type: 'transfer',
+            date,
+            amount: rule.amount,
+            currency: rule.currency,
+            accountId: rule.accountId,
+            destinationAccountId: rule.destinationAccountId as number,
+            destinationAmount,
+            fxRate: rule.fxRate,
+            notes: rule.notes,
+            source: 'recurring',
+            recurringRuleId: rule.id,
+            recurringBatchId: batchId,
+          });
+        } else {
+          await insertTransaction(db, {
+            type: rule.type as 'income' | 'expense',
+            date,
+            amount: rule.amount,
+            currency: rule.currency,
+            accountId: rule.accountId,
+            categoryId: rule.categoryId,
+            notes: rule.notes,
+            source: 'recurring',
+            recurringRuleId: rule.id,
+            recurringBatchId: batchId,
+          });
         }
-      }
-
-      if (perRuleApplied > 0) {
-        snapshot.push({
-          ruleId: rule.id,
-          prevNextExecution: rule.nextExecution,
-          prevLastRunDate: rule.lastRunDate,
-        });
+        appliedCount += 1;
       }
 
       const lastDate = dates[dates.length - 1];
-      const next = nextOccurrence(lastDate, rule.frequency, rule.intervalDays);
+      const next = nextOccurrence(lastDate, rule.frequency, rule.intervalDays, anchorDay);
       // If computed next is still <= asOfDate (should not happen), advance until past asOfDate
       let advancedNext = next;
       let guard = 0;
       while (advancedNext <= asOfDate && guard < 1000) {
-        advancedNext = nextOccurrence(advancedNext, rule.frequency, rule.intervalDays);
+        advancedNext = nextOccurrence(advancedNext, rule.frequency, rule.intervalDays, anchorDay);
         guard += 1;
       }
       await updateRecurringRuleSchedule(db, rule.id, advancedNext, lastDate);
@@ -145,7 +119,6 @@ export async function processRecurringOnOpen(
         batchId,
         appliedAt: nowIsoDateTime(),
         count: appliedCount,
-        rules: snapshot,
       };
       await db.runAsync(
         'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
@@ -206,9 +179,6 @@ export async function undoLastRecurringBatch(db: SqlExecutor): Promise<number> {
     deleted = await deleteTransactionsByBatch(db, batch.batchId);
     if (deleted === 0 && batch.count > 0) {
       deleted = batch.count;
-    }
-    for (const entry of batch.rules) {
-      await updateRecurringRuleSchedule(db, entry.ruleId, entry.prevNextExecution, entry.prevLastRunDate);
     }
     await db.runAsync('DELETE FROM settings WHERE key = ?', [RECURRING_LAST_BATCH_KEY]);
   });

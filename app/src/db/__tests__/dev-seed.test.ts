@@ -5,8 +5,7 @@ import { BASE_CATEGORIES, INVESTMENT_CATEGORIES } from '@/db/seed';
 import { listAccountsWithBalances, insertAccount } from '@/db/repositories/accounts-repo';
 import { getAllCategories } from '@/db/repositories/categories-repo';
 import { listRecurringRules } from '@/db/repositories/recurring-rules-repo';
-import { getThemeMode, saveThemeMode } from '@/db/repositories/settings-repo';
-import { insertTransaction, listTransactions } from '@/db/repositories/transactions-repo';
+import { insertTransaction, EMPTY_TRANSACTION_FILTERS, listTransactionsFiltered } from '@/db/repositories/transactions-repo';
 import { BetterSqliteExecutor } from '@/test/better-sqlite-executor';
 import { getLatestRatesToEur } from '@/utils/currency';
 
@@ -83,19 +82,17 @@ describe('dev-seed', () => {
     db.close();
   });
 
-  it('clears all user data but keeps settings and base categories', async () => {
+  it('clears all user data but keeps base categories', async () => {
     const db = await createDb();
     await seedDevData(db);
-    await saveThemeMode(db, 'dark');
 
     await clearAllDevData(db);
 
     expect(await listAccountsWithBalances(db)).toHaveLength(0);
-    expect(await listTransactions(db)).toHaveLength(0);
+    expect(await listTransactionsFiltered(db, EMPTY_TRANSACTION_FILTERS)).toHaveLength(0);
     expect(await listRecurringRules(db)).toHaveLength(0);
     expect(await getLatestRatesToEur(db)).toEqual({});
     expect(await getAllCategories(db)).toHaveLength(BASE_CATEGORIES.length + INVESTMENT_CATEGORIES.length);
-    expect(await getThemeMode(db)).toBe('dark');
     db.close();
   });
 });

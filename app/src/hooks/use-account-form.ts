@@ -41,6 +41,7 @@ export interface UseAccountFormResult {
   saving: boolean;
   deleting: boolean;
   isEditing: boolean;
+  currencyLocked: boolean;
   setName: (value: string) => void;
   setIdentifier: (value: string) => void;
   setCurrency: (value: string) => void;
@@ -67,12 +68,17 @@ export function useAccountForm(accountId: number | null): UseAccountFormResult {
   const [loading, setLoading] = useState(accountId !== null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [currencyLocked, setCurrencyLocked] = useState(false);
 
   useEffect(() => {
     if (accountId === null) {
       return;
     }
     let active = true;
+    // Only active rules are counted; inactive rules keep the old currency label.
+    Promise.all([countTransactionsForAccount(db, accountId), countActiveRecurringRulesForAccount(db, accountId)]).then(
+      ([transactions, rules]) => active && setCurrencyLocked(transactions + rules > 0),
+    );
     getAccountById(db, accountId).then((account) => {
       if (!active || !account) {
         return;
@@ -168,9 +174,10 @@ export function useAccountForm(accountId: number | null): UseAccountFormResult {
     saving,
     deleting,
     isEditing: accountId !== null,
+    currencyLocked,
     setName: (name: string) => setValues((v) => ({ ...v, name })),
     setIdentifier: (identifier: string) => setValues((v) => ({ ...v, identifier })),
-    setCurrency: (currency: string) => setValues((v) => ({ ...v, currency })),
+    setCurrency: (currency: string) => setValues((v) => (currencyLocked ? v : { ...v, currency })),
     setInitialBalance: (initialBalance: string) => setValues((v) => ({ ...v, initialBalance })),
     setColor: (color: string | null) => setValues((v) => ({ ...v, color })),
     setIsPrimary: (isPrimary: boolean) => setValues((v) => ({ ...v, isPrimary })),

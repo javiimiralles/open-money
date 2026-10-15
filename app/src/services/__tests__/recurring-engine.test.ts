@@ -1,7 +1,7 @@
 import { migrate } from '@/db/client';
 import { insertAccount, listAccountsWithBalances } from '@/db/repositories/accounts-repo';
 import { insertRecurringRule, deleteRecurringRule, getRecurringRuleById } from '@/db/repositories/recurring-rules-repo';
-import { deleteTransactionsByBatch, listTransactions } from '@/db/repositories/transactions-repo';
+import { deleteTransactionsByBatch, EMPTY_TRANSACTION_FILTERS, listTransactionsFiltered } from '@/db/repositories/transactions-repo';
 import { BetterSqliteExecutor } from '@/test/better-sqlite-executor';
 import {
   clearLastRecurringBatch,
@@ -44,7 +44,7 @@ describe('recurring-engine', () => {
     expect(result).not.toBeNull();
     expect(result?.appliedCount).toBe(3); // Sep 1, 8, 15
 
-    const transactions = await listTransactions(db);
+    const transactions = await listTransactionsFiltered(db, EMPTY_TRANSACTION_FILTERS);
     expect(transactions).toHaveLength(3);
     expect(transactions.every((t) => t.source === 'recurring')).toBe(true);
     expect(transactions.every((t) => t.recurringBatchId === result?.batchId)).toBe(true);
@@ -76,7 +76,7 @@ describe('recurring-engine', () => {
     await processRecurringOnOpen(db, '2026-09-08');
     const second = await processRecurringOnOpen(db, '2026-09-08');
     expect(second).toBeNull();
-    const transactions = await listTransactions(db);
+    const transactions = await listTransactionsFiltered(db, EMPTY_TRANSACTION_FILTERS);
     expect(transactions).toHaveLength(2); // Sep 1, Sep 8
     db.close();
   });
@@ -100,9 +100,9 @@ describe('recurring-engine', () => {
     });
 
     await processRecurringOnOpen(db, '2026-03-31');
-    const transactions = await listTransactions(db);
-    // Jan 31, Feb 28, Mar 28
-    expect(transactions.map((t) => t.date).sort()).toEqual(['2026-01-31', '2026-02-28', '2026-03-28']);
+    const transactions = await listTransactionsFiltered(db, EMPTY_TRANSACTION_FILTERS);
+    // Anchored to day 31
+    expect(transactions.map((t) => t.date).sort()).toEqual(['2026-01-31', '2026-02-28', '2026-03-31']);
     db.close();
   });
 
@@ -126,7 +126,7 @@ describe('recurring-engine', () => {
     });
 
     await processRecurringOnOpen(db, '2026-09-01');
-    const tx = (await listTransactions(db))[0];
+    const tx = (await listTransactionsFiltered(db, EMPTY_TRANSACTION_FILTERS))[0];
     expect(tx.type).toBe('transfer');
     expect(tx.destinationAmount).toBe(110);
     expect(tx.fxRate).toBe(1.1);
@@ -137,7 +137,7 @@ describe('recurring-engine', () => {
     db.close();
   });
 
-  it('stores a batch snapshot and undo restores rules and deletes transactions', async () => {
+  it('undo deletes the batch transactions and keeps the schedule advanced', async () => {
     const db = await createDb();
     const accountId = await createAccount(db);
     await insertRecurringRule(db, {
@@ -163,11 +163,38 @@ describe('recurring-engine', () => {
 
     const undone = await undoLastRecurringBatch(db);
     expect(undone).toBeGreaterThan(0);
-    expect(await listTransactions(db)).toHaveLength(0);
+    expect(await listTransactionsFiltered(db, EMPTY_TRANSACTION_FILTERS)).toHaveLength(0);
     const rule = await getRecurringRuleById(db, 1);
-    expect(rule?.nextExecution).toBe('2026-09-01');
-    expect(rule?.lastRunDate).toBeNull();
+    expect(rule?.nextExecution).toBe('2026-09-15');
     expect(await getLastRecurringBatch(db)).toBeNull();
+    expect(await processRecurringOnOpen(db, '2026-09-08')).toBeNull();
+    expect(await listTransactionsFiltered(db, EMPTY_TRANSACTION_FILTERS)).toHaveLength(0);
+    db.close();
+  });
+
+  it('keeps the anchor day across clamped months', async () => {
+    const db = await createDb();
+    const accountId = await createAccount(db);
+    await insertRecurringRule(db, {
+      type: 'expense',
+      amount: 10,
+      currency: 'EUR',
+      accountId,
+      destinationAccountId: null,
+      categoryId: null,
+      notes: null,
+      frequency: 'monthly',
+      intervalDays: null,
+      nextExecution: '2026-01-31',
+      active: true,
+      fxRate: null,
+    });
+
+    await processRecurringOnOpen(db, '2026-03-31');
+
+    const dates = (await listTransactionsFiltered(db, EMPTY_TRANSACTION_FILTERS)).map((t) => t.date).sort();
+    expect(dates).toEqual(['2026-01-31', '2026-02-28', '2026-03-31']);
+    expect((await getRecurringRuleById(db, 1))?.nextExecution).toBe('2026-04-30');
     db.close();
   });
 
@@ -191,7 +218,7 @@ describe('recurring-engine', () => {
 
     const result = await processRecurringOnOpen(db, '2026-09-15');
     expect(result).toBeNull();
-    expect(await listTransactions(db)).toHaveLength(0);
+    expect(await listTransactionsFiltered(db, EMPTY_TRANSACTION_FILTERS)).toHaveLength(0);
     db.close();
   });
 
@@ -214,7 +241,7 @@ describe('recurring-engine', () => {
     });
 
     await processRecurringOnOpen(db, '2026-09-07');
-    const transactions = await listTransactions(db);
+    const transactions = await listTransactionsFiltered(db, EMPTY_TRANSACTION_FILTERS);
     expect(transactions.map((t) => t.date).sort()).toEqual(['2026-09-01', '2026-09-04', '2026-09-07']);
     db.close();
   });
@@ -322,7 +349,7 @@ describe('recurring-engine', () => {
 
     const undone = await undoLastRecurringBatch(db);
     expect(undone).toBeGreaterThan(0);
-    expect(await listTransactions(db)).toHaveLength(0);
+    expect(await listTransactionsFiltered(db, EMPTY_TRANSACTION_FILTERS)).toHaveLength(0);
     expect(await loadActiveRecurringBatch(db)).toBeNull();
     db.close();
   });

@@ -22,6 +22,7 @@ export interface RecurringRule {
   active: boolean;
   lastRunDate: string | null;
   fxRate: number | null;
+  anchorDay: number | null;
   createdAt: string;
 }
 
@@ -61,6 +62,7 @@ interface RecurringRuleRow {
   active: number;
   last_run_date: string | null;
   fx_rate: number | null;
+  anchor_day: number | null;
   created_at: string;
 }
 
@@ -86,6 +88,7 @@ function mapRule(row: RecurringRuleRow): RecurringRule {
     active: row.active === 1,
     lastRunDate: row.last_run_date,
     fxRate: row.fx_rate,
+    anchorDay: row.anchor_day,
     createdAt: row.created_at,
   };
 }
@@ -115,6 +118,7 @@ const DETAILS_SELECT = `
     r.active,
     r.last_run_date,
     r.fx_rate,
+    r.anchor_day,
     r.created_at,
     a.name AS account_name,
     da.name AS destination_account_name,
@@ -125,11 +129,15 @@ const DETAILS_SELECT = `
   LEFT JOIN categories c ON c.id = r.category_id
 `;
 
+export function dayOfIso(iso: string): number {
+  return Number(iso.slice(8, 10));
+}
+
 export async function insertRecurringRule(db: SqlExecutor, input: RecurringRuleInput): Promise<number> {
   await db.runAsync(
     `INSERT INTO recurring_rules
-      (type, amount, currency, account_id, destination_account_id, category_id, notes, frequency, interval_days, next_execution, active, fx_rate)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (type, amount, currency, account_id, destination_account_id, category_id, notes, frequency, interval_days, next_execution, active, fx_rate, anchor_day)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       input.type,
       input.amount,
@@ -143,6 +151,7 @@ export async function insertRecurringRule(db: SqlExecutor, input: RecurringRuleI
       input.nextExecution,
       input.active ? 1 : 0,
       input.fxRate,
+      dayOfIso(input.nextExecution),
     ],
   );
   const row = await db.getFirstAsync<{ id: number }>('SELECT last_insert_rowid() AS id');
@@ -156,7 +165,7 @@ export async function updateRecurringRule(
 ): Promise<void> {
   await db.runAsync(
     `UPDATE recurring_rules
-     SET type = ?, amount = ?, currency = ?, account_id = ?, destination_account_id = ?, category_id = ?, notes = ?, frequency = ?, interval_days = ?, next_execution = ?, active = ?, fx_rate = ?
+     SET type = ?, amount = ?, currency = ?, account_id = ?, destination_account_id = ?, category_id = ?, notes = ?, frequency = ?, interval_days = ?, next_execution = ?, active = ?, fx_rate = ?, anchor_day = ?
      WHERE id = ?`,
     [
       input.type,
@@ -171,6 +180,7 @@ export async function updateRecurringRule(
       input.nextExecution,
       input.active ? 1 : 0,
       input.fxRate,
+      dayOfIso(input.nextExecution),
       id,
     ],
   );

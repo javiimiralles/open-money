@@ -21,7 +21,12 @@ import type { AccountListItem } from '@/hooks/use-accounts';
 import { getLatestRatesToEur, toAccountListItems } from '@/utils/currency';
 import { todayIso } from '@/utils/dates';
 import { parseAmount } from '@/utils/money';
-import { crossRate, destinationAmountFromRate, rateFromAmounts } from '@/utils/transfer';
+import {
+  applyTransferAmount,
+  applyTransferDestinationAmount,
+  applyTransferFxRate,
+  transferDefaults,
+} from '@/utils/transfer';
 
 export type TransactionFormType = 'income' | 'expense' | 'transfer' | 'investment';
 
@@ -68,33 +73,6 @@ export interface UseTransactionFormResult {
   setFxRate: (fxRate: string) => void;
   save: () => Promise<boolean>;
   remove: () => Promise<void>;
-}
-
-/**
- * Recomputes the destination amount and FX rate for a transfer when the
- * origin/destination accounts change or the type switches to transfer.
- * Same-currency transfers keep destinationAmount = amount and no rate;
- * cross-currency ones prefill the rate from the stored rates when available.
- */
-function transferDefaults(
-  values: TransactionFormValues,
-  accounts: AccountWithBalance[],
-  rates: Record<string, number>,
-): Pick<TransactionFormValues, 'destinationAmount' | 'fxRate'> {
-  const origin = accounts.find((account) => account.id === values.accountId);
-  const destination = accounts.find((account) => account.id === values.destinationAccountId);
-  if (!origin || !destination) {
-    return { destinationAmount: '', fxRate: '' };
-  }
-  const amount = parseAmount(values.amount);
-  if (origin.currency === destination.currency) {
-    return { destinationAmount: amount !== null ? String(amount) : '', fxRate: '' };
-  }
-  const rate = crossRate(origin.currency, destination.currency, rates);
-  if (rate === null || amount === null) {
-    return { destinationAmount: '', fxRate: '' };
-  }
-  return { destinationAmount: String(destinationAmountFromRate(amount, rate)), fxRate: String(rate) };
 }
 
 export function useTransactionForm(
@@ -310,32 +288,11 @@ export function useTransactionForm(
   const setDate = useCallback((date: string) => setValues((v) => ({ ...v, date })), []);
   const setAmount = useCallback(
     (amount: string) => {
-      setValues((current) => {
-        const next = { ...current, amount };
-        if (next.type === 'transfer') {
-          const origin = accounts.find((account) => account.id === next.accountId);
-          const destination = accounts.find((account) => account.id === next.destinationAccountId);
-          if (origin && destination && origin.currency === destination.currency) {
-            const parsed = parseAmount(amount);
-            next.destinationAmount = parsed !== null ? String(parsed) : '';
-            next.fxRate = '';
-          } else if (origin && destination) {
-            const parsed = parseAmount(amount);
-            const rate = parseAmount(next.fxRate);
-            if (parsed !== null && rate !== null && rate > 0) {
-              next.destinationAmount = String(destinationAmountFromRate(parsed, rate));
-            } else if (parsed !== null) {
-              // No rate yet (e.g. accounts picked before the amount): prefill.
-              const prefilled = crossRate(origin.currency, destination.currency, rates);
-              if (prefilled !== null) {
-                next.fxRate = String(prefilled);
-                next.destinationAmount = String(destinationAmountFromRate(parsed, prefilled));
-              }
-            }
-          }
-        }
-        return next;
-      });
+      setValues((current) =>
+        current.type === 'transfer'
+          ? applyTransferAmount(current, amount, accounts, rates)
+          : { ...current, amount },
+      );
     },
     [accounts, rates],
   );
@@ -366,30 +323,16 @@ export function useTransactionForm(
     [accounts, rates],
   );
   const setDestinationAmount = useCallback((destinationAmount: string) => {
-    setValues((current) => {
-      const next = { ...current, destinationAmount };
-      if (next.type === 'transfer') {
-        const amount = parseAmount(next.amount);
-        const destination = parseAmount(destinationAmount);
-        if (amount !== null && amount > 0 && destination !== null && destination > 0) {
-          next.fxRate = String(rateFromAmounts(amount, destination));
-        }
-      }
-      return next;
-    });
+    setValues((current) =>
+      current.type === 'transfer'
+        ? applyTransferDestinationAmount(current, destinationAmount)
+        : { ...current, destinationAmount },
+    );
   }, []);
   const setFxRate = useCallback((fxRate: string) => {
-    setValues((current) => {
-      const next = { ...current, fxRate };
-      if (next.type === 'transfer') {
-        const amount = parseAmount(next.amount);
-        const rate = parseAmount(fxRate);
-        if (amount !== null && amount > 0 && rate !== null && rate > 0) {
-          next.destinationAmount = String(destinationAmountFromRate(amount, rate));
-        }
-      }
-      return next;
-    });
+    setValues((current) =>
+      current.type === 'transfer' ? applyTransferFxRate(current, fxRate) : { ...current, fxRate },
+    );
   }, []);
 
   return {

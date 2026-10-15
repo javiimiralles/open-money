@@ -86,6 +86,7 @@ const TABLE_COLUMNS: Record<BackupTableName, readonly string[]> = {
     'last_run_date',
     'created_at',
     'fx_rate',
+    'anchor_day',
   ],
   exchange_rates: ['id', 'currency', 'rate_to_eur', 'fetched_at', 'is_manual'],
   settings: ['key', 'value'],

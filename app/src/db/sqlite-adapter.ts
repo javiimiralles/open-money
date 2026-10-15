@@ -7,6 +7,9 @@ import type { SQLiteDatabase, SQLiteBindValue } from 'expo-sqlite';
 
 import type { SqlExecutor } from './client';
 
+// Module-level: every adapter shares one connection, so transactions must not overlap.
+let transactionQueue: Promise<unknown> = Promise.resolve();
+
 export function toSqlExecutor(db: SQLiteDatabase): SqlExecutor {
   return {
     async execAsync(sql: string): Promise<void> {
@@ -21,20 +24,25 @@ export function toSqlExecutor(db: SQLiteDatabase): SqlExecutor {
     async runAsync(sql: string, params: SQLiteBindValue[] = []): Promise<unknown> {
       return db.runAsync(sql, params);
     },
-    async withTransactionAsync<T>(fn: () => Promise<T>): Promise<T> {
-      await db.execAsync('BEGIN');
-      try {
-        const result = await fn();
-        await db.execAsync('COMMIT');
-        return result;
-      } catch (error) {
+    withTransactionAsync<T>(fn: () => Promise<T>): Promise<T> {
+      const run = async (): Promise<T> => {
+        await db.execAsync('BEGIN');
         try {
-          await db.execAsync('ROLLBACK');
-        } catch {
-          // ignore rollback errors
+          const result = await fn();
+          await db.execAsync('COMMIT');
+          return result;
+        } catch (error) {
+          try {
+            await db.execAsync('ROLLBACK');
+          } catch {
+            // ignore rollback errors
+          }
+          throw error;
         }
-        throw error;
-      }
+      };
+      const result = transactionQueue.then(run);
+      transactionQueue = result.catch(() => undefined);
+      return result;
     },
   };
 }

@@ -123,7 +123,7 @@ const onDatabaseError = (error: Error) => {
 };
 
 function ThemedApp() {
-  const { colors, isReady } = useTheme();
+  const { colors } = useTheme();
 
   const navigationTheme = useMemo(
     () => ({
@@ -141,14 +141,8 @@ function ThemedApp() {
   );
 
   useEffect(() => {
-    if (isReady) {
-      void SplashScreen.hideAsync();
-    }
-  }, [isReady]);
-
-  if (!isReady) {
-    return null;
-  }
+    void SplashScreen.hideAsync();
+  }, []);
 
   return (
     <NavigationThemeProvider value={navigationTheme}>

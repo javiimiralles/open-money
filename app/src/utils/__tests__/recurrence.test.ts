@@ -20,11 +20,13 @@ describe('recurrence', () => {
       expect(nextOccurrence('2026-01-31', 'monthly')).toBe('2026-02-28');
     });
 
-    it('monthly clamps then preserves day when month is longer again (Jan 31 -> Feb 28 -> Mar 28 is not expected; anchored semantics mean one step only)', () => {
-      // Jan 31 + 1 month = Feb 28 (clamped). This is the correct one-step result.
-      expect(nextOccurrence('2026-01-31', 'monthly')).toBe('2026-02-28');
-      // Feb 28 + 1 month = Mar 28 (no clamp needed, but anchored from Feb 28)
-      expect(nextOccurrence('2026-02-28', 'monthly')).toBe('2026-03-28');
+    it('monthly with anchor day restores the anchor after a clamped month (Jan 31 -> Feb 28 -> Mar 31)', () => {
+      expect(nextOccurrence('2026-01-31', 'monthly', null, 31)).toBe('2026-02-28');
+      expect(nextOccurrence('2026-02-28', 'monthly', null, 31)).toBe('2026-03-31');
+    });
+
+    it('yearly with anchor day 29 returns to Feb 29 on leap years', () => {
+      expect(nextOccurrence('2027-02-28', 'yearly', null, 29)).toBe('2028-02-29');
     });
 
     it('monthly preserves day when no clamp needed', () => {
@@ -74,12 +76,11 @@ describe('recurrence', () => {
       ]);
     });
 
-    it('catches up monthly with clamp', () => {
-      // Jan 31 due, asOf Mar 31: Jan 31, Feb 28 (clamped), Mar 28
-      expect(computeCatchUpDates('2026-01-31', '2026-03-31', 'monthly')).toEqual([
+    it('catches up monthly with clamp and anchor', () => {
+      expect(computeCatchUpDates('2026-01-31', '2026-03-31', 'monthly', null, 31)).toEqual([
         '2026-01-31',
         '2026-02-28',
-        '2026-03-28',
+        '2026-03-31',
       ]);
     });
 

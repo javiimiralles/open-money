@@ -85,14 +85,22 @@ export default function AccountFormScreen() {
                   <Pressable
                     key={code}
                     accessibilityRole="button"
-                    accessibilityState={{ selected }}
+                    accessibilityState={{ selected, disabled: form.currencyLocked }}
+                    disabled={form.currencyLocked}
                     onPress={() => form.setCurrency(code)}
-                    style={[styles.currencyChip, selected && styles.currencyChipSelected]}>
+                    style={[
+                      styles.currencyChip,
+                      selected && styles.currencyChipSelected,
+                      form.currencyLocked && !selected && styles.currencyChipDisabled,
+                    ]}>
                     <Text style={[styles.currencyChipText, selected && styles.currencyChipTextSelected]}>{code}</Text>
                   </Pressable>
                 );
               })}
             </View>
+            {form.currencyLocked ? (
+              <Text style={styles.primaryHint}>La divisa no se puede cambiar porque la cuenta tiene movimientos.</Text>
+            ) : null}
           </View>
           <TextField
             label="Saldo inicial"
@@ -193,6 +201,9 @@ const makeStyles = (colors: ThemeColors) =>
     currencyChipSelected: {
       backgroundColor: colors.ink,
       borderColor: colors.ink,
+    },
+    currencyChipDisabled: {
+      opacity: 0.4,
     },
     currencyChipText: {
       ...typography.bodySmStrong,

@@ -2,7 +2,7 @@ import { migrate } from '@/db/client';
 import { insertAccount, listAccountsWithBalances } from '@/db/repositories/accounts-repo';
 import { dumpAllTables, replaceAllTables } from '@/db/repositories/backup-repo';
 import { insertCategory } from '@/db/repositories/categories-repo';
-import { insertTransaction, listTransactions } from '@/db/repositories/transactions-repo';
+import { insertTransaction, EMPTY_TRANSACTION_FILTERS, listTransactionsFiltered } from '@/db/repositories/transactions-repo';
 import { BetterSqliteExecutor } from '@/test/better-sqlite-executor';
 import { BackupValidationError } from '@/utils/backup';
 
@@ -34,7 +34,7 @@ describe('backup-repo', () => {
     const file = await dumpAllTables(db);
 
     expect(file.app).toBe('open-money');
-    expect(file.schemaVersion).toBe(11);
+    expect(file.schemaVersion).toBe(12);
     expect(file.data.accounts).toHaveLength(1);
     expect(file.data.transactions).toHaveLength(1);
     expect(file.data.categories.length).toBeGreaterThan(1);
@@ -48,11 +48,11 @@ describe('backup-repo', () => {
 
     await db.runAsync('DELETE FROM transactions');
     await db.runAsync('UPDATE accounts SET name = ? WHERE id = ?', ['Changed', accountId]);
-    expect(await listTransactions(db)).toHaveLength(0);
+    expect(await listTransactionsFiltered(db, EMPTY_TRANSACTION_FILTERS)).toHaveLength(0);
 
     await replaceAllTables(db, file);
 
-    const transactions = await listTransactions(db);
+    const transactions = await listTransactionsFiltered(db, EMPTY_TRANSACTION_FILTERS);
     expect(transactions).toHaveLength(1);
     expect(transactions[0].notes).toBe('Lunch');
     const accounts = await listAccountsWithBalances(db);
@@ -114,7 +114,7 @@ describe('backup-repo', () => {
     };
 
     await expect(replaceAllTables(db, tampered)).rejects.toBeInstanceOf(BackupValidationError);
-    expect(await listTransactions(db)).toHaveLength(1);
+    expect(await listTransactionsFiltered(db, EMPTY_TRANSACTION_FILTERS)).toHaveLength(1);
     db.close();
   });
 });

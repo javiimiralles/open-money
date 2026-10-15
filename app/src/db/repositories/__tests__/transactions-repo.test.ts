@@ -5,7 +5,6 @@ import {
   EMPTY_TRANSACTION_FILTERS,
   getTransactionById,
   insertTransaction,
-  listTransactions,
   listTransactionsFiltered,
   sumExpenseTotalsByCategory,
   sumMonthlyTotalsByTypeAndCurrency,
@@ -157,7 +156,7 @@ describe('transactions-repo', () => {
     const older = await insertTransaction(db, input({ date: '2026-08-01', amount: 10, accountId }));
     const newer = await insertTransaction(db, input({ date: '2026-09-01', amount: 20, accountId }));
 
-    const transactions = await listTransactions(db);
+    const transactions = await listTransactionsFiltered(db, EMPTY_TRANSACTION_FILTERS);
     expect(transactions.map((t) => t.id)).toEqual([newer, older]);
     db.close();
   });
@@ -168,7 +167,7 @@ describe('transactions-repo', () => {
     await insertTransaction(db, input({ date: '2026-08-01', amount: 10, accountId }));
     await insertTransaction(db, input({ date: '2026-09-01', amount: 20, accountId }));
 
-    const transactions = await listTransactions(db, 1);
+    const transactions = await listTransactionsFiltered(db, EMPTY_TRANSACTION_FILTERS, { limit: 1 });
     expect(transactions).toHaveLength(1);
     expect(transactions[0].amount).toBe(20);
     db.close();

@@ -19,7 +19,7 @@ describe('migrations', () => {
     await migrate(db);
 
     const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    expect(version?.user_version).toBe(11);
+    expect(version?.user_version).toBe(12);
 
     const tables = await db.getAllAsync<{ name: string }>(
       "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
@@ -97,7 +97,7 @@ describe('migrations', () => {
     await migrate(db);
 
     const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    expect(version?.user_version).toBe(11);
+    expect(version?.user_version).toBe(12);
 
     const tables = await db.getAllAsync<{ name: string }>(
       "SELECT name FROM sqlite_master WHERE type IN ('table', 'index') AND name IN ('instruments', 'trades', 'idx_instruments_symbol', 'idx_trades_instrument')",
@@ -158,7 +158,7 @@ describe('migrations', () => {
     await migrate(db);
 
     const version = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    expect(version?.user_version).toBe(11);
+    expect(version?.user_version).toBe(12);
 
     const transactionLink = await db.getFirstAsync<{ category_id: number | null }>(
       'SELECT category_id FROM transactions',
@@ -231,6 +231,22 @@ describe('migrations', () => {
       ),
     ).rejects.toThrow();
 
+    db.close();
+  });
+
+  it('applies migration v12 adding anchor_day backfilled from next_execution', async () => {
+    const db = new BetterSqliteExecutor();
+    await migrateToVersion(db, 11);
+    await db.runAsync("INSERT INTO accounts (name, currency, initial_balance) VALUES ('Banco', 'EUR', 0)");
+    await db.runAsync(
+      `INSERT INTO recurring_rules (type, amount, currency, account_id, frequency, next_execution, active)
+       VALUES ('expense', 10, 'EUR', 1, 'monthly', '2026-02-28', 1)`,
+    );
+
+    await migrate(db);
+
+    const row = await db.getFirstAsync<{ anchor_day: number | null }>('SELECT anchor_day FROM recurring_rules');
+    expect(row?.anchor_day).toBe(28);
     db.close();
   });
 
@@ -324,7 +340,7 @@ describe('migrations', () => {
     await db.execAsync('PRAGMA user_version = 999');
     await migrate(db);
     const versionAfter = (await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version'))?.user_version;
-    expect(versionBefore).toBe(11);
+    expect(versionBefore).toBe(12);
     expect(versionAfter).toBe(999);
 
     db.close();

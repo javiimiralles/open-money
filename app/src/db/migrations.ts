@@ -329,4 +329,13 @@ CREATE INDEX idx_transactions_recurring_batch ON transactions(recurring_batch_id
 CREATE UNIQUE INDEX idx_transactions_recurring_dedup ON transactions(recurring_rule_id, date) WHERE recurring_rule_id IS NOT NULL;
 `,
   },
+  {
+    version: 12,
+    up: `
+-- Day of month a monthly/yearly rule is anchored to, so clamped months
+-- (Jan 31 -> Feb 28) do not drift the schedule.
+ALTER TABLE recurring_rules ADD COLUMN anchor_day INTEGER;
+UPDATE recurring_rules SET anchor_day = CAST(substr(next_execution, 9, 2) AS INTEGER);
+`,
+  },
 ];

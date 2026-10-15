@@ -10,7 +10,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useMemo, useState } from 'react';
 
 import {
-  listTransactions,
+  EMPTY_TRANSACTION_FILTERS,
   listTransactionsFiltered,
   summarizeTransactionsFiltered,
   type TransactionFilters,
@@ -57,7 +57,7 @@ export function useTransactions(filters?: TransactionFilters, limit?: number): U
       setSummary({ count: total.count, net: total.net, currency: total.currency, mixedCurrencies: total.mixedCurrencies });
       setHasMore(firstPage.length < total.count);
     } else {
-      const transactions = filters ? await listTransactionsFiltered(db, filters) : await listTransactions(db, limit);
+      const transactions = await listTransactionsFiltered(db, filters ?? EMPTY_TRANSACTION_FILTERS, filters || limit === undefined ? undefined : { limit });
       setItems(transactions);
       setHasMore(false);
     }

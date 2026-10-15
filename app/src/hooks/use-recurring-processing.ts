@@ -31,13 +31,15 @@ export function useRecurringProcessing(): UseRecurringProcessingResult {
   const [notice, setNotice] = useState<RecurringLastBatch | null>(null);
   const [processing, setProcessing] = useState(false);
   const hasRunRef = useRef(false);
+  const inFlightRef = useRef(false);
 
   const refreshNotice = useCallback(async () => {
     setNotice(await loadActiveRecurringBatch(db));
   }, [db]);
 
   const runNow = useCallback(async () => {
-    if (processing) return;
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     setProcessing(true);
     try {
       const result = await processRecurringOnOpen(db, todayIso());
@@ -47,28 +49,22 @@ export function useRecurringProcessing(): UseRecurringProcessingResult {
     } catch {
       // Engine errors should not crash the app; notice stays as-is
     } finally {
+      inFlightRef.current = false;
       setProcessing(false);
     }
-  }, [db, processing, refreshNotice]);
+  }, [db, refreshNotice]);
 
   // On mount: load pending batch and run catch-up once
   useEffect(() => {
-    let active = true;
     const init = async () => {
       await refreshNotice();
       if (!hasRunRef.current) {
         hasRunRef.current = true;
-        const result = await processRecurringOnOpen(db, todayIso()).catch(() => null);
-        if (active && result) {
-          await refreshNotice();
-        }
+        await runNow();
       }
     };
     init();
-    return () => {
-      active = false;
-    };
-  }, [db, refreshNotice]);
+  }, [refreshNotice, runNow]);
 
   // Re-run when app returns to foreground (idempotent)
   useEffect(() => {

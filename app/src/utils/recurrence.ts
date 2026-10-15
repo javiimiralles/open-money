@@ -29,8 +29,9 @@ function addDaysIso(iso: string, days: number): string {
   return formatIso(date.getFullYear(), date.getMonth() + 1, date.getDate());
 }
 
-function addMonthsClamped(iso: string, monthsToAdd: number): string {
-  const { year, month1, day } = parseIso(iso);
+function addMonthsClamped(iso: string, monthsToAdd: number, anchorDay?: number | null): string {
+  const { year, month1, day: isoDay } = parseIso(iso);
+  const day = anchorDay ?? isoDay;
   let totalMonths = year * 12 + (month1 - 1) + monthsToAdd;
   // Handle negative gracefully (not needed for forward-only, but keep correct)
   const newYear = Math.floor(totalMonths / 12);
@@ -43,14 +44,15 @@ function addMonthsClamped(iso: string, monthsToAdd: number): string {
   return formatIso(newYear, newMonth1, newDay);
 }
 
-function addYearsClamped(iso: string, yearsToAdd: number): string {
-  return addMonthsClamped(iso, yearsToAdd * 12);
+function addYearsClamped(iso: string, yearsToAdd: number, anchorDay?: number | null): string {
+  return addMonthsClamped(iso, yearsToAdd * 12, anchorDay);
 }
 
 export function nextOccurrence(
   fromIso: string,
   frequency: RecurrenceFrequency,
   intervalDays?: number | null,
+  anchorDay?: number | null,
 ): string {
   switch (frequency) {
     case 'weekly':
@@ -63,9 +65,9 @@ export function nextOccurrence(
       return addDaysIso(fromIso, n);
     }
     case 'monthly':
-      return addMonthsClamped(fromIso, 1);
+      return addMonthsClamped(fromIso, 1, anchorDay);
     case 'yearly':
-      return addYearsClamped(fromIso, 1);
+      return addYearsClamped(fromIso, 1, anchorDay);
     default:
       throw new Error(`Unknown frequency: ${frequency as string}`);
   }
@@ -76,6 +78,7 @@ export function computeCatchUpDates(
   asOfIso: string,
   frequency: RecurrenceFrequency,
   intervalDays?: number | null,
+  anchorDay?: number | null,
 ): string[] {
   if (nextExecutionIso > asOfIso) {
     return [];
@@ -88,7 +91,7 @@ export function computeCatchUpDates(
   while (current <= asOfIso && iterations < MAX_ITERATIONS) {
     dates.push(current);
     iterations += 1;
-    const next = nextOccurrence(current, frequency, intervalDays);
+    const next = nextOccurrence(current, frequency, intervalDays, anchorDay);
     // Guard against non-advancing next (should not happen with valid inputs)
     if (next <= current) {
       break;

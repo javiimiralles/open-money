@@ -423,37 +423,6 @@ export async function summarizeTransactionsFiltered(
 }
 
 /**
- * Lists transactions in reverse chronological order (newest first).
- * `limit`/`offset` are optional; `limit` is used by the dashboard for
- * recent movements and `offset` enables pagination.
- */
-export async function listTransactions(
-  db: SqlExecutor,
-  limit?: number,
-  offset?: number,
-): Promise<TransactionWithDetails[]> {
-  const { where, params } = buildFilters(EMPTY_TRANSACTION_FILTERS);
-  const queryParams = [...params];
-  let paginationClause = '';
-  if (limit !== undefined) {
-    paginationClause += ' LIMIT ?';
-    queryParams.push(limit);
-  }
-  if (offset !== undefined) {
-    if (limit === undefined) {
-      paginationClause += ' LIMIT -1';
-    }
-    paginationClause += ' OFFSET ?';
-    queryParams.push(offset);
-  }
-  const rows = await db.getAllAsync<TransactionDetailsRow>(
-    `${DETAILS_SELECT}${where} ORDER BY t.date DESC, t.id DESC${paginationClause}`,
-    queryParams,
-  );
-  return rows.map(mapTransactionWithDetails);
-}
-
-/**
  * Income/expense/investment totals grouped by type and currency for a date range.
  * Transfers are excluded: they move balance between own accounts.
  * EUR conversion happens in JS (utils/stats) using the stored rates.

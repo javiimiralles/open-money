@@ -18,9 +18,16 @@ import {
   type RecurringRuleType,
 } from '@/db/repositories/recurring-rules-repo';
 import { toSqlExecutor } from '@/db/sqlite-adapter';
+import { getLatestRatesToEur } from '@/utils/currency';
 import { todayIso } from '@/utils/dates';
 import { parseAmount } from '@/utils/money';
-import { crossRate, destinationAmountFromRate, rateFromAmounts } from '@/utils/transfer';
+import {
+  applyTransferAmount,
+  applyTransferDestinationAmount,
+  applyTransferFxRate,
+  destinationAmountFromRate,
+  transferDefaults,
+} from '@/utils/transfer';
 
 export type RecurringFormType = RecurringRuleType;
 
@@ -80,27 +87,6 @@ export interface UseRecurringFormResult {
   toggleActive: () => Promise<void>;
 }
 
-function transferDefaults(
-  values: RecurringFormValues,
-  accounts: AccountWithBalance[],
-  rates: Record<string, number>,
-): Pick<RecurringFormValues, 'destinationAmount' | 'fxRate'> {
-  const origin = accounts.find((a) => a.id === values.accountId);
-  const destination = accounts.find((a) => a.id === values.destinationAccountId);
-  if (!origin || !destination) {
-    return { destinationAmount: '', fxRate: '' };
-  }
-  const amount = parseAmount(values.amount);
-  if (origin.currency === destination.currency) {
-    return { destinationAmount: amount !== null ? String(amount) : '', fxRate: '' };
-  }
-  const rate = crossRate(origin.currency, destination.currency, rates);
-  if (rate === null || amount === null) {
-    return { destinationAmount: '', fxRate: '' };
-  }
-  return { destinationAmount: String(destinationAmountFromRate(amount, rate)), fxRate: String(rate) };
-}
-
 export function useRecurringForm(ruleId: number | null): UseRecurringFormResult {
   const sqlite = useSQLiteContext();
   const db = useMemo(() => toSqlExecutor(sqlite), [sqlite]);
@@ -129,19 +115,14 @@ export function useRecurringForm(ruleId: number | null): UseRecurringFormResult 
 
   useEffect(() => {
     let active = true;
-    Promise.all([listAccountsWithBalances(db), getAllCategories(db)]).then(async ([accountRows, categoryRows]) => {
-      if (!active) return;
-      setAccounts(accountRows);
-      setCategories(categoryRows);
-      // Rates: try to load if table has data; no-op when empty.
-      try {
-        const { getLatestRatesToEur } = await import('@/utils/currency');
-        const r = await getLatestRatesToEur(db);
-        if (active) setRates(r);
-      } catch {
-        // ignore
-      }
-    });
+    Promise.all([listAccountsWithBalances(db), getAllCategories(db), getLatestRatesToEur(db)]).then(
+      ([accountRows, categoryRows, rateRows]) => {
+        if (!active) return;
+        setAccounts(accountRows);
+        setCategories(categoryRows);
+        setRates(rateRows);
+      },
+    );
     return () => {
       active = false;
     };
@@ -324,31 +305,11 @@ export function useRecurringForm(ruleId: number | null): UseRecurringFormResult 
 
   const setAmount = useCallback(
     (amount: string) => {
-      setValues((current) => {
-        const next = { ...current, amount };
-        if (next.type === 'transfer') {
-          const origin = accounts.find((a) => a.id === next.accountId);
-          const destination = accounts.find((a) => a.id === next.destinationAccountId);
-          if (origin && destination && origin.currency === destination.currency) {
-            const parsed = parseAmount(amount);
-            next.destinationAmount = parsed !== null ? String(parsed) : '';
-            next.fxRate = '';
-          } else if (origin && destination) {
-            const parsed = parseAmount(amount);
-            const rate = parseAmount(next.fxRate);
-            if (parsed !== null && rate !== null && rate > 0) {
-              next.destinationAmount = String(destinationAmountFromRate(parsed, rate));
-            } else if (parsed !== null) {
-              const prefilled = crossRate(origin.currency, destination.currency, rates);
-              if (prefilled !== null) {
-                next.fxRate = String(prefilled);
-                next.destinationAmount = String(destinationAmountFromRate(parsed, prefilled));
-              }
-            }
-          }
-        }
-        return next;
-      });
+      setValues((current) =>
+        current.type === 'transfer'
+          ? applyTransferAmount(current, amount, accounts, rates)
+          : { ...current, amount },
+      );
     },
     [accounts, rates],
   );
@@ -386,31 +347,17 @@ export function useRecurringForm(ruleId: number | null): UseRecurringFormResult 
   );
 
   const setFxRate = useCallback((fxRate: string) => {
-    setValues((current) => {
-      const next = { ...current, fxRate };
-      if (next.type === 'transfer') {
-        const amount = parseAmount(next.amount);
-        const rate = parseAmount(fxRate);
-        if (amount !== null && amount > 0 && rate !== null && rate > 0) {
-          next.destinationAmount = String(destinationAmountFromRate(amount, rate));
-        }
-      }
-      return next;
-    });
+    setValues((current) =>
+      current.type === 'transfer' ? applyTransferFxRate(current, fxRate) : { ...current, fxRate },
+    );
   }, []);
 
   const setDestinationAmount = useCallback((destinationAmount: string) => {
-    setValues((current) => {
-      const next = { ...current, destinationAmount };
-      if (next.type === 'transfer') {
-        const amount = parseAmount(next.amount);
-        const dest = parseAmount(destinationAmount);
-        if (amount !== null && amount > 0 && dest !== null && dest > 0) {
-          next.fxRate = String(rateFromAmounts(amount, dest));
-        }
-      }
-      return next;
-    });
+    setValues((current) =>
+      current.type === 'transfer'
+        ? applyTransferDestinationAmount(current, destinationAmount)
+        : { ...current, destinationAmount },
+    );
   }, []);
 
   return {
