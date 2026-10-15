@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/Card';
+import { MaikelAvatar } from '@/components/MaikelAvatar';
 import { CategoryDonutChart } from '@/components/CategoryDonutChart';
 import { MonthlyBarsChart } from '@/components/MonthlyBarsChart';
 import { type SegmentedOption } from '@/components/SegmentedControl';
@@ -60,7 +61,10 @@ export default function StatsScreen() {
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Estadísticas</Text>
+        <View style={styles.titleRow}>
+          <MaikelAvatar />
+          <Text style={styles.title}>Estadísticas</Text>
+        </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Balance neto</Text>
@@ -154,6 +158,11 @@ const makeStyles = (colors: ThemeColors) =>
     content: {
       padding: spacing.xl,
       gap: spacing.xl,
+    },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
     },
     title: {
       ...typography.displayXs,

@@ -4,6 +4,7 @@ import { ActivityIndicator, Modal, Pressable, ScrollView, SectionList, StyleShee
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/Card';
+import { MaikelAvatar } from '@/components/MaikelAvatar';
 import { FilterBar } from '@/components/FilterBar';
 import { TransactionFiltersPanel } from '@/components/TransactionFiltersPanel';
 import { TransactionRow } from '@/components/TransactionRow';
@@ -63,7 +64,10 @@ export default function TransactionsScreen() {
         }
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text style={styles.title}>Movimientos</Text>
+            <View style={styles.titleRow}>
+              <MaikelAvatar />
+              <Text style={styles.title}>Movimientos</Text>
+            </View>
             <FilterBar
               search={filters.state.search}
               onSearchChange={filters.setSearch}
@@ -138,6 +142,11 @@ const makeStyles = (colors: ThemeColors) =>
     },
     header: {
       gap: spacing.lg,
+    },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
     },
     title: {
       ...typography.displayXs,

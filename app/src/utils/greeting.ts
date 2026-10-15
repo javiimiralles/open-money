@@ -6,10 +6,10 @@
 
 export function getGreeting(hour: number): string {
   if (hour >= 6 && hour < 12) {
-    return 'Buenos días 👋';
+    return 'Buenos días';
   }
   if (hour >= 12 && hour < 21) {
-    return 'Buenas tardes 👋';
+    return 'Buenas tardes';
   }
-  return 'Buenas noches 👋';
+  return 'Buenas noches';
 }

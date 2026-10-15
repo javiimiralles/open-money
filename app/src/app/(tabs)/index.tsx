@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AccountCardScroller } from '@/components/AccountCardScroller';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
+import { MaikelAvatar } from '@/components/MaikelAvatar';
 import { QuickActions } from '@/components/QuickActions';
 import { TransactionRow } from '@/components/TransactionRow';
 import { useDashboard } from '@/hooks/use-dashboard';
@@ -51,7 +52,10 @@ export default function DashboardScreen() {
         ListHeaderComponent={
           <View style={styles.header}>
             <View style={styles.greetingRow}>
-              <Text style={styles.greeting}>{greeting}</Text>
+              <View style={styles.titleRow}>
+                <MaikelAvatar />
+                <Text style={styles.greeting}>{greeting}</Text>
+              </View>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={balancesHidden ? 'Mostrar importes' : 'Ocultar importes'}
@@ -132,6 +136,12 @@ const makeStyles = (colors: ThemeColors) =>
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: spacing.md,
+    },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      flexShrink: 1,
     },
     greeting: {
       ...typography.displayXs,
