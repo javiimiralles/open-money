@@ -1,8 +1,8 @@
 # Open Money
 
-App personal de finanzas (uso personal, no comercial). App móvil 100% local: sin backend, sin cuentas de usuario, sin nube y sin datos de mercado. Todos tus datos viven en SQLite dentro del móvil.
+<img width="3840" height="2880" alt="image" src="https://github.com/user-attachments/assets/861e472c-b692-46d5-b7c5-f3adcd50434a" />
 
-Idioma de la app: **español**. Idioma del código: **inglés**.
+App personal de finanzas (uso personal, no comercial). App móvil 100% local: sin backend, sin cuentas de usuario, sin nube y sin datos de mercado. Todos tus datos viven en SQLite dentro del móvil.
 
 ## En qué consiste
 
